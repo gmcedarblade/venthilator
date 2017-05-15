@@ -10,9 +10,8 @@ var GamePlayScene = function(game, stage)
   var my_graph;
   var my_knob;
   var selected_channel = 0;
-  var channel_0_btn;
-  var channel_1_btn;
-  var channel_2_btn;
+  var channel_colors;
+  var channel_btns;
   var clicker;
   var dragger;
 
@@ -28,7 +27,15 @@ var GamePlayScene = function(game, stage)
     self.ww = 0;
     self.wh = 0;
 
-    var channel = function()
+    self.cache;
+    self.dirty = true;;
+
+    self.genCache = function()
+    {
+      self.cache = GenIcon(self.w,self.h);
+    }
+
+    var channel = function(graph)
     {
       var self = this;
       self.data = [];
@@ -41,6 +48,7 @@ var GamePlayScene = function(game, stage)
 
       self.delta = function(i)
       {
+        graph.dirty = true;
         self.data_t += i;
 
         while(self.data_t > 1)
@@ -71,7 +79,7 @@ var GamePlayScene = function(game, stage)
     var c;
     var j;
 
-    c = new channel();
+    c = new channel(self);
     c.data = [];
     c.data_pts = 100;
     c.data_from_i = 0;
@@ -91,7 +99,7 @@ var GamePlayScene = function(game, stage)
     self.channels[0] = c;
 
 
-    c = new channel();
+    c = new channel(self);
     c.data = [];
     c.data_pts = 100;
     c.data_from_i = 0;
@@ -112,26 +120,38 @@ var GamePlayScene = function(game, stage)
 
     self.draw = function()
     {
-      var c;
-      var x;
-      var y;
-      for(var i = 0; i < self.channels.length; i++)
+      if(self.dirty)
       {
-        c = self.channels[i];
-        ctx.beginPath();
-        y = lerp(c.data[c.data_from_i][0],c.data[c.data_from_i+1][0],c.data_t);
-        ctx.moveTo(self.x, clamp(self.y,self.y+self.h,mapVal(c.min_y, c.max_y, self.y+self.h, self.y, y)));
-        for(var j = 1; j < c.data_pts; j++)
+        self.cache.context.clearRect(0,0,self.w,self.h);
+        var c;
+        var x;
+        var y;
+        for(var i = 0; i < self.channels.length; i++)
         {
-          x = j/(c.data_pts-1);
-          y = lerp(c.data[c.data_from_i][j],c.data[c.data_from_i+1][j],c.data_t);
-          ctx.lineTo(
-            clamp(self.x,self.x+self.w,mapVal(      0,       1, self.x,        self.x+self.w, x)),
-            clamp(self.y,self.y+self.h,mapVal(c.min_y, c.max_y, self.y+self.h, self.y,        y))
-          );
+          c = self.channels[i];
+          self.cache.context.strokeStyle = "#000000";
+          if(selected_channel == i)
+            self.cache.context.strokeStyle = channel_colors[i];
+          self.cache.context.beginPath();
+          y = lerp(c.data[c.data_from_i][0],c.data[c.data_from_i+1][0],c.data_t);
+          self.cache.context.moveTo(0, clamp(0,self.h,mapVal(c.min_y, c.max_y, self.h, 0, y)));
+          for(var j = 1; j < c.data_pts; j++)
+          {
+            x = j/(c.data_pts-1);
+            y = lerp(c.data[c.data_from_i][j],c.data[c.data_from_i+1][j],c.data_t);
+            self.cache.context.lineTo(
+              clamp(0,self.w,mapVal(      0,       1, 0,      self.w, x)),
+              clamp(0,self.h,mapVal(c.min_y, c.max_y, self.h,      0, y))
+            );
+          }
+          self.cache.context.stroke();
         }
-        ctx.stroke();
+        self.dirty = false
       }
+
+      ctx.drawImage(self.cache,self.x,self.y,self.w,self.h);
+      ctx.strokeStyle = "#000000";
+      ctx.strokeRect(self.x,self.y,self.w,self.h);
     }
   }
 
@@ -141,35 +161,42 @@ var GamePlayScene = function(game, stage)
 
     my_graph = new graph();
     my_graph.wx = 0;
-    my_graph.wy = 0;
-    my_graph.ww = cam.ww;
+    my_graph.wy = 0.4;
+    my_graph.ww = cam.ww-0.1;
     my_graph.wh = my_graph.ww/2;
     screenSpace(cam,canv,my_graph);
+    my_graph.genCache();
 
     my_knob = new KnobBox(0,0,0,0, 0,1,0.1,0,function(v)
     {
-      //for(var i = 0; i < my_graph.channels.length; i++)
-       my_graph.channels[selected_channel].delta(v);
+      my_graph.channels[selected_channel].delta(v);
     });
-    my_knob.wx = -0.25;
-    my_knob.wy = 0.5;
-    my_knob.ww = 0.1;
-    my_knob.wh = 0.1;
+    my_knob.wx = -0.3;
+    my_knob.wy = -0.1;
+    my_knob.ww = 0.2;
+    my_knob.wh = 0.2;
     screenSpace(cam,canv,my_knob);
 
-    channel_0_btn = new ButtonBox(0,0,0,0, function(){selected_channel = 0;})
-    channel_0_btn.wx = -0.25;
-    channel_0_btn.wy = -0.5;
-    channel_0_btn.ww = 0.1;
-    channel_0_btn.wh = 0.1;
-    screenSpace(cam,canv,channel_0_btn);
+    channel_btns = [];
+    channel_colors = [];
 
-    channel_1_btn = new ButtonBox(0,0,0,0, function(){selected_channel = 1;})
-    channel_1_btn.wx = 0.;
-    channel_1_btn.wy = -0.5;
-    channel_1_btn.ww = 0.1;
-    channel_1_btn.wh = 0.1;
-    screenSpace(cam,canv,channel_1_btn);
+    btn = new ButtonBox(0,0,0,0, function(){selected_channel = 0; my_graph.dirty = true;})
+    btn.wx = -0.25;
+    btn.wy = -0.5;
+    btn.ww = 0.2;
+    btn.wh = 0.2;
+    screenSpace(cam,canv,btn);
+    channel_btns.push(btn);
+    channel_colors.push("#880000");
+
+    btn = new ButtonBox(0,0,0,0, function(){selected_channel = 1; my_graph.dirty = true;})
+    btn.wx = 0.;
+    btn.wy = -0.5;
+    btn.ww = 0.2;
+    btn.wh = 0.2;
+    screenSpace(cam,canv,btn);
+    channel_btns.push(btn);
+    channel_colors.push("#008800");
 
     clicker = new Clicker({source:stage.dispCanv.canvas});
     dragger = new Dragger({source:stage.dispCanv.canvas});
@@ -180,8 +207,8 @@ var GamePlayScene = function(game, stage)
   {
     n_ticks++;
 
-    clicker.filter(channel_0_btn);
-    clicker.filter(channel_1_btn);
+    for(var i = 0; i < channel_btns.length; i++)
+      clicker.filter(channel_btns[i]);
     dragger.filter(my_knob);
     clicker.flush();
     dragger.flush();
@@ -191,9 +218,17 @@ var GamePlayScene = function(game, stage)
   self.draw = function()
   {
     my_graph.draw();
-    channel_0_btn.draw(canv);
-    channel_1_btn.draw(canv);
+
+    ctx.fillStyle = channel_colors[selected_channel];
+    ctx.fillRect(channel_btns[selected_channel].x,channel_btns[selected_channel].y,channel_btns[selected_channel].w,channel_btns[selected_channel].h);
+    ctx.strokeStyle = "#000000";
+    for(var i = 0; i < channel_btns.length; i++)
+      ctx.strokeRect(channel_btns[i].x,channel_btns[i].y,channel_btns[i].w,channel_btns[i].h);
+
     my_knob.draw(canv);
+    var sel_c = my_graph.channels[selected_channel];
+    ctx.font = "30px Arial";
+    ctx.fillText(fdisp(sel_c.data_from_i+sel_c.data_t),my_knob.x+my_knob.w+20,my_knob.y+my_knob.h/2+10);
   };
 
   self.cleanup = function()
