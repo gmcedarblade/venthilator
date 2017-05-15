@@ -12,6 +12,7 @@ var GamePlayScene = function(game, stage)
   var selected_channel = 0;
   var channel_colors;
   var channel_btns;
+  var alert_t;
   var clicker;
   var dragger;
 
@@ -39,12 +40,12 @@ var GamePlayScene = function(game, stage)
     {
       var self = this;
       self.data = [];
-      self.data_layers = 0;
       self.data_pts = 100;
       self.data_from_i = 0;
       self.data_t = 0;
       self.min_y = -1;
       self.max_y =  1;
+      self.error_ranges = [];
 
       self.delta = function(i)
       {
@@ -55,7 +56,7 @@ var GamePlayScene = function(game, stage)
         {
           self.data_t -= 1;
           self.data_from_i++;
-          while(self.data_from_i > self.data_layers-2)
+          while(self.data_from_i > self.data.length-2)
           {
             self.data_from_i--;
             self.data_t = 1;
@@ -87,14 +88,12 @@ var GamePlayScene = function(game, stage)
     c.min_y = -1;
     c.max_y = 1;
 
-    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push(sin(i/10));
-    c.data_layers++;
-    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push(cos(i/10));
-    c.data_layers++;
-    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push(i/100);
-    c.data_layers++;
-    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push(sqrt(i));
-    c.data_layers++;
+    c.data.push([]); for(var i = 0; i < c.data_pts; i++) c.data[c.data.length-1].push(sin(i/10));
+    c.data.push([]); for(var i = 0; i < c.data_pts; i++) c.data[c.data.length-1].push(cos(i/10));
+    c.data.push([]); for(var i = 0; i < c.data_pts; i++) c.data[c.data.length-1].push(i/100);
+    c.data.push([]); for(var i = 0; i < c.data_pts; i++) c.data[c.data.length-1].push(sqrt(i));
+
+    c.error_ranges.push({min:2.3,max:4});
 
     self.channels[0] = c;
 
@@ -107,14 +106,10 @@ var GamePlayScene = function(game, stage)
     c.min_y = -1;
     c.max_y = 1;
 
-    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push((i/100));
-    c.data_layers++;
-    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push((i/100)*2);
-    c.data_layers++;
-    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push(pow((i/100),2));
-    c.data_layers++;
-    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push(pow(2,(i/100)));
-    c.data_layers++;
+    c.data.push([]); for(var i = 0; i < c.data_pts; i++) c.data[c.data.length-1].push((i/100));
+    c.data.push([]); for(var i = 0; i < c.data_pts; i++) c.data[c.data.length-1].push((i/100)*2);
+    c.data.push([]); for(var i = 0; i < c.data_pts; i++) c.data[c.data.length-1].push(pow((i/100),2));
+    c.data.push([]); for(var i = 0; i < c.data_pts; i++) c.data[c.data.length-1].push(pow(2,(i/100)));
 
     self.channels[1] = c;
 
@@ -198,9 +193,10 @@ var GamePlayScene = function(game, stage)
     channel_btns.push(btn);
     channel_colors.push("#008800");
 
+    alert_t = 0;
+
     clicker = new Clicker({source:stage.dispCanv.canvas});
     dragger = new Dragger({source:stage.dispCanv.canvas});
-
   };
 
   self.tick = function()
@@ -213,6 +209,18 @@ var GamePlayScene = function(game, stage)
     clicker.flush();
     dragger.flush();
 
+    var in_error = false;
+    for(var i = 0; i < my_graph.channels.length; i++)
+    {
+      var c = my_graph.channels[i];
+      for(var j = 0; j < c.error_ranges.length; j++)
+      {
+        var v = c.data_from_i+c.data_t;
+        if(v > c.error_ranges[j].min && v < c.error_ranges[j].max) in_error = true;
+      }
+    }
+    if(in_error) alert_t += 0.1;
+    else         alert_t = 0;
   };
 
   self.draw = function()
@@ -228,7 +236,14 @@ var GamePlayScene = function(game, stage)
     my_knob.draw(canv);
     var sel_c = my_graph.channels[selected_channel];
     ctx.font = "30px Arial";
+    ctx.fillStyle = "#000000";
     ctx.fillText(fdisp(sel_c.data_from_i+sel_c.data_t),my_knob.x+my_knob.w+20,my_knob.y+my_knob.h/2+10);
+
+    if(alert_t)
+    {
+      ctx.fillStyle = "rgba(255,0,0,"+(psin(alert_t)/2)+")";
+      ctx.fillRect(0,0,canv.width,canv.height);
+    }
   };
 
   self.cleanup = function()
