@@ -15,7 +15,9 @@ function jsonFromURL()
 }
 
 //math (raw)
+function isTo(a,b,v) { return (v/a)*b;  } //"a isTo b as v isTo ..."
 function mapVal(from_min, from_max, to_min, to_max, v) { return ((v-from_min)/(from_max-from_min))*(to_max-to_min)+to_min; }
+function clampMapVal(from_min, from_max, to_min, to_max, v) { return clamp(to_min,to_max,((v-from_min)/(from_max-from_min))*(to_max-to_min)+to_min); }
 function clamp(a,b,v) { if(v < a) return a; if(v > b) return b; return v; }
 function eq(a,b,e) { return (a < b+e && a > b-e); }
 function lerp(s,e,t) { return s+((e-s)*t); }
@@ -29,6 +31,18 @@ function clerp(s,e,t)
   else if(s > e && s-e > (e+Math.PI*2)-s) e += Math.PI*2;
 
   return lerp(s,e,t)%(Math.PI*2);
+}
+function ccwdist(from,to)
+{
+  while(from < 0)         from += Math.PI*2;
+  while(to   < 0)         to   += Math.PI*2;
+  while(from > Math.PI*2) from -= Math.PI*2;
+  while(to   > Math.PI*2) to   -= Math.PI*2;
+  var dist = to-from;
+  if(dist >  Math.PI) dist -= Math.PI*2;
+  if(dist < -Math.PI) dist += Math.PI*2;
+
+  return dist;
 }
 function cdist(a,b)
 {
@@ -49,6 +63,14 @@ function dist(ax,ay,bx,by)
 {
   var x = bx-ax;
   var y = by-ay;
+  return Math.sqrt(x*x+y*y);
+}
+function lensqr(x,y)
+{
+  return x*x+y*y;
+}
+function len(x,y)
+{
   return Math.sqrt(x*x+y*y);
 }
 function randIntBelow(n) { return Math.floor(Math.random()*n); }

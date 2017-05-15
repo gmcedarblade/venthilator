@@ -688,3 +688,87 @@ function BinBox(x,y,w,h,drag_start_callback,drag_callback,drag_finish_callback,p
   }
 }
 
+function KnobBox(x,y,w,h,min_val,max_val,cwdelta,val,callback)
+//register to dragger
+{
+  var self = this;
+  self.x = x;
+  self.y = y;
+  self.w = w;
+  self.h = h;
+
+  self.min_val = min_val;
+  self.max_val = max_val;
+  self.cwdelta = cwdelta;
+  self.val = val;
+
+  self.last_x = 0;
+  self.last_y = 0;
+  self.last_theta = 0;
+  self.viz_theta = 0;
+
+  self.dragging = false;
+  self.dragStart = function(evt)
+  {
+    evt.hit_ui = true;
+    self.dragging = true;
+    self.drag(evt);
+  }
+  self.drag = function(evt)
+  {
+    evt.hit_ui = true;
+    var x = evt.doX-(self.x+self.w/2);
+    var y = evt.doY-(self.y+self.h/2);
+    if(lensqr(x,y) < 100)
+    {
+      self.last_x = 0;
+      self.last_y = 0;
+      self.last_theta = 0;
+    }
+    else
+    {
+      var theta = atan2(y,x);
+      if(!(self.last_x == 0 && self.last_y == 0))
+      {
+        var delta = ccwdist(self.last_theta,theta);
+        self.viz_theta += delta;
+        var oldval = self.val
+        self.set(self.val + delta * self.cwdelta);
+        callback(self.val-oldval);
+      }
+      self.last_x = x;
+      self.last_y = y;
+      self.last_theta = theta;
+    }
+  }
+  self.dragFinish = function()
+  {
+    self.last_x = 0;
+    self.last_y = 0;
+    self.last_theta = 0;
+    self.dragging = false;
+  }
+  self.set = function(v)
+  {
+    self.val = clamp(self.min_val,self.max_vel,v);
+  }
+
+  self.draw = function(canv)
+  {
+    canv.context.strokeStyle = "#333333";
+    canv.context.strokeRect(self.x,self.y,self.w,self.h);
+    canv.context.beginPath();
+    canv.context.arc(self.x+self.w/2,self.y+self.h/2,self.w/2,0,2*Math.PI);
+    canv.context.stroke();
+    canv.context.beginPath();
+    canv.context.moveTo(self.x+self.w/2,self.y+self.h/2);
+    canv.context.lineTo(self.x+self.w/2+cos(self.viz_theta)*self.w/2,self.y+self.h/2+sin(self.viz_theta)*self.w/2);
+    canv.context.stroke();
+
+  }
+
+  self.print = function()
+  {
+  }
+}
+
