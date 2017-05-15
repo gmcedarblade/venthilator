@@ -9,6 +9,11 @@ var GamePlayScene = function(game, stage)
   var cam = {wx:0,wy:0,ww:1,wh:2};
   var my_graph;
   var my_knob;
+  var selected_channel = 0;
+  var channel_0_btn;
+  var channel_1_btn;
+  var channel_2_btn;
+  var clicker;
   var dragger;
 
   var graph = function()
@@ -85,6 +90,26 @@ var GamePlayScene = function(game, stage)
 
     self.channels[0] = c;
 
+
+    c = new channel();
+    c.data = [];
+    c.data_pts = 100;
+    c.data_from_i = 0;
+    c.data_t = 0;
+    c.min_y = -1;
+    c.max_y = 1;
+
+    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push((i/100));
+    c.data_layers++;
+    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push((i/100)*2);
+    c.data_layers++;
+    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push(pow((i/100),2));
+    c.data_layers++;
+    c.data[c.data_layers] = []; for(var i = 0; i < c.data_pts; i++) c.data[c.data_layers].push(pow(2,(i/100)));
+    c.data_layers++;
+
+    self.channels[1] = c;
+
     self.draw = function()
     {
       var c;
@@ -123,8 +148,8 @@ var GamePlayScene = function(game, stage)
 
     my_knob = new KnobBox(0,0,0,0, 0,1,0.1,0,function(v)
     {
-      for(var i = 0; i < my_graph.channels.length; i++)
-        my_graph.channels[i].delta(v);
+      //for(var i = 0; i < my_graph.channels.length; i++)
+       my_graph.channels[selected_channel].delta(v);
     });
     my_knob.wx = -0.25;
     my_knob.wy = 0.5;
@@ -132,6 +157,21 @@ var GamePlayScene = function(game, stage)
     my_knob.wh = 0.1;
     screenSpace(cam,canv,my_knob);
 
+    channel_0_btn = new ButtonBox(0,0,0,0, function(){selected_channel = 0;})
+    channel_0_btn.wx = -0.25;
+    channel_0_btn.wy = -0.5;
+    channel_0_btn.ww = 0.1;
+    channel_0_btn.wh = 0.1;
+    screenSpace(cam,canv,channel_0_btn);
+
+    channel_1_btn = new ButtonBox(0,0,0,0, function(){selected_channel = 1;})
+    channel_1_btn.wx = 0.;
+    channel_1_btn.wy = -0.5;
+    channel_1_btn.ww = 0.1;
+    channel_1_btn.wh = 0.1;
+    screenSpace(cam,canv,channel_1_btn);
+
+    clicker = new Clicker({source:stage.dispCanv.canvas});
     dragger = new Dragger({source:stage.dispCanv.canvas});
 
   };
@@ -140,7 +180,10 @@ var GamePlayScene = function(game, stage)
   {
     n_ticks++;
 
+    clicker.filter(channel_0_btn);
+    clicker.filter(channel_1_btn);
     dragger.filter(my_knob);
+    clicker.flush();
     dragger.flush();
 
   };
@@ -148,6 +191,8 @@ var GamePlayScene = function(game, stage)
   self.draw = function()
   {
     my_graph.draw();
+    channel_0_btn.draw(canv);
+    channel_1_btn.draw(canv);
     my_knob.draw(canv);
   };
 
