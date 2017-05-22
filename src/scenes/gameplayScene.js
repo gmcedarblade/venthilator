@@ -201,7 +201,7 @@ var GamePlayScene = function(game, stage)
 
     my_graph = new graph();
     my_graph.wx = 0;
-    my_graph.wy = 0.4;
+    my_graph.wy = 0.3;
     my_graph.ww = cam.ww-0.1;
     my_graph.wh = 0.2;
     screenSpace(cam,canv,my_graph);
@@ -209,7 +209,7 @@ var GamePlayScene = function(game, stage)
 
     deriv_graph = new graph();
     deriv_graph.wx = 0;
-    deriv_graph.wy = 0.62;
+    deriv_graph.wy = 0.52;
     deriv_graph.ww = cam.ww-0.1;
     deriv_graph.wh = 0.2;
     screenSpace(cam,canv,deriv_graph);
@@ -303,6 +303,14 @@ var GamePlayScene = function(game, stage)
   {
     my_graph.draw();
     deriv_graph.draw();
+
+    ctx.fillStyle = "#000000"
+    ctx.font = "10px Arial";
+    ctx.fillText(fdisp(my_data.wavelength),10,20);
+    ctx.fillText(fdisp(my_data.amplitude),40,20);
+    ctx.fillText(fdisp(my_data.spacing),70,20);
+    ctx.fillText(fdisp(my_data.offset),100,20);
+    ctx.fillText(fdisp(my_data.pulse_from_i+my_data.pulse_t),140,20);
 
     ctx.fillStyle = "#AAAAAA";
     ctx.fillRect(channel_btns[selected_channel].x,channel_btns[selected_channel].y,channel_btns[selected_channel].w,channel_btns[selected_channel].h);
