@@ -8,6 +8,9 @@ var GamePlayScene = function(game, stage)
   var n_ticks = 0;
   var cam = {wx:0,wy:0,ww:1,wh:2};
   var my_graph;
+  var deriv_graph;
+  var my_data;
+  var deriv_data;
   var my_knob;
   var selected_channel = 0;
   var channel_btns;
@@ -23,22 +26,9 @@ var GamePlayScene = function(game, stage)
   var CHANNEL_OFFSET     = ENUM; ENUM++;
   var CHANNEL_PULSE      = ENUM; ENUM++;
 
-  var graph = function()
+  var graph_data = function()
   {
     var self = this;
-    self.x = 0;
-    self.y = 0;
-    self.w = 0;
-    self.h = 0;
-    self.wx = 0;
-    self.wy = 0;
-    self.ww = 0;
-    self.wh = 0;
-
-    self.cache;
-    self.dirty = true;
-
-    self.gen_cache = function() { self.cache = GenIcon(self.w,self.h); }
 
     self.pulses = [];
     self.pulse_pts = 1000;
@@ -136,8 +126,43 @@ var GamePlayScene = function(game, stage)
         gen_data_t_in_state += 1/self.data_pts;
         gen_data_advance_state();
       }
+    }
+    self.deriv_data = function(data)
+    {
+      for(var i = 0; i < self.data_pts-1; i++)
+        self.data[i] = data.data[i+1]-data.data[i];
+      self.data[self.data_pts-1] = self.data[self.data_pts-2];
+    }
+  }
+  var graph = function()
+  {
+    var self = this;
+    self.x = 0;
+    self.y = 0;
+    self.w = 0;
+    self.h = 0;
+    self.wx = 0;
+    self.wy = 0;
+    self.ww = 0;
+    self.wh = 0;
+
+    self.cache;
+    self.dirty = true;
+    self.data_pts = 100;
+    self.data = [];
+    self.min_y = 0;
+    self.max_y = 0;
+
+    self.consume_data = function(gd)
+    {
+      self.data = gd.data;
+      self.data_pts = gd.data_pts;
+      self.min_y = gd.min_y;
+      self.max_y = gd.max_y;
       self.dirty = true;
     }
+
+    self.gen_cache = function() { self.cache = GenIcon(self.w,self.h); }
 
     self.draw = function()
     {
@@ -178,33 +203,52 @@ var GamePlayScene = function(game, stage)
     my_graph.wx = 0;
     my_graph.wy = 0.4;
     my_graph.ww = cam.ww-0.1;
-    my_graph.wh = my_graph.ww/2;
+    my_graph.wh = 0.2;
     screenSpace(cam,canv,my_graph);
     my_graph.gen_cache();
-    my_graph.gen_data();
+
+    deriv_graph = new graph();
+    deriv_graph.wx = 0;
+    deriv_graph.wy = 0.62;
+    deriv_graph.ww = cam.ww-0.1;
+    deriv_graph.wh = 0.2;
+    screenSpace(cam,canv,deriv_graph);
+    deriv_graph.gen_cache();
+
+    my_data = new graph_data();
+    my_data.gen_data();
+    deriv_data = new graph_data();
+    deriv_data.min_y = -0.1;
+    deriv_data.max_y = 0.1;
+    deriv_data.deriv_data(my_data);
+    my_graph.consume_data(my_data);
+    deriv_graph.consume_data(deriv_data);
 
     my_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
     {
       switch(selected_channel)
       {
         case CHANNEL_WAVELENGTH:
-          my_graph.wavelength = clamp(0.01,1,my_graph.wavelength+v);
+          my_data.wavelength = clamp(0.01,1,my_data.wavelength+v);
           break;
         case CHANNEL_AMPLITUDE:
-          my_graph.amplitude = clamp(0,1,my_graph.amplitude+v);
+          my_data.amplitude = clamp(0,1,my_data.amplitude+v);
           break;
         case CHANNEL_SPACING:
-          my_graph.spacing = clamp(0,1,my_graph.spacing+v);
+          my_data.spacing = clamp(0,1,my_data.spacing+v);
           break;
         case CHANNEL_OFFSET:
-          my_graph.offset = clamp(-1,1,my_graph.offset+v);
+          my_data.offset = clamp(-1,1,my_data.offset+v);
           break;
         case CHANNEL_PULSE:
-          my_graph.delta_pulse(v);
+          my_data.delta_pulse(v);
           break;
       }
       my_knob.val = 0;
-      my_graph.gen_data();
+      my_data.gen_data();
+      deriv_data.deriv_data(my_data);
+      my_graph.consume_data(my_data);
+      deriv_graph.consume_data(deriv_data);
     });
     my_knob.wx = -0.3;
     my_knob.wy = -0.1;
@@ -220,18 +264,19 @@ var GamePlayScene = function(game, stage)
       btn.title = title;
       btn.wx = x;
       btn.wy = 0.1
-      btn.ww = 0.1;
+      btn.ww = 0.15;
       btn.wh = 0.1;
       screenSpace(cam,canv,btn);
       channel_btns[channel] = btn;
     }
 
-    x = -0.4;
-    genBtn(CHANNEL_WAVELENGTH,"wavelength",x); x += 0.11;
-    genBtn(CHANNEL_AMPLITUDE,"amplitude",x); x += 0.11;
-    genBtn(CHANNEL_SPACING,"spacing",x); x += 0.11;
-    genBtn(CHANNEL_OFFSET,"offset",x); x += 0.11;
-    genBtn(CHANNEL_PULSE,"pulse",x); x += 0.11;
+    var x = -0.32;
+    var s = 0.16;
+    genBtn(CHANNEL_WAVELENGTH,"wavelength",x); x += s;
+    genBtn(CHANNEL_AMPLITUDE,"amplitude",x); x += s;
+    genBtn(CHANNEL_SPACING,"spacing",x); x += s;
+    genBtn(CHANNEL_OFFSET,"offset",x); x += s;
+    genBtn(CHANNEL_PULSE,"pulse",x); x += s;
 
     alert_t = 0;
 
@@ -257,12 +302,18 @@ var GamePlayScene = function(game, stage)
   self.draw = function()
   {
     my_graph.draw();
+    deriv_graph.draw();
 
     ctx.fillStyle = "#AAAAAA";
-    ctx.strokeStyle = "#000000";
     ctx.fillRect(channel_btns[selected_channel].x,channel_btns[selected_channel].y,channel_btns[selected_channel].w,channel_btns[selected_channel].h);
+    ctx.strokeStyle = "#000000";
+    ctx.fillStyle = "#000000"
+    ctx.font = "10px Arial";
     for(var i = 0; i < channel_btns.length; i++)
+    {
       ctx.strokeRect(channel_btns[i].x,channel_btns[i].y,channel_btns[i].w,channel_btns[i].h);
+      ctx.fillText(channel_btns[i].title,channel_btns[i].x+2,channel_btns[i].y+channel_btns[i].h/2+5);
+    }
 
     my_knob.draw(canv);
     ctx.font = "30px Arial";
