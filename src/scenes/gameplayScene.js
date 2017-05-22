@@ -9,11 +9,14 @@ var GamePlayScene = function(game, stage)
   var cam = {wx:0,wy:0,ww:1,wh:2};
   var my_graph;
   var deriv_graph;
+  var commit_my_graph;
+  var commit_deriv_graph;
   var my_data;
   var deriv_data;
   var my_knob;
   var selected_channel = 0;
   var channel_btns;
+  var commit_btn;
   var alert_t;
   var clicker;
   var dragger;
@@ -215,6 +218,22 @@ var GamePlayScene = function(game, stage)
     screenSpace(cam,canv,deriv_graph);
     deriv_graph.gen_cache();
 
+    commit_my_graph = new graph();
+    commit_my_graph.wx = my_graph.wx;
+    commit_my_graph.wy = my_graph.wy;
+    commit_my_graph.ww = my_graph.ww;
+    commit_my_graph.wh = my_graph.wh;
+    screenSpace(cam,canv,commit_my_graph);
+    commit_my_graph.gen_cache();
+
+    commit_deriv_graph = new graph();
+    commit_deriv_graph.wx = deriv_graph.wx;
+    commit_deriv_graph.wy = deriv_graph.wy;
+    commit_deriv_graph.ww = deriv_graph.ww;
+    commit_deriv_graph.wh = deriv_graph.wh;
+    screenSpace(cam,canv,commit_deriv_graph);
+    commit_deriv_graph.gen_cache();
+
     my_data = new graph_data();
     my_data.gen_data();
     deriv_data = new graph_data();
@@ -223,6 +242,8 @@ var GamePlayScene = function(game, stage)
     deriv_data.deriv_data(my_data);
     my_graph.consume_data(my_data);
     deriv_graph.consume_data(deriv_data);
+    commit_my_graph.consume_data(my_data);
+    commit_deriv_graph.consume_data(deriv_data);
 
     my_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
     {
@@ -278,6 +299,14 @@ var GamePlayScene = function(game, stage)
     genBtn(CHANNEL_OFFSET,"offset",x); x += s;
     genBtn(CHANNEL_PULSE,"pulse",x); x += s;
 
+    commit_btn = new ButtonBox(0,0,0,0, function(){ commit_my_graph.consume_data(my_data); commit_deriv_graph.consume_data(deriv_data); })
+    commit_btn.title = "hello";
+    commit_btn.wx = 0.3;
+    commit_btn.wy = -0.5
+    commit_btn.ww = 0.15;
+    commit_btn.wh = 0.1;
+    screenSpace(cam,canv,commit_btn);
+
     alert_t = 0;
 
     clicker = new Clicker({source:stage.dispCanv.canvas});
@@ -290,6 +319,7 @@ var GamePlayScene = function(game, stage)
 
     for(var i = 0; i < channel_btns.length; i++)
       clicker.filter(channel_btns[i]);
+    clicker.filter(commit_btn);
     dragger.filter(my_knob);
     clicker.flush();
     dragger.flush();
@@ -303,6 +333,8 @@ var GamePlayScene = function(game, stage)
   {
     my_graph.draw();
     deriv_graph.draw();
+    commit_my_graph.draw();
+    commit_deriv_graph.draw();
 
     ctx.fillStyle = "#000000"
     ctx.font = "10px Arial";
@@ -322,6 +354,8 @@ var GamePlayScene = function(game, stage)
       ctx.strokeRect(channel_btns[i].x,channel_btns[i].y,channel_btns[i].w,channel_btns[i].h);
       ctx.fillText(channel_btns[i].title,channel_btns[i].x+2,channel_btns[i].y+channel_btns[i].h/2+5);
     }
+
+    ctx.strokeRect(commit_btn.x,commit_btn.y,commit_btn.w,commit_btn.h);
 
     my_knob.draw(canv);
     ctx.font = "30px Arial";
