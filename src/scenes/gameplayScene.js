@@ -14,6 +14,12 @@ var GamePlayScene = function(game, stage)
   var MODE_VOLUME   = ENUM; ENUM++;
   var MODE_PRESSURE = ENUM; ENUM++;
   ENUM = 0;
+  var OUT_CHANNEL_MODE    = ENUM; ENUM++;
+  var OUT_CHANNEL_RATE    = ENUM; ENUM++;
+  var OUT_CHANNEL_FLOW    = ENUM; ENUM++;
+  var OUT_CHANNEL_OXY     = ENUM; ENUM++;
+  var OUT_CHANNEL_TIMEOUT = ENUM; ENUM++;
+  ENUM = 0;
   var IN_CHANNEL_MODE    = ENUM; ENUM++;
   var IN_CHANNEL_RATE    = ENUM; ENUM++;
   var IN_CHANNEL_FLOW    = ENUM; ENUM++;
@@ -23,51 +29,62 @@ var GamePlayScene = function(game, stage)
   var GRAPH_TYPE_VOLUME   = ENUM; ENUM++;
   var GRAPH_TYPE_PRESSURE = ENUM; ENUM++;
   var GRAPH_TYPE_FLOW     = ENUM; ENUM++;
-  ENUM = 0;
-  var GRAPH_BASE       = ENUM; ENUM++;
-  var GRAPH_DERIVATIVE = ENUM; ENUM++;
 
-  var min_in_volume = 1;
-  var max_in_volume = 2;
+  var min_in_volume = 0;
+  var max_in_volume = 2000;
   var min_in_pressure = 1;
   var max_in_pressure = 2;
-  var min_in_rate = 1;
-  var max_in_rate = 2;
-  var min_in_flow = 1;
-  var max_in_flow = 2;
-  var min_in_oxy = 1;
-  var max_in_oxy = 2;
-  var min_in_timeout = 1;
-  var max_in_timeout = 2;
+  var min_in_rate = 0;
+  var max_in_rate = 40;
+  var min_in_flow = 15;
+  var max_in_flow = 100;
+  var min_in_oxy = 21;
+  var max_in_oxy = 100;
+  var min_in_timeout = 0;
+  var max_in_timeout = 1;
+
+  var min_offset = 0;
+  var max_offset = 1;
+  var min_wavelength = 0.01;
+  var max_wavelength = 1;
+  var min_amplitude = 0;
+  var max_amplitude = 1;
+  var min_spacing = 0;
+  var max_spacing = 1;
 
   //data
   var selected_mode = 0;
   var selected_channel = 0;
   var alert_t = 0;
-  var in_volume = min_in_volume;
-  var in_pressure = min_in_pressure;
-  var in_rate = min_in_rate;
-  var in_flow = min_in_flow;
-  var in_oxy = min_in_oxy;
-  var in_timeout = min_in_timeout;
+  var norm_in_volume   = 0.5;
+  var norm_in_pressure = 0.5;
+  var norm_in_rate     = 0.8;
+  var norm_in_flow     = 0.5;
+  var norm_in_oxy      = 0.5;
+  var norm_in_timeout  = 0.1;
+  var in_volume   = lerp(min_in_volume,   max_in_volume,   norm_in_volume);
+  var in_pressure = lerp(min_in_pressure, max_in_pressure, norm_in_pressure);
+  var in_rate     = lerp(min_in_rate,     max_in_rate,     norm_in_rate);
+  var in_flow     = lerp(min_in_flow,     max_in_flow,     norm_in_flow);
+  var in_oxy      = lerp(min_in_oxy,      max_in_oxy,      norm_in_oxy);
+  var in_timeout  = lerp(min_in_timeout,  max_in_timeout,  norm_in_timeout);
   var patient_compliance = 1;
   var patient_volume = 0;
   var patient_pressure = 0;
 
   //ui state
   var selected_graph_type = 0;
-  var selected_graph_mode = 0;
+  var blip_t = 0;
 
   //ui
   var patient_volume_graph;
   var patient_pressure_graph;
   var patient_flow_graph;
   var my_knob;
+  var out_channel_btns;
   var in_channel_btns;
   var graph_type_btns;
-  var mode_btn;
   var graph_type_btn;
-  var graph_mode_btn;
   var commit_btn;
 
   //filters
@@ -99,6 +116,10 @@ var GamePlayScene = function(game, stage)
     var j = 0;
     self.pulses[j] = [];
     for(var i = 0; i < self.pulse_pts; i++)
+      self.pulses[j][i] = pcos((i/self.pulse_pts)*twopi-pi)+pcos((i/self.pulse_pts)*2*twopi-pi)/2;
+    j++;
+    self.pulses[j] = [];
+    for(var i = 0; i < self.pulse_pts; i++)
       self.pulses[j][i] = pcos((i/self.pulse_pts)*twopi-pi);
     j++;
     self.pulses[j] = [];
@@ -108,10 +129,10 @@ var GamePlayScene = function(game, stage)
 
     self.pulse_from_i = 0;
     self.pulse_t = 0;
-    self.offset = 0.1;
-    self.wavelength = 0.1;
-    self.amplitude = 1.;
-    self.spacing = 0.1;
+    self.offset     = min_offset;
+    self.wavelength = lerp(min_wavelength,max_wavelength,0.5);
+    self.amplitude  = lerp(min_amplitude,max_amplitude,0.5);
+    self.spacing    = lerp(min_spacing,max_spacing,0.5);
 
     self.data = [];
     self.data_pts = 1000;
@@ -191,12 +212,6 @@ var GamePlayScene = function(game, stage)
         gen_data_advance_state();
       }
     }
-    self.deriv_data = function(data)
-    {
-      for(var i = 0; i < self.data_pts-1; i++)
-        self.data[i] = data.data[i+1]-data.data[i];
-      self.data[self.data_pts-1] = self.data[self.data_pts-2];
-    }
   }
 
   var graph_set = function()
@@ -213,14 +228,9 @@ var GamePlayScene = function(game, stage)
 
     self.graph = new graph();
     self.commit_graph = new graph();
-    self.deriv_graph = new graph();
-    self.commit_deriv_graph = new graph();
 
     self.data = new graph_data();
     self.data.gen_data();
-    self.deriv_data = new graph_data();
-    //self.deriv_data.min_y = -0.1;
-    //self.deriv_data.max_y = 0.1;
 
     var apply_size_graph = function(g)
     {
@@ -238,35 +248,22 @@ var GamePlayScene = function(game, stage)
     {
       apply_size_graph(self.graph);
       apply_size_graph(self.commit_graph);
-      apply_size_graph(self.deriv_graph);
-      apply_size_graph(self.commit_deriv_graph);
     }
 
     self.update = function()
     {
       self.data.gen_data();
       self.graph.consume_data(self.data);
-      self.deriv_data.deriv_data(self.data);
-      self.deriv_graph.consume_data(self.deriv_data);
     }
     self.commit = function()
     {
       self.commit_graph.consume_data(self.data);
-      self.commit_deriv_graph.consume_data(self.deriv_data);
     }
 
-    self.draw = function(deriv)
+    self.draw = function()
     {
-      if(!deriv)
-      {
-        self.graph.draw();
-        self.commit_graph.draw();
-      }
-      if(deriv)
-      {
-        self.deriv_graph.draw();
-        self.commit_deriv_graph.draw();
-      }
+      //self.graph.draw();
+      self.commit_graph.draw();
     }
   }
 
@@ -325,44 +322,59 @@ var GamePlayScene = function(game, stage)
         self.dirty = false
       }
 
-      ctx.drawImage(self.cache,self.x,self.y,self.w,self.h);
+      ctx.drawImage(self.cache,0,0,self.w*blip_t,self.h,self.x,self.y,self.w*blip_t,self.h);
       ctx.strokeStyle = "#000000";
       ctx.strokeRect(self.x,self.y,self.w,self.h);
     }
   }
 
-  var genInChannelBtn = function(channel, title, x)
-  {
-    btn = new ButtonBox(0,0,0,0, function(){selected_channel = channel; })
-    btn.title = title;
-    btn.wx = x;
-    btn.wy = 0.1
-    btn.ww = 0.15;
-    btn.wh = 0.1;
-    screenSpace(cam,canv,btn);
-    in_channel_btns[channel] = btn;
-  }
   var genGraphTypeBtn = function(type, title, x)
   {
     btn = new ButtonBox(0,0,0,0, function(){selected_graph_type = type; })
     btn.title = title;
     btn.wx = x;
-    btn.wy = 0.21
+    btn.wy = 0.2;
     btn.ww = 0.15;
     btn.wh = 0.1;
     screenSpace(cam,canv,btn);
     graph_type_btns[type] = btn;
   }
-  var drawBtn = function(btn)
+  var genOutChannelBtn = function(channel, title, x)
+  {
+    btn = new ButtonBox(0,0,0,0, function(){selected_channel = channel; })
+    btn.channel = channel;
+    btn.title = title;
+    btn.wh = 0.1;
+    btn.ww = 0.15;
+    btn.wx = x;
+    btn.wy = 0.75-(btn.ww/2)-0.05;
+    screenSpace(cam,canv,btn);
+    out_channel_btns[channel] = btn;
+  }
+  var genInChannelBtn = function(channel, title, x)
+  {
+    btn = new ButtonBox(0,0,0,0, function(){selected_channel = channel; })
+    btn.channel = channel;
+    btn.title = title;
+    btn.wx = x;
+    btn.wy = -0.1
+    btn.ww = 0.15;
+    btn.wh = 0.1;
+    screenSpace(cam,canv,btn);
+    in_channel_btns[channel] = btn;
+  }
+  var drawBtn = function(btn,sub,subsub)
   {
     ctx.strokeRect(btn.x,btn.y,btn.w,btn.h);
-    ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2+5);
+    ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2-10);
+    if(sub) ctx.fillText(sub,btn.x+2,btn.y+btn.h/2+5);
+    if(subsub) ctx.fillText(subsub,btn.x+2,btn.y+btn.h/2+15);
   }
 
   var setup_graph_set = function(gs)
   {
     gs.wx = 0;
-    gs.wy = 0.5;
+    gs.wy = 0.4;
     gs.ww = cam.ww-0.1;
     gs.wh = 0.2;
     screenSpace(cam,canv,gs);
@@ -370,6 +382,27 @@ var GamePlayScene = function(game, stage)
 
     gs.update();
     gs.commit();
+  }
+
+  var update_graphs = function()
+  {
+    for(var i = 0; i < 3; i++)
+    {
+      var cur_graph;
+      switch(i)
+      {
+        case 0: cur_graph = patient_volume_graph;   cur_graph.data.offset = 0.2; break;
+        case 1: cur_graph = patient_pressure_graph; break;
+        case 2: cur_graph = patient_flow_graph;     cur_graph.data.offset = 0.3; break;
+      }
+
+           if(selected_mode == MODE_VOLUME)   cur_graph.data.amplitude = lerp(min_amplitude, max_amplitude, norm_in_volume);
+      else if(selected_mode == MODE_PRESSURE) cur_graph.data.amplitude = lerp(min_amplitude, max_amplitude, norm_in_pressure);
+
+      cur_graph.data.wavelength = lerp(min_wavelength, max_wavelength, norm_in_rate);
+      cur_graph.data.spacing    = lerp(min_spacing,    max_spacing,    norm_in_timeout);
+      cur_graph.update();
+    }
   }
 
   self.ready = function()
@@ -388,75 +421,80 @@ var GamePlayScene = function(game, stage)
       switch(selected_channel)
       {
         case IN_CHANNEL_MODE:
-               if(selected_mode == MODE_VOLUME)   in_volume   = clamp(min_in_volume,  max_in_volume,   in_volume  +v);
-          else if(selected_mode == MODE_PRESSURE) in_pressure = clamp(min_in_pressure,max_in_pressure, in_pressure+v);
+               if(selected_mode == MODE_VOLUME)   norm_in_volume   = clamp(0, 1, norm_in_volume  +v);
+          else if(selected_mode == MODE_PRESSURE) norm_in_pressure = clamp(0, 1, norm_in_pressure+v);
+          in_volume   = lerp(min_in_volume,   max_in_volume,   norm_in_volume);
+          in_pressure = lerp(min_in_pressure, max_in_pressure, norm_in_pressure);
           break;
         case IN_CHANNEL_RATE:
-          in_rate = clamp(min_in_rate,max_in_rate,in_rate+v);
+          norm_in_rate = clamp(0,1,norm_in_rate+v);
+          in_rate = lerp(min_in_rate, max_in_rate, norm_in_rate);
           break;
         case IN_CHANNEL_FLOW:
-          in_flow = clamp(min_in_flow,max_in_flow,in_flow+v);
+          norm_in_flow = clamp(0,1,norm_in_flow+v);
+          in_flow = lerp(min_in_flow, max_in_flow, norm_in_flow);
           break;
         case IN_CHANNEL_OXY:
-          in_oxy = clamp(min_in_oxy,max_in_oxy,in_oxy+v);
+          norm_in_oxy = clamp(0,1,norm_in_oxy+v);
+          in_oxy = lerp(min_in_oxy, max_in_oxy, norm_in_oxy);
           break;
         case IN_CHANNEL_TIMEOUT:
-          in_timeout = clamp(min_in_timeout,max_in_timeout,in_timeout+v);
+          norm_in_timeout = clamp(0,1,norm_in_timeout+v);
+          in_timeout = lerp(min_in_timeout, max_in_timeout, norm_in_timeout);
           break;
       }
+      update_graphs();
+
       my_knob.val = 0;
     });
-    my_knob.wx = -0.3;
-    my_knob.wy = -0.1;
     my_knob.ww = 0.2;
+    my_knob.wx = 0.5-(my_knob.ww/2)-0.05 - (0.15+0.05);
     my_knob.wh = 0.2;
+    my_knob.wy = -0.5+(my_knob.wh/2)+0.05;
     screenSpace(cam,canv,my_knob);
 
+    out_channel_btns = [];
     in_channel_btns = [];
     graph_type_btns = [];
 
-    var x = -0.32;
-    var s = 0.16;
+    var x = -0.5+(0.15/2)+0.05;
+    var s = 0.15+0.02;
+    genOutChannelBtn(OUT_CHANNEL_MODE,   "Volume", x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_RATE,   "Rate",   x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_FLOW,   "Flow",   x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_OXY,    "Oxygen", x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_TIMEOUT,"Timeout",x); x += s;
+    x = -0.5+(0.15/2)+0.05;
     genInChannelBtn(IN_CHANNEL_MODE,   "Volume", x); x += s;
     genInChannelBtn(IN_CHANNEL_RATE,   "Rate",   x); x += s;
     genInChannelBtn(IN_CHANNEL_FLOW,   "Flow",   x); x += s;
     genInChannelBtn(IN_CHANNEL_OXY,    "Oxygen", x); x += s;
     genInChannelBtn(IN_CHANNEL_TIMEOUT,"Timeout",x); x += s;
-    x = -0.32;
+    x = -0.5+(0.15/2)+0.05;
     genGraphTypeBtn(GRAPH_TYPE_VOLUME,   "Volume",   x); x += s;
     genGraphTypeBtn(GRAPH_TYPE_PRESSURE, "Pressure", x); x += s;
     genGraphTypeBtn(GRAPH_TYPE_FLOW,     "Flow",     x); x += s;
 
-    mode_btn = new ButtonBox(0,0,0,0, function(){ if(selected_mode == MODE_VOLUME) selected_mode = MODE_PRESSURE; else if(selected_mode == MODE_PRESSURE) selected_mode = MODE_VOLUME; })
-    mode_btn.title = "Mode";
-    mode_btn.wx = 0;
-    mode_btn.wy = -0.5
-    mode_btn.ww = 0.15;
-    mode_btn.wh = 0.1;
-    screenSpace(cam,canv,mode_btn);
-
-    graph_mode_btn = new ButtonBox(0,0,0,0, function(){ if(selected_graph_mode == GRAPH_BASE) selected_graph_mode = GRAPH_DERIVATIVE; else if(selected_graph_mode == GRAPH_DERIVATIVE) selected_graph_mode = GRAPH_BASE; })
-    graph_mode_btn.title = "Graph";
-    graph_mode_btn.wx = 0;
-    graph_mode_btn.wy = 0
-    graph_mode_btn.ww = 0.15;
-    graph_mode_btn.wh = 0.1;
-    screenSpace(cam,canv,graph_mode_btn);
-
     commit_btn = new ButtonBox(0,0,0,0, function()
     {
+      blip_t = 0;
       patient_volume_graph.commit();
       patient_pressure_graph.commit();
       patient_flow_graph.commit();
     });
     commit_btn.title = "Commit";
-    commit_btn.wx = 0.3;
-    commit_btn.wy = -0.5
     commit_btn.ww = 0.15;
+    commit_btn.wx = 0.5-(commit_btn.ww/2)-0.05;
     commit_btn.wh = 0.1;
+    commit_btn.wy = -0.5+(commit_btn.wh/2)+0.05;
     screenSpace(cam,canv,commit_btn);
 
     alert_t = 0;
+
+    update_graphs();
+    patient_volume_graph.draw(false);
+    patient_pressure_graph.draw(false);
+    patient_flow_graph.draw(false);
 
     clicker = new Clicker({source:stage.dispCanv.canvas});
     dragger = new Dragger({source:stage.dispCanv.canvas});
@@ -470,8 +508,6 @@ var GamePlayScene = function(game, stage)
       clicker.filter(in_channel_btns[i]);
     for(var i = 0; i < graph_type_btns.length; i++)
       clicker.filter(graph_type_btns[i]);
-    clicker.filter(mode_btn);
-    clicker.filter(graph_mode_btn);
     clicker.filter(commit_btn);
     dragger.filter(my_knob);
     clicker.flush();
@@ -490,16 +526,18 @@ var GamePlayScene = function(game, stage)
     var in_error = false;
     if(in_error) alert_t += 0.1;
     else         alert_t = 0;
+
+    blip_t += 0.001;
+    if(blip_t > 1) blip_t = 0;
   };
 
   self.draw = function()
   {
-    var deriv = selected_graph_mode == GRAPH_DERIVATIVE;
     switch(selected_graph_type)
     {
-      case GRAPH_TYPE_VOLUME:   patient_volume_graph.draw(deriv);   break;
-      case GRAPH_TYPE_PRESSURE: patient_pressure_graph.draw(deriv); break;
-      case GRAPH_TYPE_FLOW:     patient_flow_graph.draw(deriv);     break;
+      case GRAPH_TYPE_VOLUME:   patient_volume_graph.draw();   break;
+      case GRAPH_TYPE_PRESSURE: patient_pressure_graph.draw(); break;
+      case GRAPH_TYPE_FLOW:     patient_flow_graph.draw();     break;
     }
 
 /*
@@ -518,13 +556,37 @@ var GamePlayScene = function(game, stage)
     ctx.strokeStyle = "#000000";
     ctx.fillStyle = "#000000"
     ctx.font = "10px Arial";
-    for(var i = 0; i < in_channel_btns.length; i++)
-      drawBtn(in_channel_btns[i]);
+    ctx.fillText("Graph Display:",graph_type_btns[0].x,graph_type_btns[0].y-10);
     for(var i = 0; i < graph_type_btns.length; i++)
       drawBtn(graph_type_btns[i]);
 
-    drawBtn(mode_btn);
-    drawBtn(graph_mode_btn);
+    ctx.fillText("Output:",out_channel_btns[0].x,out_channel_btns[0].y-10);
+    var sub;
+    for(var i = 0; i < out_channel_btns.length; i++)
+    {
+           if(out_channel_btns[i].title == "Volume")  sub = fdisp(in_volume)+" L";
+      else if(out_channel_btns[i].title == "Rate")    sub = fdisp(in_rate)+" b/m";
+      else if(out_channel_btns[i].title == "Flow")    sub = fdisp(in_flow)+" l/m";
+      else if(out_channel_btns[i].title == "Oxygen")  sub = fdisp(in_oxy)+"% O2";
+      else if(out_channel_btns[i].title == "Timeout") sub = fdisp(in_timeout)+" s";
+      drawBtn(out_channel_btns[i],sub);
+    }
+
+    ctx.fillText("Input:",in_channel_btns[0].x,in_channel_btns[0].y-10);
+    var sub;
+    for(var i = 0; i < in_channel_btns.length; i++)
+    {
+      switch(in_channel_btns[i].channel)
+      {
+        case IN_CHANNEL_MODE:    sub = fdisp(in_volume)+" L";  break;
+        case IN_CHANNEL_RATE:    sub = fdisp(in_rate)+" b/m";  break;
+        case IN_CHANNEL_FLOW:    sub = fdisp(in_flow)+" l/m";  break;
+        case IN_CHANNEL_OXY:     sub = fdisp(in_oxy)+"% O2";   break;
+        case IN_CHANNEL_TIMEOUT: sub = fdisp(in_timeout)+" s"; break;
+      }
+      drawBtn(in_channel_btns[i],sub);
+    }
+
     drawBtn(commit_btn);
 
     my_knob.draw(canv);
