@@ -114,17 +114,17 @@ var GamePlayScene = function(game, stage)
     self.pulses = [];
     self.pulse_pts = 1000;
     var j = 0;
-    //pressure
+    //volume
     self.pulses[j] = [];
     for(var i = 0; i < self.pulse_pts; i++)
     {
-      if(i < self.pulse_pts/2-self.pulse_pts/10)
+      if(i < self.pulse_pts/2-self.pulse_pts/20)
       {
         self.pulses[j][i] = sqrt(pcos((i/self.pulse_pts)*twopi-pi));
       }
-      else if(i < self.pulse_pts/2+self.pulse_pts/10)
+      else if(i < self.pulse_pts/2+self.pulse_pts/20)
       {
-        var t = mapVal(self.pulse_pts/2-self.pulse_pts/10,self.pulse_pts/2+self.pulse_pts/10,0,1,i);
+        var t = mapVal(self.pulse_pts/2-self.pulse_pts/20,self.pulse_pts/2+self.pulse_pts/20,0,1,i);
         self.pulses[j][i] = lerp(sqrt(pcos((i/self.pulse_pts)*twopi-pi)),pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),3),t);
       }
       else
@@ -133,22 +133,22 @@ var GamePlayScene = function(game, stage)
       }
     }
     j++;
-    //volume
+    //pressure
     self.pulses[j] = [];
     for(var i = 0; i < self.pulse_pts; i++)
     {
-      if(i < self.pulse_pts/2-self.pulse_pts/10)
+      if(i < self.pulse_pts/2-self.pulse_pts/20)
       {
-        self.pulses[j][i] = pcos((i/self.pulse_pts)*twopi-pi);
+        self.pulses[j][i] = pow(pcos((i/self.pulse_pts)*twopi-pi),0.5);
       }
-      else if(i < self.pulse_pts/2+self.pulse_pts/10)
+      else if(i < self.pulse_pts/2+self.pulse_pts/20)
       {
-        var t = mapVal(self.pulse_pts/2-self.pulse_pts/10,self.pulse_pts/2+self.pulse_pts/10,0,1,i);
-        self.pulses[j][i] = lerp(pcos((i/self.pulse_pts)*twopi-pi),pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),1.5),t);
+        var t = mapVal(self.pulse_pts/2-self.pulse_pts/20,self.pulse_pts/2+self.pulse_pts/20,0,1,i);
+        self.pulses[j][i] = lerp(pow(pcos((i/self.pulse_pts)*twopi-pi),0.5),pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),12)*0.5,t);
       }
       else
       {
-        self.pulses[j][i] = pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),1.5);
+        self.pulses[j][i] = pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),12)*0.5;
       }
     }
     j++;
