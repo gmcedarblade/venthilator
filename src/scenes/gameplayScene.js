@@ -179,8 +179,8 @@ var GamePlayScene = function(game, stage)
 
     self.pulse_from_i = 0;
     self.pulse_t = 0;
-    self.x_offset     = min_x_offset;
-    self.y_offset     = min_y_offset;
+    self.x_offset   = min_x_offset;
+    self.y_offset   = min_y_offset;
     self.wavelength = lerp(min_wavelength,max_wavelength,0.5);
     self.amplitude  = lerp(min_amplitude,max_amplitude,0.5);
     self.spacing    = lerp(min_spacing,max_spacing,0.5);
@@ -222,7 +222,7 @@ var GamePlayScene = function(game, stage)
       var to_i   = ceil(t*self.pulse_pts);
       var from = lerp(self.pulses[self.pulse_from_i][from_i],self.pulses[self.pulse_from_i+1][from_i],self.pulse_t);
       var to   = lerp(self.pulses[self.pulse_from_i][to_i],  self.pulses[self.pulse_from_i+1][to_i],  self.pulse_t);
-      return lerp(from,to,t)+self.y_offset;
+      return lerp(from,to,t);
     }
 
     var gen_data_in_pulse = false;
@@ -255,9 +255,9 @@ var GamePlayScene = function(game, stage)
       for(var i = 0; i < self.data_pts; i++)
       {
         if(gen_data_in_pulse)
-          self.data[i] = self.sample_pulse(gen_data_t_in_state/self.wavelength)*self.amplitude;
+          self.data[i] = self.sample_pulse(gen_data_t_in_state/self.wavelength)*self.amplitude+self.y_offset;
         else
-          self.data[i] = self.sample_pulse(0);
+          self.data[i] = self.sample_pulse(0)+self.y_offset;
 
         gen_data_t_in_state += 1/self.data_pts;
         gen_data_advance_state();
