@@ -46,7 +46,7 @@ var GamePlayScene = function(game, stage)
   var min_offset = 0;
   var max_offset = 1;
   var min_wavelength = 0.01;
-  var max_wavelength = 1;
+  var max_wavelength = 0.5;
   var min_amplitude = 0;
   var max_amplitude = 1;
   var min_spacing = 0;
@@ -125,11 +125,11 @@ var GamePlayScene = function(game, stage)
       else if(i < self.pulse_pts/2+self.pulse_pts/10)
       {
         var t = mapVal(self.pulse_pts/2-self.pulse_pts/10,self.pulse_pts/2+self.pulse_pts/10,0,1,i);
-        self.pulses[j][i] = lerp(sqrt(pcos((i/self.pulse_pts)*twopi-pi)),pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),2),t);
+        self.pulses[j][i] = lerp(sqrt(pcos((i/self.pulse_pts)*twopi-pi)),pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),3),t);
       }
       else
       {
-        self.pulses[j][i] = pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),2);
+        self.pulses[j][i] = pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),3);
       }
     }
     j++;
