@@ -114,17 +114,59 @@ var GamePlayScene = function(game, stage)
     self.pulses = [];
     self.pulse_pts = 1000;
     var j = 0;
+    //pressure
     self.pulses[j] = [];
     for(var i = 0; i < self.pulse_pts; i++)
-      self.pulses[j][i] = pcos((i/self.pulse_pts)*twopi-pi)+pcos((i/self.pulse_pts)*2*twopi-pi)/2;
+    {
+      if(i < self.pulse_pts/2-self.pulse_pts/10)
+      {
+        self.pulses[j][i] = sqrt(pcos((i/self.pulse_pts)*twopi-pi));
+      }
+      else if(i < self.pulse_pts/2+self.pulse_pts/10)
+      {
+        var t = mapVal(self.pulse_pts/2-self.pulse_pts/10,self.pulse_pts/2+self.pulse_pts/10,0,1,i);
+        self.pulses[j][i] = lerp(sqrt(pcos((i/self.pulse_pts)*twopi-pi)),pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),2),t);
+      }
+      else
+      {
+        self.pulses[j][i] = pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),2);
+      }
+    }
     j++;
+    //volume
     self.pulses[j] = [];
     for(var i = 0; i < self.pulse_pts; i++)
-      self.pulses[j][i] = pcos((i/self.pulse_pts)*twopi-pi);
+    {
+      if(i < self.pulse_pts/2-self.pulse_pts/10)
+      {
+        self.pulses[j][i] = pcos((i/self.pulse_pts)*twopi-pi);
+      }
+      else if(i < self.pulse_pts/2+self.pulse_pts/10)
+      {
+        var t = mapVal(self.pulse_pts/2-self.pulse_pts/10,self.pulse_pts/2+self.pulse_pts/10,0,1,i);
+        self.pulses[j][i] = lerp(pcos((i/self.pulse_pts)*twopi-pi),pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),1.5),t);
+      }
+      else
+      {
+        self.pulses[j][i] = pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),1.5);
+      }
+    }
     j++;
+    //flow
     self.pulses[j] = [];
-    for(var i = 0; i < self.pulse_pts; i++)
-      self.pulses[j][i] = -pcos((i/self.pulse_pts)*twopi-pi);
+    self.pulses[j][0] = 0;
+    for(var i = 1; i < self.pulse_pts-1; i++)
+    {
+      if(i < self.pulse_pts/2)
+      {
+        self.pulses[j][i] = 1;
+      }
+      else
+      {
+        self.pulses[j][i] = pow(-1+((i-self.pulse_pts/2)/(self.pulse_pts/2)),3);
+      }
+    }
+    self.pulses[j][self.pulse_pts-1] = 0;
     j++;
 
     self.pulse_from_i = 0;
@@ -410,10 +452,18 @@ var GamePlayScene = function(game, stage)
     cam.wh = isTo(canv.width,1,canv.height);
 
     patient_volume_graph = new graph_set();
+    patient_volume_graph.data.pulse_from_i = 0;
+    patient_volume_graph.data.pulse_t = 0;
     setup_graph_set(patient_volume_graph);
     patient_pressure_graph = new graph_set();
+    patient_pressure_graph.data.pulse_from_i = 1;
+    patient_pressure_graph.data.pulse_t = 0;
     setup_graph_set(patient_pressure_graph);
     patient_flow_graph = new graph_set();
+    patient_flow_graph.data.pulse_from_i = 1;
+    patient_flow_graph.data.pulse_t = 1;
+    patient_flow_graph.data.min_y = -1.1;
+    patient_flow_graph.data.max_y =  1.1;
     setup_graph_set(patient_flow_graph);
 
     my_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
