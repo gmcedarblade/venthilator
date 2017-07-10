@@ -149,6 +149,7 @@ var GamePlayScene = function(game, stage)
   var commit_btn;
   var alarms_btn;
   var patient_btn;
+  var next_btn;
   var x_btn;
 
   //filters
@@ -170,6 +171,11 @@ var GamePlayScene = function(game, stage)
   //  outputs volume to watch changes in compliance
 
   //commit
+
+  var evaluate_patient = function()
+  {
+    return false;
+  }
 
   var graph_data = function()
   {
@@ -201,19 +207,36 @@ var GamePlayScene = function(game, stage)
     self.pulses[j] = [];
     for(var i = 0; i < self.pulse_pts; i++)
     {
-      if(i < self.pulse_pts/2-self.pulse_pts/20)
+        /*
+      if(i < self.pulse_pts/2)
       {
-        self.pulses[j][i] = pow(pcos((i/self.pulse_pts)*twopi-pi),0.5);
+        //should work, but pow doesn't like - numbers?
+        var x = i/self.pulse_pts/2;
+        var a = (x*16)-8;
+        var b = 0.333;
+        self.pulses[j][i] = 1+pow(a,b)/4;
       }
-      else if(i < self.pulse_pts/2+self.pulse_pts/20)
+        */
+      if(i < self.pulse_pts/4)
       {
-        var t = mapVal(self.pulse_pts/2-self.pulse_pts/20,self.pulse_pts/2+self.pulse_pts/20,0,1,i);
-        self.pulses[j][i] = lerp(pow(pcos((i/self.pulse_pts)*twopi-pi),0.5),pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),12)*0.5,t);
+        var x = i/(self.pulse_pts/4);
+        var y = pow(x,8)/2;
+        self.pulses[j][i] = y;
+      }
+      else if(i < self.pulse_pts/2)
+      {
+        var x = (i-self.pulse_pts/4)/(self.pulse_pts/4);
+        var y = 1-pow((1-x),8)/2;
+        self.pulses[j][i] = y;
+      }
+      else if(i < self.pulse_pts*3/4)
+      {
+        var x = (i-self.pulse_pts/2)/(self.pulse_pts/2);
+        var y = pow((1-x*2),8);
+        self.pulses[j][i] = y;
       }
       else
-      {
-        self.pulses[j][i] = pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),12)*0.5;
-      }
+        self.pulses[j][i] = 0;
     }
     j++;
     //flow
@@ -430,9 +453,18 @@ var GamePlayScene = function(game, stage)
         self.dirty = false
       }
 
+      ctx.lineWidth = 0.5;
+      ctx.strokeStyle = light_blue;
+      ctx.beginPath();
+      ctx.moveTo(self.x,       self.y);
+      ctx.lineTo(self.x+self.w,self.y);
+      ctx.moveTo(self.x,       self.y+self.h/2);
+      ctx.lineTo(self.x+self.w,self.y+self.h/2);
+      ctx.moveTo(self.x,       self.y+self.h);
+      ctx.lineTo(self.x+self.w,self.y+self.h);
+      ctx.stroke();
+      ctx.lineWidth = 1;
       ctx.drawImage(self.cache,0,0,self.w*blip_t,self.h,self.x,self.y,self.w*blip_t,self.h);
-      //ctx.strokeStyle = "#000000";
-      //ctx.strokeRect(self.x,self.y,self.w,self.h);
     }
   }
 
@@ -607,12 +639,12 @@ var GamePlayScene = function(game, stage)
 
     var x = -0.5+(out_btn_w/2)+0.05;
     var s = out_btn_w+0.02;
-    genOutChannelBtn(OUT_CHANNEL_PEAK_PRESSURE,        "Peak Pressure",        x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_MEAN_PRESSURE,        "Mean Pressure",        x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_FREQ,                 "Frequency",            x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_EXHALE_VOLUME,        "Exhale Volume",        x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_EXHALE_MINUTE_VOLUME, "Exhale Minute Volume", x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "E:I",                  x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_PEAK_PRESSURE,        "PP"  /*"Peak Pressure"*/,        x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_MEAN_PRESSURE,        "MP"  /*"Mean Pressure"*/,        x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_FREQ,                 "Freq"/*"Frequency"*/,            x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_EXHALE_VOLUME,        "EV"  /*"Exhale Volume"*/,        x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_EXHALE_MINUTE_VOLUME, "EMV" /*"Exhale Minute Volume"*/, x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "E:I" /*"E:I"*/,                  x); x += s;
     x = -0.5+(in_btn_w/2)+0.05;
     s = in_btn_w+0.02;
     genInChannelBtn(IN_CHANNEL_MODE,   "Volume", x); x += s;
@@ -649,17 +681,24 @@ var GamePlayScene = function(game, stage)
     });
     x_btn.title = "X";
 
-    patient_btn = new ButtonBox(15,canv.height-55,40,40, function()
+    patient_btn = new ButtonBox(30,canv.height-65,40,40, function()
     {
       cur_screen = SCREEN_PATIENT;
     });
-    patient_btn.title = "X";
+    patient_btn.title = "patient info";
 
-    alarms_btn = new ButtonBox(80,canv.height-55,40,40, function()
+    alarms_btn = new ButtonBox(120,canv.height-65,40,40, function()
     {
       cur_screen = SCREEN_ALARMS;
     });
-    alarms_btn.title = "X";
+    alarms_btn.title = "alarms";
+
+    next_btn = new ButtonBox(canv.width-200,canv.height-65,180,40, function()
+    {
+      cur_screen = SCREEN_NOTIF;
+    });
+    next_btn.title = "Next Patient";
+
 
     alert_t = 0;
 
@@ -684,10 +723,12 @@ var GamePlayScene = function(game, stage)
         clicker.filter(commit_btn);
         clicker.filter(patient_btn);
         clicker.filter(alarms_btn);
+        clicker.filter(next_btn);
         dragger.filter(my_knob);
       break;
       case SCREEN_PATIENT:
       case SCREEN_ALARMS:
+      case SCREEN_NOTIF:
         clicker.filter(x_btn);
       break;
     }
@@ -712,7 +753,7 @@ var GamePlayScene = function(game, stage)
       ctx.fillStyle = light_blue;
       ctx.fillRect(0,0,canv.width,canv.height);
       ctx.fillStyle = white;
-      ctx.drawImage(icon_patient_img,15,15,40,40);
+      ctx.drawImage(icon_patient_img,20,15,30,40);
       ctx.font = "30px Helvetica";
       ctx.fillText("patient info",70,45);
       ctx.fillStyle = dark_blue;
@@ -760,17 +801,50 @@ var GamePlayScene = function(game, stage)
     {
       ctx.fillStyle = light_blue;
       ctx.fillRect(0,0,canv.width,canv.height);
+      ctx.fillStyle = white;
+      ctx.drawImage(icon_alarms_img,20,15,30,40);
+      ctx.font = "30px Helvetica";
+      ctx.fillText("alarms",70,45);
 
-      drawBtn(x_btn);
+      ctx.fillStyle = white;
+      ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
+    }
+    else if(cur_screen == SCREEN_NOTIF)
+    {
+      if(evaluate_patient())
+      {
+        ctx.fillStyle = green;
+        ctx.fillRect(0,0,canv.width,canv.height);
+        ctx.fillStyle = white;
+        ctx.font = "30px Helvetica";
+        ctx.fillText("patient info",70,45);
+      }
+      else
+      {
+        ctx.fillStyle = red;
+        ctx.fillRect(0,0,canv.width,canv.height);
+        ctx.fillStyle = white;
+        ctx.font = "30px Helvetica";
+        //ctx.fillText("patient info",70,45);
+
+      }
+
+      ctx.fillStyle = white;
+      ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
     }
     else if(cur_screen == SCREEN_VENTHILATOR)
     {
       ctx.lineWidth = 1;
       ctx.fillStyle = dark_blue;
       ctx.fillRect(0,0,canv.width,patient_flow_graph.y+patient_flow_graph.h);
+      ctx.fillStyle = light_blue;
+      ctx.font = "15px Helvetica";
       patient_volume_graph.draw();
+      ctx.fillText("Volume",patient_volume_graph.x+10,patient_volume_graph.y+20);
       patient_pressure_graph.draw();
+      ctx.fillText("Pressure",patient_pressure_graph.x+10,patient_pressure_graph.y+20);
       patient_flow_graph.draw();
+      ctx.fillText("Flow",patient_flow_graph.x+10,patient_flow_graph.y+20);
 
       ctx.font = "14px Helvetica";
       ctx.fillStyle = light_blue;
@@ -828,15 +902,24 @@ var GamePlayScene = function(game, stage)
 
       ctx.strokeStyle = gray;
       ctx.beginPath();
-      ctx.moveTo(0,canv.height-70);
-      ctx.lineTo(canv.width,canv.height-70);
+      ctx.moveTo(0,canv.height-80);
+      ctx.lineTo(canv.width,canv.height-80);
       ctx.stroke();
 
-      ctx.drawImage(icon_patient_img,patient_btn.x,patient_btn.y,patient_btn.w,patient_btn.h);
-      ctx.drawImage(icon_alarms_img,alarms_btn.x,alarms_btn.y,alarms_btn.w,alarms_btn.h);
+      ctx.fillStyle = dark_blue;
+      ctx.font = "15px Helvetica";
+      ctx.drawImage(icon_patient_img,patient_btn.x+5,patient_btn.y,patient_btn.w-10,patient_btn.h-5);
+      ctx.fillText("patient info",patient_btn.x-17,patient_btn.y+patient_btn.h+12);
+      ctx.drawImage(icon_alarms_img,alarms_btn.x+5,alarms_btn.y,alarms_btn.w-10,alarms_btn.h-5);
+      ctx.fillText("alarms",alarms_btn.x,alarms_btn.y+alarms_btn.h+12);
+      ctx.fillStyle = light_blue;
+      ctx.fillRect(next_btn.x,next_btn.y,next_btn.w,next_btn.h);
+      ctx.fillStyle = white;
+      ctx.font = "20px Helvetica";
+      ctx.fillText("Next Patient",next_btn.x+10,next_btn.y+next_btn.h/2);
 
       ctx.font = "30px Helvetica";
-      ctx.fillStyle = "#000000";
+      ctx.fillStyle = black;
 
       if(alert_t)
       {
