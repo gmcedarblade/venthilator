@@ -20,8 +20,8 @@ var GamePlayScene = function(game, stage)
   var knob_range_img;
   var knob_img;
   var knob_indicator_img;
-  var icon_alarms_img;
   var icon_patient_img;
+  var icon_alarms_img;
   var icon_sad_face_img;
 
   //definition
@@ -43,6 +43,12 @@ var GamePlayScene = function(game, stage)
   var IN_CHANNEL_OXY     = ENUM; ENUM++;
   var IN_CHANNEL_TIMEOUT = ENUM; ENUM++;
   var IN_CHANNEL_PEEP    = ENUM; ENUM++;
+  ENUM = 0;
+  var SCREEN_PATIENT     = ENUM; ENUM++;
+  var SCREEN_VENTHILATOR = ENUM; ENUM++;
+  var SCREEN_ALARMS      = ENUM; ENUM++;
+  var SCREEN_NOTIF       = ENUM; ENUM++;
+  var SCREEN_COMPLETE    = ENUM; ENUM++;
 
   var min_in_volume = 0;
   var max_in_volume = 2000;
@@ -123,9 +129,15 @@ var GamePlayScene = function(game, stage)
   var patient_compliance = 1;
   var patient_volume = 0;
   var patient_pressure = 0;
+  var patient_height = 12*6+2;
+  var patient_weight = 182;
+  var patient_sex = "M";
+  var patient_name_primary = "John";
+  var patient_name_secondary = "Smith";
 
   //ui state
   var blip_t = 0;
+  var cur_screen = 0;
 
   //ui
   var patient_volume_graph;
@@ -135,6 +147,9 @@ var GamePlayScene = function(game, stage)
   var out_channel_btns;
   var in_channel_btns;
   var commit_btn;
+  var alarms_btn;
+  var patient_btn;
+  var x_btn;
 
   //filters
   var clicker;
@@ -472,9 +487,7 @@ var GamePlayScene = function(game, stage)
   {
     ctx.fillStyle = dark_blue;
     ctx.fillRect(btn.x,btn.y,btn.w,btn.h);
-    ctx.fillStyle = light_blue;
-    ctx.strokeStyle = light_blue;
-    ctx.strokeRect(btn.x,btn.y,btn.w,btn.h);
+    ctx.fillStyle = white;
     ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2);
     if(sub) ctx.fillText(sub,btn.x+2,btn.y+btn.h/2+5);
     if(subsub) ctx.fillText(subsub,btn.x+2,btn.y+btn.h/2+15);
@@ -630,6 +643,24 @@ var GamePlayScene = function(game, stage)
     commit_btn.wy = -0.42;
     screenSpace(cam,canv,commit_btn);
 
+    x_btn = new ButtonBox(canv.width-50,30,40,40, function()
+    {
+      cur_screen = SCREEN_VENTHILATOR;
+    });
+    x_btn.title = "X";
+
+    patient_btn = new ButtonBox(15,canv.height-55,40,40, function()
+    {
+      cur_screen = SCREEN_PATIENT;
+    });
+    patient_btn.title = "X";
+
+    alarms_btn = new ButtonBox(80,canv.height-55,40,40, function()
+    {
+      cur_screen = SCREEN_ALARMS;
+    });
+    alarms_btn.title = "X";
+
     alert_t = 0;
 
     update_graphs();
@@ -645,22 +676,26 @@ var GamePlayScene = function(game, stage)
   {
     n_ticks++;
 
-    for(var i = 0; i < in_channel_btns.length; i++)
-      clicker.filter(in_channel_btns[i]);
-    clicker.filter(commit_btn);
-    dragger.filter(my_knob);
+    switch(cur_screen)
+    {
+      case SCREEN_VENTHILATOR:
+        for(var i = 0; i < in_channel_btns.length; i++)
+          clicker.filter(in_channel_btns[i]);
+        clicker.filter(commit_btn);
+        clicker.filter(patient_btn);
+        clicker.filter(alarms_btn);
+        dragger.filter(my_knob);
+      break;
+      case SCREEN_PATIENT:
+      case SCREEN_ALARMS:
+        clicker.filter(x_btn);
+      break;
+    }
     clicker.flush();
     dragger.flush();
 
     if(selected_mode == MODE_VOLUME)   in_channel_btns[0].title = "Volume"
     if(selected_mode == MODE_PRESSURE) in_channel_btns[0].title = "Pressure"
-
-/*
-    patient_volume_graph.data.wavelength = clamp(0.01,1,patient_volume_graph.data.wavelength+v);
-    patient_volume_graph.data.spacing    = clamp(0,1,patient_volume_graph.data.spacing+v);
-    patient_volume_graph.data.amplitude  = clamp(0,1,patient_volume_graph.data.amplitude+v);
-    patient_volume_graph.update();
-*/
 
     var in_error = false;
     if(in_error) alert_t += 0.1;
@@ -672,83 +707,142 @@ var GamePlayScene = function(game, stage)
 
   self.draw = function()
   {
-    ctx.lineWidth = 1;
-    ctx.fillStyle = dark_blue;
-    ctx.fillRect(0,0,canv.width,patient_flow_graph.y+patient_flow_graph.h);
-    patient_volume_graph.draw();
-    patient_pressure_graph.draw();
-    patient_flow_graph.draw();
-
-    ctx.font = "14px Helvetica";
-    ctx.fillStyle = light_blue;
-    ctx.fillText("Venthilator Output",out_channel_btns[0].x,out_channel_btns[0].y-10);
-    var sub;
-    for(var i = 0; i < out_channel_btns.length; i++)
+    if(cur_screen == SCREEN_PATIENT)
     {
-      switch(out_channel_btns[i].channel)
-      {
-        case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure); break;
-        case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure); break;
-        case OUT_CHANNEL_FREQ:                 sub = fdisp(out_freq); break;
-        case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume); break;
-        case OUT_CHANNEL_EXHALE_MINUTE_VOLUME: sub = fdisp(out_exhale_minute_volume); break;
-        case OUT_CHANNEL_IE_RATIO:             sub = fdisp(out_ie_ratio); break;
-      }
-      drawOutBtn(out_channel_btns[i],sub);
-    }
-
-    ctx.fillStyle = dark_blue;
-    ctx.fillRect(in_channel_btns[selected_channel].x,in_channel_btns[selected_channel].y,in_channel_btns[selected_channel].w,in_channel_btns[selected_channel].h);
-
-    var sub;
-    for(var i = 0; i < in_channel_btns.length; i++)
-    {
-      switch(in_channel_btns[i].channel)
-      {
-        case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume)+" L";  break;
-        case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate)+" b/m";  break;
-        case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow)+" l/m";  break;
-        case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy)+"% O2";   break;
-        case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout)+" s"; break;
-        case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep)+"";      break;
-      }
-      drawInBtn(in_channel_btns[i],sub);
-    }
-
-    switch(in_channel_btns[selected_channel].channel)
-    {
-      case IN_CHANNEL_MODE:    sub = fdisp(in_volume)+" L";  break;
-      case IN_CHANNEL_RATE:    sub = fdisp(in_rate)+" b/m";  break;
-      case IN_CHANNEL_FLOW:    sub = fdisp(in_flow)+" l/m";  break;
-      case IN_CHANNEL_OXY:     sub = fdisp(in_oxy)+"% O2";   break;
-      case IN_CHANNEL_TIMEOUT: sub = fdisp(in_timeout)+" s"; break;
-      case IN_CHANNEL_PEEP:    sub = fdisp(in_peep)+"";      break;
-    }
-    ctx.fillStyle = dark_blue;
-    ctx.fillText(in_channel_btns[selected_channel].title,commit_btn.x,commit_btn.y-40);
-    ctx.fillText(sub,commit_btn.x,commit_btn.y-20);
-    drawBtn(commit_btn);
-
-    ctx.drawImage(knob_range_img,my_knob.x,my_knob.y,my_knob.w,my_knob.h);
-    ctx.drawImage(knob_img,my_knob.x+10,my_knob.y+10,my_knob.w-20,my_knob.h-20);
-    ctx.drawImage(knob_indicator_img,my_knob.x+my_knob.w/2+cos(my_knob.viz_theta)*my_knob.w/3.5-4,my_knob.y+my_knob.h/2+sin(my_knob.viz_theta)*my_knob.w/3.5-4,8,8);
-
-    ctx.strokeStyle = gray;
-    ctx.beginPath();
-    ctx.moveTo(0,canv.height-70);
-    ctx.lineTo(canv.width,canv.height-70);
-    ctx.stroke();
-
-    ctx.drawImage(icon_patient_img,15,canv.height-55,40,40);
-    ctx.drawImage(icon_alarms_img,80,canv.height-55,40,40);
-
-    ctx.font = "30px Helvetica";
-    ctx.fillStyle = "#000000";
-
-    if(alert_t)
-    {
-      ctx.fillStyle = "rgba(255,0,0,"+(psin(alert_t)/2)+")";
+      ctx.fillStyle = light_blue;
       ctx.fillRect(0,0,canv.width,canv.height);
+      ctx.fillStyle = white;
+      ctx.drawImage(icon_patient_img,15,15,40,40);
+      ctx.font = "30px Helvetica";
+      ctx.fillText("patient info",70,45);
+      ctx.fillStyle = dark_blue;
+      ctx.font = "60px Helvetica";
+      ctx.fillText(patient_name_primary,30,145);
+      ctx.fillText(patient_name_secondary,30,220);
+      ctx.strokeStyle = white;
+      ctx.beginPath();
+      ctx.moveTo(30,canv.height/2);
+      ctx.lineTo(canv.width-60,canv.height/2);
+      ctx.stroke();
+
+      ctx.fillStyle = white;
+      ctx.font = "22px Helvetica";
+      ctx.fillText("Height",30,canv.height/2+40);
+      ctx.fillStyle = dark_blue;
+      ctx.font = "50px Helvetica";
+      ctx.fillText(parseInt(patient_height/12)+"'"+(patient_height%12)+"\"",30,canv.height/2+100);
+
+      ctx.fillStyle = white;
+      ctx.font = "22px Helvetica";
+      ctx.fillText("Sex",canv.width/2,canv.height/2+40);
+      ctx.fillStyle = dark_blue;
+      ctx.font = "50px Helvetica";
+      ctx.fillText(patient_sex,canv.width/2,canv.height/2+100);
+
+      ctx.fillStyle = white;
+      ctx.font = "22px Helvetica";
+      ctx.fillText("Weight",30,canv.height/2+190);
+      ctx.fillStyle = dark_blue;
+      ctx.font = "50px Helvetica";
+      ctx.fillText(patient_weight+" lb",30,canv.height/2+250);
+
+      ctx.fillStyle = white;
+      ctx.font = "22px Helvetica";
+      ctx.fillText("Something Else",canv.width/2,canv.height/2+190);
+      ctx.fillStyle = dark_blue;
+      ctx.font = "50px Helvetica";
+      ctx.fillText(patient_weight,canv.width/2,canv.height/2+250);
+
+      ctx.fillStyle = white;
+      ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
+    }
+    else if(cur_screen == SCREEN_ALARMS)
+    {
+      ctx.fillStyle = light_blue;
+      ctx.fillRect(0,0,canv.width,canv.height);
+
+      drawBtn(x_btn);
+    }
+    else if(cur_screen == SCREEN_VENTHILATOR)
+    {
+      ctx.lineWidth = 1;
+      ctx.fillStyle = dark_blue;
+      ctx.fillRect(0,0,canv.width,patient_flow_graph.y+patient_flow_graph.h);
+      patient_volume_graph.draw();
+      patient_pressure_graph.draw();
+      patient_flow_graph.draw();
+
+      ctx.font = "14px Helvetica";
+      ctx.fillStyle = light_blue;
+      ctx.fillText("Venthilator Output",out_channel_btns[0].x,out_channel_btns[0].y-10);
+      var sub;
+      for(var i = 0; i < out_channel_btns.length; i++)
+      {
+        switch(out_channel_btns[i].channel)
+        {
+          case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure); break;
+          case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure); break;
+          case OUT_CHANNEL_FREQ:                 sub = fdisp(out_freq); break;
+          case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume); break;
+          case OUT_CHANNEL_EXHALE_MINUTE_VOLUME: sub = fdisp(out_exhale_minute_volume); break;
+          case OUT_CHANNEL_IE_RATIO:             sub = fdisp(out_ie_ratio); break;
+        }
+        drawOutBtn(out_channel_btns[i],sub);
+      }
+
+      ctx.fillStyle = dark_blue;
+      ctx.fillRect(in_channel_btns[selected_channel].x,in_channel_btns[selected_channel].y,in_channel_btns[selected_channel].w,in_channel_btns[selected_channel].h);
+
+      var sub;
+      for(var i = 0; i < in_channel_btns.length; i++)
+      {
+        switch(in_channel_btns[i].channel)
+        {
+          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume)+" L";  break;
+          case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate)+" b/m";  break;
+          case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow)+" l/m";  break;
+          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy)+"% O2";   break;
+          case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout)+" s"; break;
+          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep)+"";      break;
+        }
+        drawInBtn(in_channel_btns[i],sub);
+      }
+
+      switch(in_channel_btns[selected_channel].channel)
+      {
+        case IN_CHANNEL_MODE:    sub = fdisp(in_volume)+" L";  break;
+        case IN_CHANNEL_RATE:    sub = fdisp(in_rate)+" b/m";  break;
+        case IN_CHANNEL_FLOW:    sub = fdisp(in_flow)+" l/m";  break;
+        case IN_CHANNEL_OXY:     sub = fdisp(in_oxy)+"% O2";   break;
+        case IN_CHANNEL_TIMEOUT: sub = fdisp(in_timeout)+" s"; break;
+        case IN_CHANNEL_PEEP:    sub = fdisp(in_peep)+"";      break;
+      }
+      ctx.fillStyle = dark_blue;
+      ctx.fillText(in_channel_btns[selected_channel].title,commit_btn.x,commit_btn.y-40);
+      ctx.fillText(sub,commit_btn.x,commit_btn.y-20);
+      drawBtn(commit_btn);
+
+      ctx.drawImage(knob_range_img,my_knob.x,my_knob.y,my_knob.w,my_knob.h);
+      ctx.drawImage(knob_img,my_knob.x+10,my_knob.y+10,my_knob.w-20,my_knob.h-20);
+      ctx.drawImage(knob_indicator_img,my_knob.x+my_knob.w/2+cos(my_knob.viz_theta)*my_knob.w/3.5-4,my_knob.y+my_knob.h/2+sin(my_knob.viz_theta)*my_knob.w/3.5-4,8,8);
+
+      ctx.strokeStyle = gray;
+      ctx.beginPath();
+      ctx.moveTo(0,canv.height-70);
+      ctx.lineTo(canv.width,canv.height-70);
+      ctx.stroke();
+
+      ctx.drawImage(icon_patient_img,patient_btn.x,patient_btn.y,patient_btn.w,patient_btn.h);
+      ctx.drawImage(icon_alarms_img,alarms_btn.x,alarms_btn.y,alarms_btn.w,alarms_btn.h);
+
+      ctx.font = "30px Helvetica";
+      ctx.fillStyle = "#000000";
+
+      if(alert_t)
+      {
+        ctx.fillStyle = "rgba(255,0,0,"+(psin(alert_t)/2)+")";
+        ctx.fillRect(0,0,canv.width,canv.height);
+      }
     }
   };
 
