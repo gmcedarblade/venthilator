@@ -764,7 +764,6 @@ function KnobBox(x,y,w,h,min_val,max_val,cwdelta,val,callback)
     canv.context.moveTo(self.x+self.w/2,self.y+self.h/2);
     canv.context.lineTo(self.x+self.w/2+cos(self.viz_theta)*self.w/2,self.y+self.h/2+sin(self.viz_theta)*self.w/2);
     canv.context.stroke();
-
   }
 
   self.print = function()

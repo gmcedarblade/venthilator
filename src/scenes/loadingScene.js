@@ -61,6 +61,12 @@ var LoadingScene = function(game, stage)
 
     //put asset paths in loading_img_srcs (for assets used on loading screen itself)
     //loading_img_srcs.push("assets/man.png");
+    loading_img_srcs.push("assets/icon-alarms.png");
+    loading_img_srcs.push("assets/icon-patient.png");
+    loading_img_srcs.push("assets/knob-indicator.png");
+    loading_img_srcs.push("assets/knob-range.png");
+    loading_img_srcs.push("assets/knob.png");
+    loading_img_srcs.push("assets/sad-face.png");
     for(var i = 0; i < loading_img_srcs.length; i++)
     {
       loading_imgs[i] = new Image();

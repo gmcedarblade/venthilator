@@ -8,18 +8,34 @@ var GamePlayScene = function(game, stage)
   var n_ticks = 0;
   var cam = {wx:0,wy:0,ww:1,wh:2};
 
+  var light_blue = "#6096D4";
+  var dark_blue  = "#00204A";
+  var red        = "#EA4922";
+  var green      = "#77AA2F";
+  var yellow     = "#D5C047";
+  var white      = "#FFFFFF";
+  var black      = "#000000";
+  var gray       = "#888888";
+
+  var knob_range_img;
+  var knob_img;
+  var knob_indicator_img;
+  var icon_alarms_img;
+  var icon_patient_img;
+  var icon_sad_face_img;
+
   //definition
   var ENUM;
   ENUM = 0;
   var MODE_VOLUME   = ENUM; ENUM++;
   var MODE_PRESSURE = ENUM; ENUM++;
   ENUM = 0;
-  var OUT_CHANNEL_MODE    = ENUM; ENUM++;
-  var OUT_CHANNEL_RATE    = ENUM; ENUM++;
-  var OUT_CHANNEL_FLOW    = ENUM; ENUM++;
-  var OUT_CHANNEL_OXY     = ENUM; ENUM++;
-  var OUT_CHANNEL_TIMEOUT = ENUM; ENUM++;
-  var OUT_CHANNEL_PEEP    = ENUM; ENUM++;
+  var OUT_CHANNEL_PEAK_PRESSURE        = ENUM; ENUM++;
+  var OUT_CHANNEL_MEAN_PRESSURE        = ENUM; ENUM++;
+  var OUT_CHANNEL_FREQ                 = ENUM; ENUM++;
+  var OUT_CHANNEL_EXHALE_VOLUME        = ENUM; ENUM++;
+  var OUT_CHANNEL_EXHALE_MINUTE_VOLUME = ENUM; ENUM++;
+  var OUT_CHANNEL_IE_RATIO             = ENUM; ENUM++;
   ENUM = 0;
   var IN_CHANNEL_MODE    = ENUM; ENUM++;
   var IN_CHANNEL_RATE    = ENUM; ENUM++;
@@ -27,10 +43,6 @@ var GamePlayScene = function(game, stage)
   var IN_CHANNEL_OXY     = ENUM; ENUM++;
   var IN_CHANNEL_TIMEOUT = ENUM; ENUM++;
   var IN_CHANNEL_PEEP    = ENUM; ENUM++;
-  ENUM = 0;
-  var GRAPH_TYPE_VOLUME   = ENUM; ENUM++;
-  var GRAPH_TYPE_PRESSURE = ENUM; ENUM++;
-  var GRAPH_TYPE_FLOW     = ENUM; ENUM++;
 
   var min_in_volume = 0;
   var max_in_volume = 2000;
@@ -46,6 +58,19 @@ var GamePlayScene = function(game, stage)
   var max_in_timeout = 1;
   var min_in_peep = 0;
   var max_in_peep = 1;
+
+  var min_out_peak_pressure        = 0;
+  var max_out_peak_pressure        = 1;
+  var min_out_mean_pressure        = 0;
+  var max_out_mean_pressure        = 1;
+  var min_out_freq                 = 0;
+  var max_out_freq                 = 1;
+  var min_out_exhale_volume        = 0;
+  var max_out_exhale_volume        = 1;
+  var min_out_exhale_minute_volume = 0;
+  var max_out_exhale_minute_volume = 1;
+  var min_out_ie_ratio             = 0;
+  var max_out_ie_ratio             = 1;
 
   var min_x_offset = 0;
   var max_x_offset = 1;
@@ -76,12 +101,30 @@ var GamePlayScene = function(game, stage)
   var in_oxy      = lerp(min_in_oxy,      max_in_oxy,      norm_in_oxy);
   var in_timeout  = lerp(min_in_timeout,  max_in_timeout,  norm_in_timeout);
   var in_peep     = lerp(min_in_peep,     max_in_peep,     norm_in_peep);
+  var commit_in_volume   = in_volume;
+  var commit_in_pressure = in_pressure;
+  var commit_in_rate     = in_rate;
+  var commit_in_flow     = in_flow;
+  var commit_in_oxy      = in_oxy;
+  var commit_in_timeout  = in_timeout;
+  var commit_in_peep     = in_peep;
+  var norm_out_peak_pressure        = 0.5;
+  var norm_out_mean_pressure        = 0.5;
+  var norm_out_freq                 = 0.5;
+  var norm_out_exhale_volume        = 0.5;
+  var norm_out_exhale_minute_volume = 0.5;
+  var norm_out_ie_ratio             = 0.5;
+  var out_peak_pressure        = lerp(min_out_peak_pressure,        max_out_peak_pressure,        norm_out_peak_pressure);
+  var out_mean_pressure        = lerp(min_out_mean_pressure,        max_out_mean_pressure,        norm_out_mean_pressure);
+  var out_freq                 = lerp(min_out_freq,                 max_out_freq,                 norm_out_freq);
+  var out_exhale_volume        = lerp(min_out_exhale_volume,        max_out_exhale_volume,        norm_out_exhale_volume);
+  var out_exhale_minute_volume = lerp(min_out_exhale_minute_volume, max_out_exhale_minute_volume, norm_out_exhale_minute_volume);
+  var out_ie_ratio             = lerp(min_out_ie_ratio,             max_out_ie_ratio,             norm_out_ie_ratio);
   var patient_compliance = 1;
   var patient_volume = 0;
   var patient_pressure = 0;
 
   //ui state
-  var selected_graph_type = 0;
   var blip_t = 0;
 
   //ui
@@ -91,8 +134,6 @@ var GamePlayScene = function(game, stage)
   var my_knob;
   var out_channel_btns;
   var in_channel_btns;
-  var graph_type_btns;
-  var graph_type_btn;
   var commit_btn;
 
   //filters
@@ -265,7 +306,7 @@ var GamePlayScene = function(game, stage)
     }
   }
 
-  var graph_set = function()
+  var graph_set = function(color)
   {
     var self = this;
     self.wx = 0;
@@ -277,8 +318,8 @@ var GamePlayScene = function(game, stage)
     self.w = 0;
     self.h = 0;
 
-    self.graph = new graph();
-    self.commit_graph = new graph();
+    self.graph = new graph(color);
+    self.commit_graph = new graph(color);
 
     self.data = new graph_data();
     self.data.gen_data();
@@ -318,7 +359,7 @@ var GamePlayScene = function(game, stage)
     }
   }
 
-  var graph = function()
+  var graph = function(color)
   {
     var self = this;
     self.x = 0;
@@ -329,6 +370,7 @@ var GamePlayScene = function(game, stage)
     self.wy = 0;
     self.ww = 0;
     self.wh = 0;
+    self.color = color;
 
     self.cache;
     self.dirty = true;
@@ -356,7 +398,7 @@ var GamePlayScene = function(game, stage)
         var c;
         var x;
         var y;
-        self.cache.context.strokeStyle = "#000000";
+        self.cache.context.strokeStyle = self.color;
         self.cache.context.beginPath();
         y = self.data[0];
         self.cache.context.moveTo(0, clamp(0,self.h,mapVal(self.min_y, self.max_y, self.h, 0, y)));
@@ -374,30 +416,21 @@ var GamePlayScene = function(game, stage)
       }
 
       ctx.drawImage(self.cache,0,0,self.w*blip_t,self.h,self.x,self.y,self.w*blip_t,self.h);
-      ctx.strokeStyle = "#000000";
-      ctx.strokeRect(self.x,self.y,self.w,self.h);
+      //ctx.strokeStyle = "#000000";
+      //ctx.strokeRect(self.x,self.y,self.w,self.h);
     }
   }
 
+  var out_btn_w = 0.15;
+  var in_btn_w = 0.135;
   var btn_w = 0.12;
-  var genGraphTypeBtn = function(type, title, x)
-  {
-    btn = new ButtonBox(0,0,0,0, function(){selected_graph_type = type; })
-    btn.title = title;
-    btn.wx = x;
-    btn.wy = 0.2;
-    btn.ww = btn_w;
-    btn.wh = 0.1;
-    screenSpace(cam,canv,btn);
-    graph_type_btns[type] = btn;
-  }
   var genOutChannelBtn = function(channel, title, x)
   {
     btn = new ButtonBox(0,0,0,0, function(){selected_channel = channel; })
     btn.channel = channel;
     btn.title = title;
     btn.wh = 0.1;
-    btn.ww = btn_w;
+    btn.ww = out_btn_w;
     btn.wx = x;
     btn.wy = 0.75-(btn.ww/2)-0.05;
     screenSpace(cam,canv,btn);
@@ -415,20 +448,44 @@ var GamePlayScene = function(game, stage)
     screenSpace(cam,canv,btn);
     in_channel_btns[channel] = btn;
   }
+  var drawOutBtn = function(btn,sub,subsub)
+  {
+    ctx.fillStyle = light_blue;
+    ctx.font = "10px Helvetica";
+    ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2-10);
+    ctx.font = "18px Helvetica";
+    if(sub) ctx.fillText(sub,btn.x+2,btn.y+btn.h/2+8);
+    if(subsub) ctx.fillText(subsub,btn.x+2,btn.y+btn.h/2+15);
+  }
+  var drawInBtn = function(btn,sub,subsub)
+  {
+    ctx.fillStyle = light_blue;
+    ctx.strokeStyle = light_blue;
+    ctx.strokeRect(btn.x,btn.y,btn.w,btn.h);
+    ctx.font = "10px Helvetica";
+    ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2-10);
+    ctx.font = "18px Helvetica";
+    if(sub) ctx.fillText(sub,btn.x+2,btn.y+btn.h/2+8);
+    if(subsub) ctx.fillText(subsub,btn.x+2,btn.y+btn.h/2+15);
+  }
   var drawBtn = function(btn,sub,subsub)
   {
+    ctx.fillStyle = dark_blue;
+    ctx.fillRect(btn.x,btn.y,btn.w,btn.h);
+    ctx.fillStyle = light_blue;
+    ctx.strokeStyle = light_blue;
     ctx.strokeRect(btn.x,btn.y,btn.w,btn.h);
-    ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2-10);
+    ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2);
     if(sub) ctx.fillText(sub,btn.x+2,btn.y+btn.h/2+5);
     if(subsub) ctx.fillText(subsub,btn.x+2,btn.y+btn.h/2+15);
   }
 
-  var setup_graph_set = function(gs)
+  var setup_graph_set = function(gs, i)
   {
     gs.wx = 0;
-    gs.wy = 0.4;
-    gs.ww = cam.ww-0.1;
-    gs.wh = 0.2;
+    gs.wh = 0.18;
+    gs.ww = cam.ww;
+    gs.wy = 0.5-(gs.wh*i*1.1);
     screenSpace(cam,canv,gs);
     gs.apply_size();
 
@@ -462,20 +519,34 @@ var GamePlayScene = function(game, stage)
   {
     cam.wh = isTo(canv.width,1,canv.height);
 
-    patient_volume_graph = new graph_set();
+    knob_range_img = new Image();
+    knob_range_img.src = "assets/knob-range.png";
+    knob_img = new Image();
+    knob_img.src = "assets/knob.png";
+    knob_indicator_img = new Image();
+    knob_indicator_img.src = "assets/knob-indicator.png";
+    icon_alarms_img = new Image();
+    icon_alarms_img.src = "assets/icon-alarms.png"
+    icon_patient_img = new Image();
+    icon_patient_img.src = "assets/icon-patient.png"
+    icon_sad_face_img = new Image();
+    icon_sad_face_img.src = "assets/sad-face.png"
+
+
+    patient_volume_graph = new graph_set(red);
     patient_volume_graph.data.pulse_from_i = 0;
     patient_volume_graph.data.pulse_t = 0;
-    setup_graph_set(patient_volume_graph);
-    patient_pressure_graph = new graph_set();
+    setup_graph_set(patient_volume_graph,0);
+    patient_pressure_graph = new graph_set(yellow);
     patient_pressure_graph.data.pulse_from_i = 1;
     patient_pressure_graph.data.pulse_t = 0;
-    setup_graph_set(patient_pressure_graph);
-    patient_flow_graph = new graph_set();
+    setup_graph_set(patient_pressure_graph,1);
+    patient_flow_graph = new graph_set(green);
     patient_flow_graph.data.pulse_from_i = 1;
     patient_flow_graph.data.pulse_t = 1;
     patient_flow_graph.data.min_y = -1.1;
     patient_flow_graph.data.max_y =  1.1;
-    setup_graph_set(patient_flow_graph);
+    setup_graph_set(patient_flow_graph,2);
 
     my_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
     {
@@ -512,35 +583,31 @@ var GamePlayScene = function(game, stage)
 
       my_knob.val = 0;
     });
-    my_knob.ww = 0.2;
-    my_knob.wx = 0.5-(my_knob.ww/2)-0.05 - (0.15+0.05);
-    my_knob.wh = 0.2;
-    my_knob.wy = -0.5+(my_knob.wh/2)+0.05;
+    my_knob.ww = 0.3;
+    my_knob.wh = 0.3;
+    my_knob.wx = -0.28;
+    my_knob.wy = -0.35;
     screenSpace(cam,canv,my_knob);
 
     out_channel_btns = [];
     in_channel_btns = [];
-    graph_type_btns = [];
 
-    var x = -0.5+(btn_w/2)+0.05;
-    var s = btn_w+0.02;
-    genOutChannelBtn(OUT_CHANNEL_MODE,   "Volume", x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_RATE,   "Rate",   x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_FLOW,   "Flow",   x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_OXY,    "Oxygen", x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_TIMEOUT,"Timeout",x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_PEEP,   "PEEP",   x); x += s;
-    x = -0.5+(btn_w/2)+0.05;
+    var x = -0.5+(out_btn_w/2)+0.05;
+    var s = out_btn_w+0.02;
+    genOutChannelBtn(OUT_CHANNEL_PEAK_PRESSURE,        "Peak Pressure",        x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_MEAN_PRESSURE,        "Mean Pressure",        x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_FREQ,                 "Frequency",            x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_EXHALE_VOLUME,        "Exhale Volume",        x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_EXHALE_MINUTE_VOLUME, "Exhale Minute Volume", x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "E:I",                  x); x += s;
+    x = -0.5+(in_btn_w/2)+0.05;
+    s = in_btn_w+0.02;
     genInChannelBtn(IN_CHANNEL_MODE,   "Volume", x); x += s;
     genInChannelBtn(IN_CHANNEL_RATE,   "Rate",   x); x += s;
     genInChannelBtn(IN_CHANNEL_FLOW,   "Flow",   x); x += s;
     genInChannelBtn(IN_CHANNEL_OXY,    "Oxygen", x); x += s;
     genInChannelBtn(IN_CHANNEL_TIMEOUT,"Timeout",x); x += s;
     genInChannelBtn(IN_CHANNEL_PEEP,   "PEEP",   x); x += s;
-    x = -0.5+(btn_w/2)+0.05;
-    genGraphTypeBtn(GRAPH_TYPE_VOLUME,   "Volume",   x); x += s;
-    genGraphTypeBtn(GRAPH_TYPE_PRESSURE, "Pressure", x); x += s;
-    genGraphTypeBtn(GRAPH_TYPE_FLOW,     "Flow",     x); x += s;
 
     commit_btn = new ButtonBox(0,0,0,0, function()
     {
@@ -548,12 +615,19 @@ var GamePlayScene = function(game, stage)
       patient_volume_graph.commit();
       patient_pressure_graph.commit();
       patient_flow_graph.commit();
+      commit_in_volume   = in_volume;
+      commit_in_pressure = in_pressure;
+      commit_in_rate     = in_rate;
+      commit_in_flow     = in_flow;
+      commit_in_oxy      = in_oxy;
+      commit_in_timeout  = in_timeout;
+      commit_in_peep     = in_peep;
     });
-    commit_btn.title = "Commit";
-    commit_btn.ww = 0.15;
-    commit_btn.wx = 0.5-(commit_btn.ww/2)-0.05;
-    commit_btn.wh = 0.1;
-    commit_btn.wy = -0.5+(commit_btn.wh/2)+0.05;
+    commit_btn.title = "Commit Changes";
+    commit_btn.ww = 0.4;
+    commit_btn.wx = 0.15;
+    commit_btn.wh = 0.08;
+    commit_btn.wy = -0.42;
     screenSpace(cam,canv,commit_btn);
 
     alert_t = 0;
@@ -573,8 +647,6 @@ var GamePlayScene = function(game, stage)
 
     for(var i = 0; i < in_channel_btns.length; i++)
       clicker.filter(in_channel_btns[i]);
-    for(var i = 0; i < graph_type_btns.length; i++)
-      clicker.filter(graph_type_btns[i]);
     clicker.filter(commit_btn);
     dragger.filter(my_knob);
     clicker.flush();
@@ -600,56 +672,77 @@ var GamePlayScene = function(game, stage)
 
   self.draw = function()
   {
-    switch(selected_graph_type)
-    {
-      case GRAPH_TYPE_VOLUME:   patient_volume_graph.draw();   break;
-      case GRAPH_TYPE_PRESSURE: patient_pressure_graph.draw(); break;
-      case GRAPH_TYPE_FLOW:     patient_flow_graph.draw();     break;
-    }
+    ctx.lineWidth = 1;
+    ctx.fillStyle = dark_blue;
+    ctx.fillRect(0,0,canv.width,patient_flow_graph.y+patient_flow_graph.h);
+    patient_volume_graph.draw();
+    patient_pressure_graph.draw();
+    patient_flow_graph.draw();
 
-    ctx.fillStyle = "#AAAAAA";
-    ctx.fillRect(in_channel_btns[selected_channel].x,in_channel_btns[selected_channel].y,in_channel_btns[selected_channel].w,in_channel_btns[selected_channel].h);
-    ctx.fillRect(graph_type_btns[selected_graph_type].x,graph_type_btns[selected_graph_type].y,graph_type_btns[selected_graph_type].w,graph_type_btns[selected_graph_type].h);
-    ctx.strokeStyle = "#000000";
-    ctx.fillStyle = "#000000"
-    ctx.font = "10px Arial";
-    ctx.fillText("Graph Display:",graph_type_btns[0].x,graph_type_btns[0].y-10);
-    for(var i = 0; i < graph_type_btns.length; i++)
-      drawBtn(graph_type_btns[i]);
-
-    ctx.fillText("Output:",out_channel_btns[0].x,out_channel_btns[0].y-10);
+    ctx.font = "14px Helvetica";
+    ctx.fillStyle = light_blue;
+    ctx.fillText("Venthilator Output",out_channel_btns[0].x,out_channel_btns[0].y-10);
     var sub;
     for(var i = 0; i < out_channel_btns.length; i++)
     {
-           if(out_channel_btns[i].title == "Volume")  sub = fdisp(in_volume)+" L";
-      else if(out_channel_btns[i].title == "Rate")    sub = fdisp(in_rate)+" b/m";
-      else if(out_channel_btns[i].title == "Flow")    sub = fdisp(in_flow)+" l/m";
-      else if(out_channel_btns[i].title == "Oxygen")  sub = fdisp(in_oxy)+"% O2";
-      else if(out_channel_btns[i].title == "Timeout") sub = fdisp(in_timeout)+" s";
-      else if(out_channel_btns[i].title == "PEEP")    sub = fdisp(in_peep)+"";
-      drawBtn(out_channel_btns[i],sub);
+      switch(out_channel_btns[i].channel)
+      {
+        case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure); break;
+        case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure); break;
+        case OUT_CHANNEL_FREQ:                 sub = fdisp(out_freq); break;
+        case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume); break;
+        case OUT_CHANNEL_EXHALE_MINUTE_VOLUME: sub = fdisp(out_exhale_minute_volume); break;
+        case OUT_CHANNEL_IE_RATIO:             sub = fdisp(out_ie_ratio); break;
+      }
+      drawOutBtn(out_channel_btns[i],sub);
     }
 
-    ctx.fillText("Input:",in_channel_btns[0].x,in_channel_btns[0].y-10);
+    ctx.fillStyle = dark_blue;
+    ctx.fillRect(in_channel_btns[selected_channel].x,in_channel_btns[selected_channel].y,in_channel_btns[selected_channel].w,in_channel_btns[selected_channel].h);
+
     var sub;
     for(var i = 0; i < in_channel_btns.length; i++)
     {
       switch(in_channel_btns[i].channel)
       {
-        case IN_CHANNEL_MODE:    sub = fdisp(in_volume)+" L";  break;
-        case IN_CHANNEL_RATE:    sub = fdisp(in_rate)+" b/m";  break;
-        case IN_CHANNEL_FLOW:    sub = fdisp(in_flow)+" l/m";  break;
-        case IN_CHANNEL_OXY:     sub = fdisp(in_oxy)+"% O2";   break;
-        case IN_CHANNEL_TIMEOUT: sub = fdisp(in_timeout)+" s"; break;
-        case IN_CHANNEL_PEEP:    sub = fdisp(in_peep)+"";      break;
+        case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume)+" L";  break;
+        case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate)+" b/m";  break;
+        case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow)+" l/m";  break;
+        case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy)+"% O2";   break;
+        case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout)+" s"; break;
+        case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep)+"";      break;
       }
-      drawBtn(in_channel_btns[i],sub);
+      drawInBtn(in_channel_btns[i],sub);
     }
 
+    switch(in_channel_btns[selected_channel].channel)
+    {
+      case IN_CHANNEL_MODE:    sub = fdisp(in_volume)+" L";  break;
+      case IN_CHANNEL_RATE:    sub = fdisp(in_rate)+" b/m";  break;
+      case IN_CHANNEL_FLOW:    sub = fdisp(in_flow)+" l/m";  break;
+      case IN_CHANNEL_OXY:     sub = fdisp(in_oxy)+"% O2";   break;
+      case IN_CHANNEL_TIMEOUT: sub = fdisp(in_timeout)+" s"; break;
+      case IN_CHANNEL_PEEP:    sub = fdisp(in_peep)+"";      break;
+    }
+    ctx.fillStyle = dark_blue;
+    ctx.fillText(in_channel_btns[selected_channel].title,commit_btn.x,commit_btn.y-40);
+    ctx.fillText(sub,commit_btn.x,commit_btn.y-20);
     drawBtn(commit_btn);
 
-    my_knob.draw(canv);
-    ctx.font = "30px Arial";
+    ctx.drawImage(knob_range_img,my_knob.x,my_knob.y,my_knob.w,my_knob.h);
+    ctx.drawImage(knob_img,my_knob.x+10,my_knob.y+10,my_knob.w-20,my_knob.h-20);
+    ctx.drawImage(knob_indicator_img,my_knob.x+my_knob.w/2+cos(my_knob.viz_theta)*my_knob.w/3.5-4,my_knob.y+my_knob.h/2+sin(my_knob.viz_theta)*my_knob.w/3.5-4,8,8);
+
+    ctx.strokeStyle = gray;
+    ctx.beginPath();
+    ctx.moveTo(0,canv.height-70);
+    ctx.lineTo(canv.width,canv.height-70);
+    ctx.stroke();
+
+    ctx.drawImage(icon_patient_img,15,canv.height-55,40,40);
+    ctx.drawImage(icon_alarms_img,80,canv.height-55,40,40);
+
+    ctx.font = "30px Helvetica";
     ctx.fillStyle = "#000000";
 
     if(alert_t)
