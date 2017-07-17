@@ -534,8 +534,9 @@ var GamePlayScene = function(game, stage)
     ctx.strokeRect(btn.x,btn.y,btn.w,btn.h);
     ctx.font = "10px Helvetica";
     ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2-10);
-    ctx.font = "18px Helvetica";
-    if(sub) ctx.fillText(sub,btn.x+2,btn.y+btn.h/2+8);
+    ctx.font = "12px Helvetica";
+    if(sub) ctx.fillText(sub,btn.x+2,btn.y+btn.h/2+4);
+    ctx.fillStyle = gray;
     if(subsub) ctx.fillText(subsub,btn.x+2,btn.y+btn.h/2+15);
   }
   var drawBtn = function(btn,sub,subsub)
@@ -915,18 +916,20 @@ var GamePlayScene = function(game, stage)
       ctx.fillRect(in_channel_btns[selected_channel].x,in_channel_btns[selected_channel].y,in_channel_btns[selected_channel].w,in_channel_btns[selected_channel].h);
 
       var sub;
+      var subsub;
       for(var i = 0; i < in_channel_btns.length; i++)
       {
         switch(in_channel_btns[i].channel)
         {
-          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume)+" L";  break;
-          case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate)+" b/m";  break;
-          case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow)+" l/m";  break;
-          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy)+"% O2";   break;
-          case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout)+" s"; break;
-          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep)+"";      break;
+          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume)+" L";  subsub = fdisp(in_volume)+" L";  break;
+          case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate)+" b/m";  subsub = fdisp(in_rate)+" b/m";  break;
+          case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow)+" l/m";  subsub = fdisp(in_flow)+" l/m";  break;
+          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy)+"% O2";   subsub = fdisp(in_oxy)+"% O2";   break;
+          case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout)+" s"; subsub = fdisp(in_timeout)+" s"; break;
+          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep)+"";      subsub = fdisp(in_peep)+"";      break;
         }
-        drawInBtn(in_channel_btns[i],sub);
+        if(subsub != sub) drawInBtn(in_channel_btns[i],sub,subsub);
+        else              drawInBtn(in_channel_btns[i],sub);
       }
 
       switch(in_channel_btns[selected_channel].channel)
