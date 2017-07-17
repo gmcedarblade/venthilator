@@ -32,7 +32,7 @@ var GamePlayScene = function(game, stage)
   ENUM = 0;
   var OUT_CHANNEL_PEAK_PRESSURE        = ENUM; ENUM++;
   var OUT_CHANNEL_MEAN_PRESSURE        = ENUM; ENUM++;
-  var OUT_CHANNEL_FREQ                 = ENUM; ENUM++;
+  var OUT_CHANNEL_RATE                 = ENUM; ENUM++;
   var OUT_CHANNEL_EXHALE_VOLUME        = ENUM; ENUM++;
   var OUT_CHANNEL_EXHALE_MINUTE_VOLUME = ENUM; ENUM++;
   var OUT_CHANNEL_IE_RATIO             = ENUM; ENUM++;
@@ -65,16 +65,16 @@ var GamePlayScene = function(game, stage)
   var min_in_peep = 0;
   var max_in_peep = 1;
 
-  var min_out_peak_pressure        = 0;
-  var max_out_peak_pressure        = 1;
-  var min_out_mean_pressure        = 0;
-  var max_out_mean_pressure        = 1;
-  var min_out_freq                 = 0;
-  var max_out_freq                 = 1;
+  var min_out_peak_pressure        = 10;
+  var max_out_peak_pressure        = 80;
+  var min_out_mean_pressure        = 5;
+  var max_out_mean_pressure        = 50;
+  var min_out_rate                 = 0;
+  var max_out_rate                 = 40;
   var min_out_exhale_volume        = 0;
-  var max_out_exhale_volume        = 1;
-  var min_out_exhale_minute_volume = 0;
-  var max_out_exhale_minute_volume = 1;
+  var max_out_exhale_volume        = 2000;
+  var min_out_exhale_minute_volume = min_out_exhale_volume*min_out_rate;
+  var max_out_exhale_minute_volume = max_out_exhale_volume*max_out_rate;
   var min_out_ie_ratio             = 0;
   var max_out_ie_ratio             = 1;
 
@@ -116,13 +116,13 @@ var GamePlayScene = function(game, stage)
   var commit_in_peep     = in_peep;
   var norm_out_peak_pressure        = 0.5;
   var norm_out_mean_pressure        = 0.5;
-  var norm_out_freq                 = 0.5;
+  var norm_out_rate                 = 0.5;
   var norm_out_exhale_volume        = 0.5;
   var norm_out_exhale_minute_volume = 0.5;
   var norm_out_ie_ratio             = 0.5;
   var out_peak_pressure        = lerp(min_out_peak_pressure,        max_out_peak_pressure,        norm_out_peak_pressure);
   var out_mean_pressure        = lerp(min_out_mean_pressure,        max_out_mean_pressure,        norm_out_mean_pressure);
-  var out_freq                 = lerp(min_out_freq,                 max_out_freq,                 norm_out_freq);
+  var out_rate                 = lerp(min_out_rate,                 max_out_rate,                 norm_out_rate);
   var out_exhale_volume        = lerp(min_out_exhale_volume,        max_out_exhale_volume,        norm_out_exhale_volume);
   var out_exhale_minute_volume = lerp(min_out_exhale_minute_volume, max_out_exhale_minute_volume, norm_out_exhale_minute_volume);
   var out_ie_ratio             = lerp(min_out_ie_ratio,             max_out_ie_ratio,             norm_out_ie_ratio);
@@ -220,12 +220,17 @@ var GamePlayScene = function(game, stage)
       if(i < self.pulse_pts/4)
       {
         var x = i/(self.pulse_pts/4);
+        x += 2;
+        x /= 3;
         var y = pow(x,8)/2;
         self.pulses[j][i] = y;
       }
       else if(i < self.pulse_pts/2)
       {
         var x = (i-self.pulse_pts/4)/(self.pulse_pts/4);
+        x += 1;
+        x /= 2;
+        x -= 0.5;
         var y = 1-pow((1-x),8)/2;
         self.pulses[j][i] = y;
       }
@@ -545,9 +550,9 @@ var GamePlayScene = function(game, stage)
       var cur_graph;
       switch(i)
       {
-        case 0: cur_graph = patient_volume_graph;   cur_graph.data.x_offset = 0.2; break;
-        case 1: cur_graph = patient_pressure_graph; break;
-        case 2: cur_graph = patient_flow_graph;     cur_graph.data.x_offset = 0.3; break;
+        case 0: cur_graph = patient_volume_graph;   cur_graph.data.x_offset = 0.0; break;
+        case 1: cur_graph = patient_pressure_graph; cur_graph.data.x_offset = 0.0; break;
+        case 2: cur_graph = patient_flow_graph;     cur_graph.data.x_offset = 0.0; break;
       }
 
            if(selected_mode == MODE_VOLUME)   cur_graph.data.amplitude = lerp(min_amplitude, max_amplitude, norm_in_volume);
@@ -641,7 +646,7 @@ var GamePlayScene = function(game, stage)
     var s = out_btn_w+0.02;
     genOutChannelBtn(OUT_CHANNEL_PEAK_PRESSURE,        "PP"  /*"Peak Pressure"*/,        x); x += s;
     genOutChannelBtn(OUT_CHANNEL_MEAN_PRESSURE,        "MP"  /*"Mean Pressure"*/,        x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_FREQ,                 "Freq"/*"Frequency"*/,            x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_RATE,                 "Freq"/*"Frequency"*/,            x); x += s;
     genOutChannelBtn(OUT_CHANNEL_EXHALE_VOLUME,        "EV"  /*"Exhale Volume"*/,        x); x += s;
     genOutChannelBtn(OUT_CHANNEL_EXHALE_MINUTE_VOLUME, "EMV" /*"Exhale Minute Volume"*/, x); x += s;
     genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "E:I" /*"E:I"*/,                  x); x += s;
@@ -856,7 +861,7 @@ var GamePlayScene = function(game, stage)
         {
           case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure); break;
           case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure); break;
-          case OUT_CHANNEL_FREQ:                 sub = fdisp(out_freq); break;
+          case OUT_CHANNEL_RATE:                 sub = fdisp(out_rate); break;
           case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume); break;
           case OUT_CHANNEL_EXHALE_MINUTE_VOLUME: sub = fdisp(out_exhale_minute_volume); break;
           case OUT_CHANNEL_IE_RATIO:             sub = fdisp(out_ie_ratio); break;
