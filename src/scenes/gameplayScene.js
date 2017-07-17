@@ -63,7 +63,7 @@ var GamePlayScene = function(game, stage)
   var min_in_timeout = 0;
   var max_in_timeout = 1;
   var min_in_peep = 0;
-  var max_in_peep = 1;
+  var max_in_peep = 10;
 
   var min_out_peak_pressure        = 10;
   var max_out_peak_pressure        = 80;
@@ -95,11 +95,11 @@ var GamePlayScene = function(game, stage)
   var alert_t = 0;
   var norm_in_volume   = 0.5;
   var norm_in_pressure = 0.5;
-  var norm_in_rate     = 0.8;
+  var norm_in_rate     = 0.3;
   var norm_in_flow     = 0.5;
   var norm_in_oxy      = 0.5;
   var norm_in_timeout  = 0.1;
-  var norm_in_peep     = 0.;
+  var norm_in_peep     = 0.5;
   var in_volume   = lerp(min_in_volume,   max_in_volume,   norm_in_volume);
   var in_pressure = lerp(min_in_pressure, max_in_pressure, norm_in_pressure);
   var in_rate     = lerp(min_in_rate,     max_in_rate,     norm_in_rate);
@@ -141,16 +141,22 @@ var GamePlayScene = function(game, stage)
   var patient_compliance = 1;
   var patient_volume = 0;
   var patient_pressure = 0;
-  var patient_height = 12*6+2;
-  var patient_weight = 182;
+  var patient_height = 12*5+5;
+  var patient_weight = 154;
+  var patient_age = 68;
+  var patient_description_0 = "You are called to the Post-anasthesia Care Unit";
+  var patient_description_1 = "for a patient who is not waking up following";
+  var patient_description_2 = "a right total knee replacement. They would like";
+  var patient_description_3 = "her set up on a venthilator STAT.";
+  var patient_description_4 = "";
   var patient_peak_pressure = 0.5;
   var patient_mean_pressure = 0.5;
-  var patient_rate = 0.5;
+  var patient_rate = 0.3;
   var patient_exhale_volume = 0.5;
   var patient_exhale_minute_volume = 0.5;
   var patient_ie_ratio = 0.5;
-  var patient_sex = "M";
-  var patient_name_primary = "John";
+  var patient_sex = "F";
+  var patient_name_primary = "Jane";
   var patient_name_secondary = "Smith";
 
   //ui state
@@ -169,6 +175,7 @@ var GamePlayScene = function(game, stage)
   var patient_btn;
   var next_btn;
   var x_btn;
+  var dismiss_submit_btn;
 
   //filters
   var clicker;
@@ -192,6 +199,28 @@ var GamePlayScene = function(game, stage)
 
   var evaluate_patient = function()
   {
+    var kg = patient_weight*0.453592;
+    var ibw;
+    if(patient_sex == "M") ibw = 50  +2.3*(patient_height-(5*12));
+    else                   ibw = 45.5+2.3*(patient_height-(5*12));
+    var expected_volume = 7*ibw*1000;
+    var expected_rate = 12;
+    var expected_peep = 5;
+    var expected_oxy = 50;
+    var expected_flow = 50;
+
+    //console.log((expected_volume/out_exhale_volume)-1);
+    //console.log((expected_peep/in_peep)-1);
+    //console.log((expected_oxy/in_oxy)-1);
+    //console.log((expected_flow/in_flow)-1);
+
+    if(
+      abs((expected_volume/out_exhale_volume)-1) < 0.2 &&
+      abs((expected_peep/in_peep)-1) < 0.2 &&
+      abs((expected_oxy/in_oxy)-1) < 0.2 &&
+      abs((expected_flow/in_flow)-1) < 0.2
+      )
+      return true;
     return false;
   }
 
@@ -264,16 +293,16 @@ var GamePlayScene = function(game, stage)
     j++;
     //flow
     self.pulses[j] = [];
-    self.pulses[j][0] = 0;
+    self.pulses[j][0] = -0.5;
     for(var i = 1; i < self.pulse_pts-1; i++)
     {
       if(i < self.pulse_pts/2)
       {
-        self.pulses[j][i] = 1;
+        self.pulses[j][i] = 0.2;
       }
       else
       {
-        self.pulses[j][i] = pow(-1+((i-self.pulse_pts/2)/(self.pulse_pts/2)),3);
+        self.pulses[j][i] = pow(-1+((i-self.pulse_pts/2)/(self.pulse_pts/2)),3)-1;
       }
     }
     self.pulses[j][self.pulse_pts-1] = 0;
@@ -705,6 +734,12 @@ var GamePlayScene = function(game, stage)
     });
     x_btn.title = "X";
 
+    dismiss_submit_btn = new ButtonBox(canv.width/2-50,450,100,40, function()
+    {
+      cur_screen = SCREEN_VENTHILATOR;
+    });
+    dismiss_submit_btn.title = "Got It";
+
     patient_btn = new ButtonBox(30,canv.height-65,40,40, function()
     {
       cur_screen = SCREEN_PATIENT;
@@ -752,8 +787,12 @@ var GamePlayScene = function(game, stage)
       break;
       case SCREEN_PATIENT:
       case SCREEN_ALARMS:
+        clicker.filter(x_btn);
+        break;
       case SCREEN_NOTIF:
         clicker.filter(x_btn);
+        clicker.filter(dismiss_submit_btn);
+        break;
       break;
     }
     clicker.flush();
@@ -810,39 +849,48 @@ var GamePlayScene = function(game, stage)
       ctx.fillText(patient_name_secondary,30,220);
       ctx.strokeStyle = white;
       ctx.beginPath();
-      ctx.moveTo(30,canv.height/2);
-      ctx.lineTo(canv.width-60,canv.height/2);
+      ctx.moveTo(30,canv.height*2/5);
+      ctx.lineTo(canv.width-60,canv.height*2/5);
       ctx.stroke();
 
       ctx.fillStyle = white;
       ctx.font = "22px Helvetica";
-      ctx.fillText("Height",30,canv.height/2+40);
+      ctx.fillText("Height",30,canv.height*2/5+40);
       ctx.fillStyle = dark_blue;
       ctx.font = "50px Helvetica";
-      ctx.fillText(parseInt(patient_height/12)+"'"+(patient_height%12)+"\"",30,canv.height/2+100);
+      ctx.fillText(parseInt(patient_height/12)+"'"+(patient_height%12)+"\"",30,canv.height*2/5+100);
 
       ctx.fillStyle = white;
       ctx.font = "22px Helvetica";
-      ctx.fillText("Sex",canv.width/2,canv.height/2+40);
+      ctx.fillText("Sex",canv.width/2,canv.height*2/5+40);
       ctx.fillStyle = dark_blue;
       ctx.font = "50px Helvetica";
-      ctx.fillText(patient_sex,canv.width/2,canv.height/2+100);
+      ctx.fillText(patient_sex,canv.width/2,canv.height*2/5+100);
 
       ctx.fillStyle = white;
       ctx.font = "22px Helvetica";
-      ctx.fillText("Weight",30,canv.height/2+190);
+      ctx.fillText("Weight",30,canv.height*2/5+150);
       ctx.fillStyle = dark_blue;
       ctx.font = "50px Helvetica";
-      ctx.fillText(patient_weight+" lb",30,canv.height/2+250);
+      ctx.fillText(patient_weight+" lb",30,canv.height*2/5+210);
 
       ctx.fillStyle = white;
       ctx.font = "22px Helvetica";
-      ctx.fillText("Something Else",canv.width/2,canv.height/2+190);
+      ctx.fillText("Age",canv.width/2,canv.height*2/5+150);
       ctx.fillStyle = dark_blue;
       ctx.font = "50px Helvetica";
-      ctx.fillText(patient_weight,canv.width/2,canv.height/2+250);
+      ctx.fillText(patient_age,canv.width/2,canv.height*2/5+210);
 
       ctx.fillStyle = white;
+      ctx.font = "16px Helvetica";
+      ctx.fillText(patient_description_0,30,canv.height*2/5+270);
+      ctx.fillText(patient_description_1,30,canv.height*2/5+300);
+      ctx.fillText(patient_description_2,30,canv.height*2/5+330);
+      ctx.fillText(patient_description_3,30,canv.height*2/5+360);
+      ctx.fillText(patient_description_4,30,canv.height*2/5+390);
+
+      ctx.fillStyle = white;
+      ctx.font = "30px Helvetica"
       ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
     }
     else if(cur_screen == SCREEN_ALARMS)
@@ -855,30 +903,62 @@ var GamePlayScene = function(game, stage)
       ctx.fillText("alarms",70,45);
 
       ctx.fillStyle = white;
+      ctx.font = "30px Helvetica"
       ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
     }
     else if(cur_screen == SCREEN_NOTIF)
     {
+      var y;
+      var yd;
+      var x;
       if(evaluate_patient())
       {
         ctx.fillStyle = green;
         ctx.fillRect(0,0,canv.width,canv.height);
         ctx.fillStyle = white;
-        ctx.font = "30px Helvetica";
-        ctx.fillText("patient info",70,45);
+        x = 40;
+        ctx.font = "35px Helvetica";
+        ctx.fillText("patient stable",x,45);
+        y = 200;
+        yd = 40;
+        ctx.font = "38px Helvetica";
+        ctx.fillText("Nice! This",x,y); y+=yd;
+        ctx.fillText("patient is",x,y); y+=yd;
+        ctx.fillText("stabilized.",x,y); y+=yd;
+        ctx.font = "20px Helvetica";
+        y = 380;
+        yd = 25;
+        ctx.fillText("Good Job",x,y); y+=yd;
       }
       else
       {
         ctx.fillStyle = red;
         ctx.fillRect(0,0,canv.width,canv.height);
         ctx.fillStyle = white;
-        ctx.font = "30px Helvetica";
-        //ctx.fillText("patient info",70,45);
-
+        x = 40;
+        ctx.font = "35px Helvetica";
+        ctx.fillText("patient not stable",x,45);
+        y = 200;
+        yd = 40;
+        ctx.font = "38px Helvetica";
+        ctx.fillText("You could",x,y); y+=yd;
+        ctx.fillText("leave this patient",x,y); y+=yd;
+        ctx.fillText("but they're not",x,y); y+=yd;
+        ctx.fillText("going to live",x,y); y+=yd;
+        ctx.font = "20px Helvetica";
+        y = 380;
+        yd = 25;
+        ctx.fillText("Continue to adjust venthilator",x,y); y+=yd;
+        ctx.fillText("until the patient can",x,y); y+=yd;
+        ctx.fillText("stabilize.",x,y); y+=yd;
       }
 
       ctx.fillStyle = white;
+      ctx.font = "30px Helvetica"
       ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
+
+      ctx.fillText(dismiss_submit_btn.title,dismiss_submit_btn.x,dismiss_submit_btn.y+dismiss_submit_btn.h/2+18);
+      ctx.strokeRect(dismiss_submit_btn.x,dismiss_submit_btn.y,dismiss_submit_btn.w,dismiss_submit_btn.h);
     }
     else if(cur_screen == SCREEN_VENTHILATOR)
     {
