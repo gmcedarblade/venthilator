@@ -120,6 +120,18 @@ var GamePlayScene = function(game, stage)
   var norm_out_exhale_volume        = 0.5;
   var norm_out_exhale_minute_volume = 0.5;
   var norm_out_ie_ratio             = 0.5;
+  var out_peak_pressure_max_variance = 0.1;
+  var out_mean_pressure_max_variance = 0.06;
+  var out_rate_max_variance = 0.0;
+  var out_exhale_volume_max_variance = 0.1;
+  var out_exhale_minute_volume_max_variance = 0.0;
+  var out_ie_ratio_max_variance = 0.0;
+  var out_peak_pressure_variance = 0.0;
+  var out_mean_pressure_variance = 0.0;
+  var out_rate_variance = 0.0;
+  var out_exhale_volume_variance = 0.0;
+  var out_exhale_minute_volume_variance = 0.0;
+  var out_ie_ratio_variance = 0.0;
   var out_peak_pressure        = lerp(min_out_peak_pressure,        max_out_peak_pressure,        norm_out_peak_pressure);
   var out_mean_pressure        = lerp(min_out_mean_pressure,        max_out_mean_pressure,        norm_out_mean_pressure);
   var out_rate                 = lerp(min_out_rate,                 max_out_rate,                 norm_out_rate);
@@ -131,6 +143,12 @@ var GamePlayScene = function(game, stage)
   var patient_pressure = 0;
   var patient_height = 12*6+2;
   var patient_weight = 182;
+  var patient_peak_pressure = 0.5;
+  var patient_mean_pressure = 0.5;
+  var patient_rate = 0.5;
+  var patient_exhale_volume = 0.5;
+  var patient_exhale_minute_volume = 0.5;
+  var patient_ie_ratio = 0.5;
   var patient_sex = "M";
   var patient_name_primary = "John";
   var patient_name_secondary = "Smith";
@@ -747,8 +765,32 @@ var GamePlayScene = function(game, stage)
     if(in_error) alert_t += 0.1;
     else         alert_t = 0;
 
-    blip_t += 0.001;
-    if(blip_t > 1) blip_t = 0;
+    var blip_rate = 0.001;
+    blip_t += blip_rate;
+    if(floor((blip_t-blip_rate)/patient_volume_graph.data.wavelength) != floor(blip_t/patient_volume_graph.data.wavelength))
+    {
+      out_peak_pressure_variance        = out_peak_pressure_max_variance        * rand0();
+      out_mean_pressure_variance        = out_mean_pressure_max_variance        * rand0();
+      out_rate_variance                 = out_rate_max_variance                 * rand0();
+      out_exhale_volume_variance        = out_exhale_volume_max_variance        * rand0();
+      out_exhale_minute_volume_variance = out_exhale_minute_volume_max_variance * rand0();
+      out_ie_ratio_variance             = out_ie_ratio_max_variance             * rand0();
+
+      norm_out_peak_pressure        = patient_peak_pressure        + patient_peak_pressure        * out_peak_pressure_variance;
+      norm_out_mean_pressure        = patient_mean_pressure        + patient_mean_pressure        * out_mean_pressure_variance;
+      norm_out_rate                 = patient_rate                 + patient_rate                 * out_rate_variance;
+      norm_out_exhale_volume        = patient_exhale_volume        + patient_exhale_volume        * out_exhale_volume_variance;
+      norm_out_exhale_minute_volume = patient_exhale_minute_volume + patient_exhale_minute_volume * out_exhale_minute_volume_variance;
+      norm_out_ie_ratio             = patient_ie_ratio             + patient_ie_ratio             * out_ie_ratio_variance;
+
+      out_peak_pressure        = lerp(min_out_peak_pressure,        max_out_peak_pressure,        norm_out_peak_pressure);
+      out_mean_pressure        = lerp(min_out_mean_pressure,        max_out_mean_pressure,        norm_out_mean_pressure);
+      out_rate                 = lerp(min_out_rate,                 max_out_rate,                 norm_out_rate);
+      out_exhale_volume        = lerp(min_out_exhale_volume,        max_out_exhale_volume,        norm_out_exhale_volume);
+      out_exhale_minute_volume = lerp(min_out_exhale_minute_volume, max_out_exhale_minute_volume, norm_out_exhale_minute_volume);
+      out_ie_ratio             = lerp(min_out_ie_ratio,             max_out_ie_ratio,             norm_out_ie_ratio);
+    }
+    while(blip_t > 1) blip_t -= 1;
   };
 
   self.draw = function()
@@ -859,12 +901,12 @@ var GamePlayScene = function(game, stage)
       {
         switch(out_channel_btns[i].channel)
         {
-          case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure); break;
-          case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure); break;
-          case OUT_CHANNEL_RATE:                 sub = fdisp(out_rate); break;
-          case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume); break;
+          case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure);        break;
+          case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure);        break;
+          case OUT_CHANNEL_RATE:                 sub = fdisp(out_rate);                 break;
+          case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume);        break;
           case OUT_CHANNEL_EXHALE_MINUTE_VOLUME: sub = fdisp(out_exhale_minute_volume); break;
-          case OUT_CHANNEL_IE_RATIO:             sub = fdisp(out_ie_ratio); break;
+          case OUT_CHANNEL_IE_RATIO:             sub = fdisp(out_ie_ratio);             break;
         }
         drawOutBtn(out_channel_btns[i],sub);
       }
