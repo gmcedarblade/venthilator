@@ -85,7 +85,7 @@ var GamePlayScene = function(game, stage)
   var min_wavelength = 0.01;
   var max_wavelength = 0.5;
   var min_amplitude = 0;
-  var max_amplitude = 1;
+  var max_amplitude = 2;
   var min_spacing = 0;
   var max_spacing = 1;
 
@@ -99,7 +99,7 @@ var GamePlayScene = function(game, stage)
   var norm_in_flow     = 0.5;
   var norm_in_oxy      = 0.5;
   var norm_in_timeout  = 0.1;
-  var norm_in_peep     = 0.5;
+  var norm_in_peep     = 0.0;
   var in_volume   = lerp(min_in_volume,   max_in_volume,   norm_in_volume);
   var in_pressure = lerp(min_in_pressure, max_in_pressure, norm_in_pressure);
   var in_rate     = lerp(min_in_rate,     max_in_rate,     norm_in_rate);
@@ -149,12 +149,12 @@ var GamePlayScene = function(game, stage)
   var patient_description_2 = "a right total knee replacement. They would like";
   var patient_description_3 = "her set up on a venthilator STAT.";
   var patient_description_4 = "";
-  var patient_peak_pressure = 0.5;
-  var patient_mean_pressure = 0.5;
-  var patient_rate = 0.3;
-  var patient_exhale_volume = 0.5;
-  var patient_exhale_minute_volume = 0.5;
-  var patient_ie_ratio = 0.5;
+  var norm_patient_peak_pressure = 0.5;
+  var norm_patient_mean_pressure = 0.5;
+  var norm_patient_rate = 0.3;
+  var norm_patient_exhale_volume = 0.5;
+  var norm_patient_exhale_minute_volume = 0.5;
+  var norm_patient_ie_ratio = 0.5;
   var patient_sex = "F";
   var patient_name_primary = "Jane";
   var patient_name_secondary = "Smith";
@@ -203,7 +203,7 @@ var GamePlayScene = function(game, stage)
     var ibw;
     if(patient_sex == "M") ibw = 50  +2.3*(patient_height-(5*12));
     else                   ibw = 45.5+2.3*(patient_height-(5*12));
-    var expected_volume = 7*ibw*1000;
+    var expected_volume = 7*ibw;
     var expected_rate = 12;
     var expected_peep = 5;
     var expected_oxy = 50;
@@ -293,17 +293,13 @@ var GamePlayScene = function(game, stage)
     j++;
     //flow
     self.pulses[j] = [];
-    self.pulses[j][0] = -0.5;
+    self.pulses[j][0] = 0.0;
     for(var i = 1; i < self.pulse_pts-1; i++)
     {
       if(i < self.pulse_pts/2)
-      {
-        self.pulses[j][i] = 0.2;
-      }
+        self.pulses[j][i] = 1;
       else
-      {
-        self.pulses[j][i] = pow(-1+((i-self.pulse_pts/2)/(self.pulse_pts/2)),3)-1;
-      }
+        self.pulses[j][i] = pow(-1+((i-self.pulse_pts/2)/(self.pulse_pts/2)),3);
     }
     self.pulses[j][self.pulse_pts-1] = 0;
     j++;
@@ -318,8 +314,8 @@ var GamePlayScene = function(game, stage)
 
     self.data = [];
     self.data_pts = 1000;
-    self.min_y = -.1;
-    self.max_y =  1.1;
+    self.min_y = -1;
+    self.max_y = 1;
 
     self.delta_pulse = function(amt)
     {
@@ -385,10 +381,11 @@ var GamePlayScene = function(game, stage)
       gen_data_advance_state();
       for(var i = 0; i < self.data_pts; i++)
       {
-        if(gen_data_in_pulse)
-          self.data[i] = self.sample_pulse(gen_data_t_in_state/self.wavelength)*self.amplitude+self.y_offset;
-        else
-          self.data[i] = self.sample_pulse(0)+self.y_offset;
+        if(gen_data_in_pulse) self.data[i] = self.sample_pulse(gen_data_t_in_state/self.wavelength)*self.amplitude+self.y_offset;
+        else                  self.data[i] = self.sample_pulse(                                  0)*self.amplitude+self.y_offset;
+
+        if(i == 0)
+          i = 0;
 
         gen_data_t_in_state += 1/self.data_pts;
         gen_data_advance_state();
@@ -466,8 +463,8 @@ var GamePlayScene = function(game, stage)
     self.dirty = true;
     self.data_pts = 100;
     self.data = [];
-    self.min_y = 0;
-    self.max_y = 0;
+    self.min_y = -1;
+    self.max_y = 1;
 
     self.consume_data = function(gd)
     {
@@ -497,7 +494,7 @@ var GamePlayScene = function(game, stage)
           x = i/(self.data_pts-1);
           y = self.data[i];
           self.cache.context.lineTo(
-            clamp(0,self.w,mapVal(      0,       1, 0,      self.w, x)),
+            clamp(0,self.w,mapVal(         0,          1,      0, self.w, x)),
             clamp(0,self.h,mapVal(self.min_y, self.max_y, self.h,      0, y))
           );
         }
@@ -608,6 +605,7 @@ var GamePlayScene = function(game, stage)
 
       cur_graph.data.wavelength = lerp(min_wavelength, max_wavelength, norm_in_rate);
       cur_graph.data.spacing    = lerp(min_spacing,    max_spacing,    norm_in_timeout);
+      if(cur_graph == patient_pressure_graph)
       cur_graph.data.y_offset   = lerp(min_y_offset,   max_y_offset,   norm_in_peep);
       cur_graph.update();
     }
@@ -634,16 +632,20 @@ var GamePlayScene = function(game, stage)
     patient_volume_graph = new graph_set(red);
     patient_volume_graph.data.pulse_from_i = 0;
     patient_volume_graph.data.pulse_t = 0;
+    patient_volume_graph.data.min_y = -1.4;
+    patient_volume_graph.data.max_y = 1.4;
     setup_graph_set(patient_volume_graph,0);
     patient_pressure_graph = new graph_set(yellow);
     patient_pressure_graph.data.pulse_from_i = 1;
     patient_pressure_graph.data.pulse_t = 0;
+    patient_pressure_graph.data.min_y = -1.4;
+    patient_pressure_graph.data.max_y = 1.4;
     setup_graph_set(patient_pressure_graph,1);
     patient_flow_graph = new graph_set(green);
     patient_flow_graph.data.pulse_from_i = 1;
     patient_flow_graph.data.pulse_t = 1;
-    patient_flow_graph.data.min_y = -1.1;
-    patient_flow_graph.data.max_y =  1.1;
+    patient_flow_graph.data.min_y = -1.8;
+    patient_flow_graph.data.max_y = 1.8;
     setup_graph_set(patient_flow_graph,2);
 
     my_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
@@ -697,7 +699,7 @@ var GamePlayScene = function(game, stage)
     genOutChannelBtn(OUT_CHANNEL_RATE,                 "Freq"/*"Frequency"*/,            x); x += s;
     genOutChannelBtn(OUT_CHANNEL_EXHALE_VOLUME,        "EV"  /*"Exhale Volume"*/,        x); x += s;
     genOutChannelBtn(OUT_CHANNEL_EXHALE_MINUTE_VOLUME, "EMV" /*"Exhale Minute Volume"*/, x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "E:I" /*"E:I"*/,                  x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "I:E" /*"I:E"*/,                  x); x += s;
     x = -0.5+(in_btn_w/2)+0.05;
     s = in_btn_w+0.02;
     genInChannelBtn(IN_CHANNEL_MODE,   "Volume", x); x += s;
@@ -809,26 +811,35 @@ var GamePlayScene = function(game, stage)
     blip_t += blip_rate;
     if(floor((blip_t-blip_rate)/patient_volume_graph.data.wavelength) != floor(blip_t/patient_volume_graph.data.wavelength))
     {
-      out_peak_pressure_variance        = out_peak_pressure_max_variance        * rand0();
-      out_mean_pressure_variance        = out_mean_pressure_max_variance        * rand0();
-      out_rate_variance                 = out_rate_max_variance                 * rand0();
-      out_exhale_volume_variance        = out_exhale_volume_max_variance        * rand0();
+      out_peak_pressure_variance = out_peak_pressure_max_variance * rand0();
+      norm_patient_peak_pressure = 0.5;
+      norm_out_peak_pressure = norm_patient_peak_pressure + norm_patient_peak_pressure * out_peak_pressure_variance;
+      out_peak_pressure = lerp(min_out_peak_pressure, max_out_peak_pressure, norm_out_peak_pressure);
+
+      out_mean_pressure_variance = out_mean_pressure_max_variance * rand0();
+      norm_patient_mean_pressure = 0.5;
+      norm_out_mean_pressure = norm_patient_mean_pressure + norm_patient_mean_pressure * out_mean_pressure_variance;
+      out_mean_pressure = lerp(min_out_mean_pressure, max_out_mean_pressure, norm_out_mean_pressure);
+
+      out_rate_variance = out_rate_max_variance * rand0();
+      norm_patient_rate = (commit_in_rate-min_in_rate)/(max_in_rate-min_in_rate);
+      norm_out_rate = norm_patient_rate + norm_patient_rate * out_rate_variance;
+      out_rate = lerp(min_out_rate, max_out_rate, norm_out_rate);
+
+      out_exhale_volume_variance = out_exhale_volume_max_variance * rand0();
+      norm_patient_exhale_volume = 0.5;
+      norm_out_exhale_volume = norm_patient_exhale_volume + norm_patient_exhale_volume * out_exhale_volume_variance;
+      out_exhale_volume = lerp(min_out_exhale_volume, max_out_exhale_volume, norm_out_exhale_volume);
+
       out_exhale_minute_volume_variance = out_exhale_minute_volume_max_variance * rand0();
-      out_ie_ratio_variance             = out_ie_ratio_max_variance             * rand0();
-
-      norm_out_peak_pressure        = patient_peak_pressure        + patient_peak_pressure        * out_peak_pressure_variance;
-      norm_out_mean_pressure        = patient_mean_pressure        + patient_mean_pressure        * out_mean_pressure_variance;
-      norm_out_rate                 = patient_rate                 + patient_rate                 * out_rate_variance;
-      norm_out_exhale_volume        = patient_exhale_volume        + patient_exhale_volume        * out_exhale_volume_variance;
-      norm_out_exhale_minute_volume = patient_exhale_minute_volume + patient_exhale_minute_volume * out_exhale_minute_volume_variance;
-      norm_out_ie_ratio             = patient_ie_ratio             + patient_ie_ratio             * out_ie_ratio_variance;
-
-      out_peak_pressure        = lerp(min_out_peak_pressure,        max_out_peak_pressure,        norm_out_peak_pressure);
-      out_mean_pressure        = lerp(min_out_mean_pressure,        max_out_mean_pressure,        norm_out_mean_pressure);
-      out_rate                 = lerp(min_out_rate,                 max_out_rate,                 norm_out_rate);
-      out_exhale_volume        = lerp(min_out_exhale_volume,        max_out_exhale_volume,        norm_out_exhale_volume);
+      norm_patient_exhale_minute_volume = ((out_rate*out_exhale_volume)-min_out_exhale_minute_volume)/(max_out_exhale_minute_volume-min_out_exhale_minute_volume);
+      norm_out_exhale_minute_volume = norm_patient_exhale_minute_volume + norm_patient_exhale_minute_volume * out_exhale_minute_volume_variance;
       out_exhale_minute_volume = lerp(min_out_exhale_minute_volume, max_out_exhale_minute_volume, norm_out_exhale_minute_volume);
-      out_ie_ratio             = lerp(min_out_ie_ratio,             max_out_ie_ratio,             norm_out_ie_ratio);
+
+      out_ie_ratio_variance = out_ie_ratio_max_variance * rand0();
+      norm_patient_ie_ratio = 1;
+      norm_out_ie_ratio = norm_patient_ie_ratio + norm_patient_ie_ratio * out_ie_ratio_variance;
+      out_ie_ratio = lerp(min_out_ie_ratio, max_out_ie_ratio, norm_out_ie_ratio);
     }
     while(blip_t > 1) blip_t -= 1;
   };
@@ -982,12 +993,12 @@ var GamePlayScene = function(game, stage)
       {
         switch(out_channel_btns[i].channel)
         {
-          case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure);        break;
-          case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure);        break;
-          case OUT_CHANNEL_RATE:                 sub = fdisp(out_rate);                 break;
-          case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume);        break;
-          case OUT_CHANNEL_EXHALE_MINUTE_VOLUME: sub = fdisp(out_exhale_minute_volume); break;
-          case OUT_CHANNEL_IE_RATIO:             sub = fdisp(out_ie_ratio);             break;
+          case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure,1);        break;
+          case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure,1);        break;
+          case OUT_CHANNEL_RATE:                 sub = fdisp(out_rate,1);                 break;
+          case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume,1);        break;
+          case OUT_CHANNEL_EXHALE_MINUTE_VOLUME: sub = fdisp(out_exhale_minute_volume,1); break;
+          case OUT_CHANNEL_IE_RATIO:             sub = "1:"+fdisp(1/out_ie_ratio,1);      break;
         }
         drawOutBtn(out_channel_btns[i],sub);
       }
@@ -1001,12 +1012,12 @@ var GamePlayScene = function(game, stage)
       {
         switch(in_channel_btns[i].channel)
         {
-          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume)+" L";  subsub = fdisp(in_volume)+" L";  break;
-          case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate)+" b/m";  subsub = fdisp(in_rate)+" b/m";  break;
-          case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow)+" l/m";  subsub = fdisp(in_flow)+" l/m";  break;
-          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy)+"% O2";   subsub = fdisp(in_oxy)+"% O2";   break;
-          case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout)+" s"; subsub = fdisp(in_timeout)+" s"; break;
-          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep)+"";      subsub = fdisp(in_peep)+"";      break;
+          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume,1)+" ml";  subsub = fdisp(in_volume,1)+" L";  break;
+          case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate,1)+" b/m";  subsub = fdisp(in_rate,1)+" b/m";  break;
+          case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow,1)+" l/m";  subsub = fdisp(in_flow,1)+" l/m";  break;
+          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy,1)+"% O2";   subsub = fdisp(in_oxy,1)+"% O2";   break;
+          case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout,1)+" s"; subsub = fdisp(in_timeout,1)+" s"; break;
+          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep,1)+"";      subsub = fdisp(in_peep,1)+"";      break;
         }
         if(subsub != sub) drawInBtn(in_channel_btns[i],sub,subsub);
         else              drawInBtn(in_channel_btns[i],sub);
@@ -1014,12 +1025,12 @@ var GamePlayScene = function(game, stage)
 
       switch(in_channel_btns[selected_channel].channel)
       {
-        case IN_CHANNEL_MODE:    sub = fdisp(in_volume)+" L";  break;
-        case IN_CHANNEL_RATE:    sub = fdisp(in_rate)+" b/m";  break;
-        case IN_CHANNEL_FLOW:    sub = fdisp(in_flow)+" l/m";  break;
-        case IN_CHANNEL_OXY:     sub = fdisp(in_oxy)+"% O2";   break;
-        case IN_CHANNEL_TIMEOUT: sub = fdisp(in_timeout)+" s"; break;
-        case IN_CHANNEL_PEEP:    sub = fdisp(in_peep)+"";      break;
+        case IN_CHANNEL_MODE:    sub = fdisp(in_volume,1)+" L";  break;
+        case IN_CHANNEL_RATE:    sub = fdisp(in_rate,1)+" b/m";  break;
+        case IN_CHANNEL_FLOW:    sub = fdisp(in_flow,1)+" l/m";  break;
+        case IN_CHANNEL_OXY:     sub = fdisp(in_oxy,1)+"% O2";   break;
+        case IN_CHANNEL_TIMEOUT: sub = fdisp(in_timeout,1)+" s"; break;
+        case IN_CHANNEL_PEEP:    sub = fdisp(in_peep,1)+"";      break;
       }
       ctx.fillStyle = dark_blue;
       ctx.fillText(in_channel_btns[selected_channel].title,commit_btn.x,commit_btn.y-40);
