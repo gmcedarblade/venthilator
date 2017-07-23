@@ -16,6 +16,7 @@ var GamePlayScene = function(game, stage)
   var white      = "#FFFFFF";
   var black      = "#000000";
   var gray       = "#888888";
+  var darken     = "rgba(0,0,0,0.5)";
 
   var knob_range_img;
   var knob_img;
@@ -87,7 +88,7 @@ var GamePlayScene = function(game, stage)
   var min_amplitude = 0;
   var max_amplitude = 2;
   var min_spacing = 0;
-  var max_spacing = 1;
+  var max_spacing = 0.2;
 
   //data
   var selected_mode = 0;
@@ -160,8 +161,10 @@ var GamePlayScene = function(game, stage)
   var patient_name_secondary = "Smith";
 
   //ui state
+  var blip_running = 0;
+  var blip_rate = 0.0013;
   var blip_t = 0;
-  var cur_screen = 0;
+  var cur_screen = 1;
 
   //ui
   var patient_volume_graph;
@@ -514,6 +517,9 @@ var GamePlayScene = function(game, stage)
       ctx.stroke();
       ctx.lineWidth = 1;
       ctx.drawImage(self.cache,0,0,self.w*blip_t,self.h,self.x,self.y,self.w*blip_t,self.h);
+
+      ctx.fillText("A",self.x+self.w-15,self.y+15);
+      ctx.fillText("B",self.x+self.w-15,self.y+self.h-5);
     }
   }
 
@@ -570,7 +576,8 @@ var GamePlayScene = function(game, stage)
     ctx.fillStyle = dark_blue;
     ctx.fillRect(btn.x,btn.y,btn.w,btn.h);
     ctx.fillStyle = white;
-    ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2);
+    ctx.font = "18px Helvetica";
+    ctx.fillText(btn.title,btn.x+10,btn.y+btn.h/2+8);
     if(sub) ctx.fillText(sub,btn.x+2,btn.y+btn.h/2+5);
     if(subsub) ctx.fillText(subsub,btn.x+2,btn.y+btn.h/2+15);
   }
@@ -627,7 +634,6 @@ var GamePlayScene = function(game, stage)
     icon_patient_img.src = "assets/icon-patient.png"
     icon_sad_face_img = new Image();
     icon_sad_face_img.src = "assets/sad-face.png"
-
 
     patient_volume_graph = new graph_set(red);
     patient_volume_graph.data.pulse_from_i = 0;
@@ -722,6 +728,7 @@ var GamePlayScene = function(game, stage)
       commit_in_oxy      = in_oxy;
       commit_in_timeout  = in_timeout;
       commit_in_peep     = in_peep;
+      blip_running = true;
     });
     commit_btn.title = "Commit Changes";
     commit_btn.ww = 0.4;
@@ -760,7 +767,6 @@ var GamePlayScene = function(game, stage)
     });
     next_btn.title = "Next Patient";
 
-
     alert_t = 0;
 
     update_graphs();
@@ -782,7 +788,7 @@ var GamePlayScene = function(game, stage)
         for(var i = 0; i < in_channel_btns.length; i++)
           clicker.filter(in_channel_btns[i]);
         clicker.filter(commit_btn);
-        clicker.filter(patient_btn);
+        //clicker.filter(patient_btn);
         clicker.filter(alarms_btn);
         clicker.filter(next_btn);
         dragger.filter(my_knob);
@@ -807,8 +813,7 @@ var GamePlayScene = function(game, stage)
     if(in_error) alert_t += 0.1;
     else         alert_t = 0;
 
-    var blip_rate = 0.001;
-    blip_t += blip_rate;
+    if(blip_running) blip_t += blip_rate;
     if(floor((blip_t-blip_rate)/patient_volume_graph.data.wavelength) != floor(blip_t/patient_volume_graph.data.wavelength))
     {
       out_peak_pressure_variance = out_peak_pressure_max_variance * rand0();
@@ -976,6 +981,21 @@ var GamePlayScene = function(game, stage)
       ctx.lineWidth = 1;
       ctx.fillStyle = dark_blue;
       ctx.fillRect(0,0,canv.width,patient_flow_graph.y+patient_flow_graph.h);
+
+      var y;
+      var h;
+      ctx.fillStyle = darken;
+
+      ctx.fillRect(0,0,canv.width,patient_volume_graph.y);
+
+      y = patient_volume_graph.y+patient_volume_graph.h;
+      h = patient_pressure_graph.y-y;
+      ctx.fillRect(0,y,canv.width,h);
+
+      y = patient_pressure_graph.y+patient_pressure_graph.h;
+      h = patient_flow_graph.y-y;
+      ctx.fillRect(0,y,canv.width,h);
+
       ctx.fillStyle = light_blue;
       ctx.font = "15px Helvetica";
       patient_volume_graph.draw();
@@ -984,6 +1004,9 @@ var GamePlayScene = function(game, stage)
       ctx.fillText("Pressure",patient_pressure_graph.x+10,patient_pressure_graph.y+20);
       patient_flow_graph.draw();
       ctx.fillText("Flow",patient_flow_graph.x+10,patient_flow_graph.y+20);
+      ctx.fillStyle = dark_blue;
+      ctx.fillText("0s", patient_flow_graph.x+4          ,patient_flow_graph.y+patient_flow_graph.h+14);
+      ctx.fillText("12s",patient_flow_graph.x+patient_flow_graph.w-27,patient_flow_graph.y+patient_flow_graph.h+14);
 
       ctx.font = "14px Helvetica";
       ctx.fillStyle = light_blue;
@@ -991,14 +1014,18 @@ var GamePlayScene = function(game, stage)
       var sub;
       for(var i = 0; i < out_channel_btns.length; i++)
       {
-        switch(out_channel_btns[i].channel)
+        if(!blip_running) sub = "-";
+        else
         {
-          case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure,1);        break;
-          case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure,1);        break;
-          case OUT_CHANNEL_RATE:                 sub = fdisp(out_rate,1);                 break;
-          case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume,1);        break;
-          case OUT_CHANNEL_EXHALE_MINUTE_VOLUME: sub = fdisp(out_exhale_minute_volume,1); break;
-          case OUT_CHANNEL_IE_RATIO:             sub = "1:"+fdisp(1/out_ie_ratio,1);      break;
+          switch(out_channel_btns[i].channel)
+          {
+            case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure,1);        break;
+            case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure,1);        break;
+            case OUT_CHANNEL_RATE:                 sub = fdisp(out_rate,1);                 break;
+            case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume,1);        break;
+            case OUT_CHANNEL_EXHALE_MINUTE_VOLUME: sub = fdisp(out_exhale_minute_volume,1); break;
+            case OUT_CHANNEL_IE_RATIO:             sub = "1:"+fdisp(1/out_ie_ratio,1);      break;
+          }
         }
         drawOutBtn(out_channel_btns[i],sub);
       }
@@ -1012,12 +1039,12 @@ var GamePlayScene = function(game, stage)
       {
         switch(in_channel_btns[i].channel)
         {
-          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume,1)+" ml";  subsub = fdisp(in_volume,1)+" L";  break;
-          case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate,1)+" b/m";  subsub = fdisp(in_rate,1)+" b/m";  break;
-          case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow,1)+" l/m";  subsub = fdisp(in_flow,1)+" l/m";  break;
-          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy,1)+"% O2";   subsub = fdisp(in_oxy,1)+"% O2";   break;
-          case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout,1)+" s"; subsub = fdisp(in_timeout,1)+" s"; break;
-          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep,1)+"";      subsub = fdisp(in_peep,1)+"";      break;
+          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume,1)+" ml";  subsub = fdisp(in_volume,1)+" ml"; break;
+          case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate,1)+" b/m";  subsub = fdisp(in_rate,1)+" b/m";   break;
+          case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow,1)+" l/m";  subsub = fdisp(in_flow,1)+" l/m";   break;
+          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy,1)+"% O2";   subsub = fdisp(in_oxy,1)+"% O2";    break;
+          case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout,1)+" s"; subsub = fdisp(in_timeout,1)+" s";  break;
+          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep,1)+"";      subsub = fdisp(in_peep,1)+"";       break;
         }
         if(subsub != sub) drawInBtn(in_channel_btns[i],sub,subsub);
         else              drawInBtn(in_channel_btns[i],sub);
@@ -1025,7 +1052,7 @@ var GamePlayScene = function(game, stage)
 
       switch(in_channel_btns[selected_channel].channel)
       {
-        case IN_CHANNEL_MODE:    sub = fdisp(in_volume,1)+" L";  break;
+        case IN_CHANNEL_MODE:    sub = fdisp(in_volume,1)+" ml"; break;
         case IN_CHANNEL_RATE:    sub = fdisp(in_rate,1)+" b/m";  break;
         case IN_CHANNEL_FLOW:    sub = fdisp(in_flow,1)+" l/m";  break;
         case IN_CHANNEL_OXY:     sub = fdisp(in_oxy,1)+"% O2";   break;
@@ -1034,7 +1061,8 @@ var GamePlayScene = function(game, stage)
       }
       ctx.fillStyle = dark_blue;
       ctx.fillText(in_channel_btns[selected_channel].title,commit_btn.x,commit_btn.y-40);
-      ctx.fillText(sub,commit_btn.x,commit_btn.y-20);
+      ctx.font = "22px Helvetica";
+      ctx.fillText(sub,commit_btn.x,commit_btn.y-12);
       drawBtn(commit_btn);
 
       ctx.drawImage(knob_range_img,my_knob.x,my_knob.y,my_knob.w,my_knob.h);
@@ -1049,8 +1077,8 @@ var GamePlayScene = function(game, stage)
 
       ctx.fillStyle = dark_blue;
       ctx.font = "15px Helvetica";
-      ctx.drawImage(icon_patient_img,patient_btn.x+5,patient_btn.y,patient_btn.w-10,patient_btn.h-5);
-      ctx.fillText("patient info",patient_btn.x-17,patient_btn.y+patient_btn.h+12);
+      //ctx.drawImage(icon_patient_img,patient_btn.x+5,patient_btn.y,patient_btn.w-10,patient_btn.h-5);
+      //ctx.fillText("patient info",patient_btn.x-17,patient_btn.y+patient_btn.h+12);
       ctx.drawImage(icon_alarms_img,alarms_btn.x+5,alarms_btn.y,alarms_btn.w-10,alarms_btn.h-5);
       ctx.fillText("alarms",alarms_btn.x,alarms_btn.y+alarms_btn.h+12);
       ctx.fillStyle = light_blue;
