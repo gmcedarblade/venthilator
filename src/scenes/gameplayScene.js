@@ -75,10 +75,10 @@ var GamePlayScene = function(game, stage)
 
   var min_in_alarm_pressure = 0;
   var max_in_alarm_pressure = 80;
-  var min_in_alarm_rate = 0;
-  var max_in_alarm_rate = 80;
-  var min_in_alarm_apnea = 0;
-  var max_in_alarm_apnea = 80;
+  var min_in_alarm_rate = 10;
+  var max_in_alarm_rate = 60;
+  var min_in_alarm_apnea = 10;
+  var max_in_alarm_apnea = 45;
 
   var min_out_peak_pressure        = 10;
   var max_out_peak_pressure        = 80;
@@ -123,6 +123,12 @@ var GamePlayScene = function(game, stage)
   var in_oxy      = lerp(min_in_oxy,      max_in_oxy,      norm_in_oxy);
   var in_timeout  = lerp(min_in_timeout,  max_in_timeout,  norm_in_timeout);
   var in_peep     = lerp(min_in_peep,     max_in_peep,     norm_in_peep);
+  var norm_in_alarm_min_pressure = 0;
+  var norm_in_alarm_max_pressure = 1;
+  var norm_in_alarm_min_rate = 0;
+  var norm_in_alarm_max_rate = 1;
+  var norm_in_alarm_min_apnea = 0;
+  var norm_in_alarm_max_apnea = 1;
   var in_alarm_min_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_min_pressure);
   var in_alarm_max_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_max_pressure);
   var in_alarm_min_rate = lerp(min_in_alarm_rate, max_in_alarm_rate, norm_in_alarm_min_rate);
@@ -160,12 +166,6 @@ var GamePlayScene = function(game, stage)
   var out_exhale_volume        = lerp(min_out_exhale_volume,        max_out_exhale_volume,        norm_out_exhale_volume);
   var out_exhale_minute_volume = lerp(min_out_exhale_minute_volume, max_out_exhale_minute_volume, norm_out_exhale_minute_volume);
   var out_ie_ratio             = lerp(min_out_ie_ratio,             max_out_ie_ratio,             norm_out_ie_ratio);
-  var norm_in_alarm_min_pressure = 0.5;
-  var norm_in_alarm_max_pressure = 0.5;
-  var norm_in_alarm_min_rate = 0.5;
-  var norm_in_alarm_max_rate = 0.5;
-  var norm_in_alarm_min_apnea = 0.5;
-  var norm_in_alarm_max_apnea = 0.5;
   var patient_compliance = 1;
   var patient_volume = 0;
   var patient_pressure = 0;
@@ -237,7 +237,7 @@ var GamePlayScene = function(game, stage)
     var ibw;
     if(patient_sex == "M") ibw = 50  +2.3*(patient_height-(5*12));
     else                   ibw = 45.5+2.3*(patient_height-(5*12));
-    var expected_volume = 7*ibw;
+    var expected_volume = 0.007*ibw;
     var expected_rate = 12;
     var expected_peep = 5;
     var expected_oxy = 50;
@@ -319,8 +319,11 @@ var GamePlayScene = function(game, stage)
       ctx.fillText(minmin_text(),self.x+4,self.y+self.h+20);
       ctx.fillText(maxmax_text(),self.x+4,self.y-4);
 
-      ctx.strokeRect(self.x-1,self.y+self.h-(self.h*self.v)-1,self.w+2,2);
-      ctx.fillText(text(),self.x+self.w+5,self.y+self.h-(self.v*self.h));
+      if(blip_running)
+      {
+        ctx.strokeRect(self.x-1,self.y+self.h-(self.h*self.v)-1,self.w+2,2);
+        ctx.fillText(text(),self.x+self.w+5,self.y+self.h-(self.v*self.h));
+      }
     }
   }
 
@@ -821,28 +824,29 @@ var GamePlayScene = function(game, stage)
       function(){selected_alarm = IN_ALARM_MAX_PRESSURE;},
       function(){return selected_alarm == IN_ALARM_MIN_PRESSURE;},
       function(){return selected_alarm == IN_ALARM_MAX_PRESSURE;},
-      function(){return fdisp(in_alarm_min_pressure,1)+" cwp";},
-      function(){return fdisp(in_alarm_max_pressure,1)+" cwp";},
-      function(){return fdisp(out_peak_pressure,1)+" cwp";},
-      function(){return fdisp(min_in_alarm_pressure,1)+" cwp";},
-      function(){return fdisp(max_in_alarm_pressure,1)+" cwp";},
+      function(){return fdisp(in_alarm_min_pressure,1)+" cm H2O";},
+      function(){return fdisp(in_alarm_max_pressure,1)+" cm H2O";},
+      function(){return fdisp(out_peak_pressure,1)+" cm H2O";},
+      function(){return fdisp(min_in_alarm_pressure,1)+" cm H2O";},
+      function(){return fdisp(max_in_alarm_pressure,1)+" cm H2O";},
       );
-    pressure_alarm.wx = -0.1;
+    //pressure_alarm.wx = -0.25;
+    pressure_alarm.wx = -0.2;
     pressure_alarm.wy = 0.2;
     pressure_alarm.ww = 0.1;
     pressure_alarm.wh = 0.5;
     screenSpace(cam,canv,pressure_alarm);
 
     rate_alarm = new alarm(
-      function(){selected_alarm = IN_ALARM_MIN_PRESSURE;},
-      function(){selected_alarm = IN_ALARM_MAX_PRESSURE;},
-      function(){return selected_alarm == IN_ALARM_MIN_PRESSURE;},
-      function(){return selected_alarm == IN_ALARM_MAX_PRESSURE;},
-      function(){return fdisp(in_alarm_min_pressure,1)+" cwp";},
-      function(){return fdisp(in_alarm_max_pressure,1)+" cwp";},
-      function(){return fdisp(out_peak_pressure,1)+" cwp";},
-      function(){return fdisp(min_in_alarm_pressure,1)+" cwp";},
-      function(){return fdisp(max_in_alarm_pressure,1)+" cwp";},
+      function(){selected_alarm = IN_ALARM_MIN_RATE;},
+      function(){selected_alarm = IN_ALARM_MAX_RATE;},
+      function(){return selected_alarm == IN_ALARM_MIN_RATE;},
+      function(){return selected_alarm == IN_ALARM_MAX_RATE;},
+      function(){return fdisp(in_alarm_min_rate,1)+" cm H2O";},
+      function(){return fdisp(in_alarm_max_rate,1)+" cm H2O";},
+      function(){return fdisp(out_rate,1)+" cm H2O";},
+      function(){return fdisp(min_in_alarm_rate,1)+" cm H2O";},
+      function(){return fdisp(max_in_alarm_rate,1)+" cm H2O";},
       );
     rate_alarm.wx = 0.2;
     rate_alarm.wy = 0.2;
@@ -851,22 +855,21 @@ var GamePlayScene = function(game, stage)
     screenSpace(cam,canv,rate_alarm);
 
     apnea_alarm = new alarm(
-      function(){selected_alarm = IN_ALARM_MIN_PRESSURE;},
-      function(){selected_alarm = IN_ALARM_MAX_PRESSURE;},
-      function(){return selected_alarm == IN_ALARM_MIN_PRESSURE;},
-      function(){return selected_alarm == IN_ALARM_MAX_PRESSURE;},
-      function(){return fdisp(in_alarm_min_pressure,1)+" cwp";},
-      function(){return fdisp(in_alarm_max_pressure,1)+" cwp";},
-      function(){return fdisp(out_peak_pressure,1)+" cwp";},
-      function(){return fdisp(min_in_alarm_pressure,1)+" cwp";},
-      function(){return fdisp(max_in_alarm_pressure,1)+" cwp";},
+      function(){selected_alarm = IN_ALARM_MIN_APNEA;},
+      function(){selected_alarm = IN_ALARM_MAX_APNEA;},
+      function(){return selected_alarm == IN_ALARM_MIN_APNEA;},
+      function(){return selected_alarm == IN_ALARM_MAX_APNEA;},
+      function(){return fdisp(in_alarm_min_apnea,1)+" cm H2O";},
+      function(){return fdisp(in_alarm_max_apnea,1)+" cm H2O";},
+      function(){return fdisp(0.5,1)+" cm H2O";},
+      function(){return fdisp(min_in_alarm_apnea,1)+" cm H2O";},
+      function(){return fdisp(max_in_alarm_apnea,1)+" cm H2O";},
       );
     apnea_alarm.wx = 0.4;
     apnea_alarm.wy = 0.2;
     apnea_alarm.ww = 0.1;
     apnea_alarm.wh = 0.5;
     screenSpace(cam,canv,apnea_alarm);
-    update_alarms();
 
     alarm_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
     {
@@ -878,6 +881,18 @@ var GamePlayScene = function(game, stage)
         case IN_ALARM_MAX_PRESSURE:
           norm_in_alarm_max_pressure = clamp(norm_in_alarm_min_pressure,1,norm_in_alarm_max_pressure+v);
           break;
+        case IN_ALARM_MIN_RATE:
+          norm_in_alarm_min_rate = clamp(0,norm_in_alarm_max_rate,norm_in_alarm_min_rate+v);
+          break;
+        case IN_ALARM_MAX_RATE:
+          norm_in_alarm_max_rate = clamp(norm_in_alarm_min_rate,1,norm_in_alarm_max_rate+v);
+          break;
+        case IN_ALARM_MIN_APNEA:
+          norm_in_alarm_min_apnea = clamp(0,norm_in_alarm_max_apnea,norm_in_alarm_min_apnea+v);
+          break;
+        case IN_ALARM_MAX_APNEA:
+          norm_in_alarm_max_apnea = clamp(norm_in_alarm_min_apnea,1,norm_in_alarm_max_apnea+v);
+          break;
       }
 
       update_alarms();
@@ -888,22 +903,23 @@ var GamePlayScene = function(game, stage)
     alarm_knob.wx = -0.28;
     alarm_knob.wy = -0.35;
     screenSpace(cam,canv,alarm_knob);
+    update_alarms();
 
     out_channel_btns = [];
     in_channel_btns = [];
 
     var x = -0.5+(out_btn_w/2)+0.05;
     var s = out_btn_w+0.02;
-    genOutChannelBtn(OUT_CHANNEL_PEAK_PRESSURE,        "PP"  /*"Peak Pressure"*/,        x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_MEAN_PRESSURE,        "MP"  /*"Mean Pressure"*/,        x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_RATE,                 "Freq"/*"Frequency"*/,            x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_EXHALE_VOLUME,        "EV"  /*"Exhale Volume"*/,        x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_PEAK_PRESSURE,        "PIP (cm H20)"  /*"Peak Pressure"*/,        x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_MEAN_PRESSURE,        "MAP (cm H20)"  /*"Mean Pressure"*/,        x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_RATE,                 "Freq (b/min)"  /*"Frequency"*/,            x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_EXHALE_VOLUME,        "EV (L)"        /*"Exhale Volume"*/,        x); x += s;
     genOutChannelBtn(OUT_CHANNEL_EXHALE_MINUTE_VOLUME, "EMV" /*"Exhale Minute Volume"*/, x); x += s;
     genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "I:E" /*"I:E"*/,                  x); x += s;
     x = -0.5+(in_btn_w/2)+0.05;
     s = in_btn_w+0.02;
     genInChannelBtn(IN_CHANNEL_MODE,   "Volume", x); x += s;
-    genInChannelBtn(IN_CHANNEL_RATE,   "Rate",   x); x += s;
+    genInChannelBtn(IN_CHANNEL_RATE,   "Freq",   x); x += s;
     genInChannelBtn(IN_CHANNEL_FLOW,   "Flow",   x); x += s;
     genInChannelBtn(IN_CHANNEL_OXY,    "Oxygen", x); x += s;
     genInChannelBtn(IN_CHANNEL_TIMEOUT,"I Time", x); x += s;
@@ -996,8 +1012,8 @@ var GamePlayScene = function(game, stage)
         clicker.filter(pressure_alarm.max_box);
         clicker.filter(rate_alarm.min_box);
         clicker.filter(rate_alarm.max_box);
-        clicker.filter(apnea_alarm.min_box);
-        clicker.filter(apnea_alarm.max_box);
+        //clicker.filter(apnea_alarm.min_box);
+        //clicker.filter(apnea_alarm.max_box);
         dragger.filter(alarm_knob);
         break;
       case SCREEN_NOTIF:
@@ -1019,13 +1035,18 @@ var GamePlayScene = function(game, stage)
     if(blip_running) blip_t += blip_rate;
     if(floor((blip_t-blip_rate)/patient_volume_graph.data.wavelength) != floor(blip_t/patient_volume_graph.data.wavelength))
     {
+      var ibw;
+      if(patient_sex == "M") ibw = 50  +2.3*(patient_height-(5*12));
+      else                   ibw = 45.5+2.3*(patient_height-(5*12));
+      var expected_volume = 0.007*ibw;
+
       out_peak_pressure_variance = out_peak_pressure_max_variance * rand0();
-      norm_patient_peak_pressure = 0.5;
+      norm_patient_peak_pressure = commit_in_volume/expected_volume * 0.155; //0.155 is ~ good readout
       norm_out_peak_pressure = norm_patient_peak_pressure + norm_patient_peak_pressure * out_peak_pressure_variance;
       out_peak_pressure = lerp(min_out_peak_pressure, max_out_peak_pressure, norm_out_peak_pressure);
 
       out_mean_pressure_variance = out_mean_pressure_max_variance * rand0();
-      norm_patient_mean_pressure = 0.5;
+      norm_patient_mean_pressure = commit_in_volume/expected_volume * 0.15; //0.15 is ~ good readout
       norm_out_mean_pressure = norm_patient_mean_pressure + norm_patient_mean_pressure * out_mean_pressure_variance;
       out_mean_pressure = lerp(min_out_mean_pressure, max_out_mean_pressure, norm_out_mean_pressure);
 
@@ -1035,7 +1056,7 @@ var GamePlayScene = function(game, stage)
       out_rate = lerp(min_out_rate, max_out_rate, norm_out_rate);
 
       out_exhale_volume_variance = out_exhale_volume_max_variance * rand0();
-      norm_patient_exhale_volume = 0.5;
+      norm_patient_exhale_volume = mapVal(min_out_exhale_volume,max_out_exhale_volume,0,1,commit_in_volume);
       norm_out_exhale_volume = norm_patient_exhale_volume + norm_patient_exhale_volume * out_exhale_volume_variance;
       out_exhale_volume = lerp(min_out_exhale_volume, max_out_exhale_volume, norm_out_exhale_volume);
 
@@ -1050,6 +1071,7 @@ var GamePlayScene = function(game, stage)
       out_ie_ratio = lerp(min_out_ie_ratio, max_out_ie_ratio, norm_out_ie_ratio);
     }
     while(blip_t > 1) blip_t -= 1;
+    evaluate_patient();
   };
 
   self.draw = function()
@@ -1117,11 +1139,18 @@ var GamePlayScene = function(game, stage)
       ctx.fillStyle = white;
       ctx.drawImage(icon_alarms_img,20,15,30,40);
       ctx.font = "30px Helvetica";
+      ctx.fillStyle = light_blue;
       ctx.fillText("alarms",70,45);
 
+      ctx.font = "20px Helvetica";
+      ctx.fillStyle = light_blue;
+      ctx.fillText("Pressure",pressure_alarm.x,pressure_alarm.y-30);
       pressure_alarm.draw();
+      ctx.font = "20px Helvetica";
+      ctx.fillStyle = light_blue;
+      ctx.fillText("Rate",rate_alarm.x,rate_alarm.y-30);
       rate_alarm.draw();
-      apnea_alarm.draw();
+      //apnea_alarm.draw();
 
       ctx.drawImage(knob_range_img,alarm_knob.x,alarm_knob.y,alarm_knob.w,alarm_knob.h);
       ctx.drawImage(knob_img,alarm_knob.x+10,alarm_knob.y+10,alarm_knob.w-20,alarm_knob.h-20);
@@ -1228,7 +1257,7 @@ var GamePlayScene = function(game, stage)
         {
           switch(out_channel_btns[i].channel)
           {
-            case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure,1);        break;
+            case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure,1); break;
             case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure,1);        break;
             case OUT_CHANNEL_RATE:                 sub = fdisp(out_rate,1);                 break;
             case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume,1);        break;
@@ -1248,12 +1277,12 @@ var GamePlayScene = function(game, stage)
       {
         switch(in_channel_btns[i].channel)
         {
-          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume,3)+" L";  subsub = fdisp(in_volume,3)+" L";  break;
+          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume,3)+" L";    subsub = fdisp(in_volume,3)+" L";  break;
           case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate,1)+" b/min";  subsub = fdisp(in_rate,1)+" b/min";  break;
           case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow,0)+" l/min";  subsub = fdisp(in_flow,0)+" l/min";  break;
-          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy,0)+"%";   subsub = fdisp(in_oxy,0)+"%";   break;
+          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy,0)+"%";        subsub = fdisp(in_oxy,0)+"%";   break;
           case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout,1)+" sec"; subsub = fdisp(in_timeout,1)+" sec"; break;
-          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep,1)+" cm H2O";      subsub = fdisp(in_peep,1)+" cm H2O";      break;
+          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep,1)+" cm H2O"; subsub = fdisp(in_peep,1)+" cm H2O";      break;
         }
         if(subsub != sub) drawInBtn(in_channel_btns[i],sub,subsub);
         else              drawInBtn(in_channel_btns[i],sub);
