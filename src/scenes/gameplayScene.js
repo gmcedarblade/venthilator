@@ -962,6 +962,7 @@ var GamePlayScene = function(game, stage)
     alarms_btn = new ButtonBox(120,canv.height-65,40,40, function()
     {
       cur_screen = SCREEN_ALARMS;
+      update_alarms();
     });
     alarms_btn.title = "alarms";
 
