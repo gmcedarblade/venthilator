@@ -951,6 +951,7 @@ var GamePlayScene = function(game, stage)
       commit_in_timeout  = in_timeout;
       commit_in_peep     = in_peep;
       blip_running = true;
+      update_alarms();
     });
     commit_btn.title = "Commit Changes";
     commit_btn.ww = 0.4;
@@ -995,6 +996,7 @@ var GamePlayScene = function(game, stage)
     patient_volume_graph.draw(false);
     patient_pressure_graph.draw(false);
     patient_flow_graph.draw(false);
+    update_alarms();
 
     clicker = new Clicker({source:stage.dispCanv.canvas});
     dragger = new Dragger({source:stage.dispCanv.canvas});
@@ -1228,10 +1230,11 @@ var GamePlayScene = function(game, stage)
       }
 
       ctx.fillStyle = white;
+      ctx.strokeStyle = white;
       ctx.font = "30px Helvetica"
       ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
 
-      ctx.fillText(dismiss_submit_btn.title,dismiss_submit_btn.x,dismiss_submit_btn.y+dismiss_submit_btn.h/2+18);
+      ctx.fillText(dismiss_submit_btn.title,dismiss_submit_btn.x+10,dismiss_submit_btn.y+dismiss_submit_btn.h/2+8);
       canv.strokeRoundRect(dismiss_submit_btn.x,dismiss_submit_btn.y,dismiss_submit_btn.w,dismiss_submit_btn.h,5);
     }
     else if(cur_screen == SCREEN_VENTILATOR)
