@@ -49,8 +49,8 @@ var GamePlayScene = function(game, stage)
   var IN_ALARM_MAX_PRESSURE = ENUM; ENUM++;
   var IN_ALARM_MIN_RATE = ENUM; ENUM++;
   var IN_ALARM_MAX_RATE = ENUM; ENUM++;
-  var IN_ALARM_MIN_APNEA = ENUM; ENUM++;
-  var IN_ALARM_MAX_APNEA = ENUM; ENUM++;
+  var IN_ALARM_MIN_EXHALE_MINUTE_VOLUME = ENUM; ENUM++;
+  var IN_ALARM_MAX_EXHALE_MINUTE_VOLUME = ENUM; ENUM++;
   ENUM = 0;
   var SCREEN_PATIENT     = ENUM; ENUM++;
   var SCREEN_VENTILATOR  = ENUM; ENUM++;
@@ -77,8 +77,8 @@ var GamePlayScene = function(game, stage)
   var max_in_alarm_pressure = 80;
   var min_in_alarm_rate = 10;
   var max_in_alarm_rate = 60;
-  var min_in_alarm_apnea = 10;
-  var max_in_alarm_apnea = 45;
+  var min_in_alarm_exhale_minute_volume = 10;
+  var max_in_alarm_exhale_minute_volume = 45;
 
   var min_out_peak_pressure        = 10;
   var max_out_peak_pressure        = 80;
@@ -127,14 +127,14 @@ var GamePlayScene = function(game, stage)
   var norm_in_alarm_max_pressure = 1;
   var norm_in_alarm_min_rate = 0;
   var norm_in_alarm_max_rate = 1;
-  var norm_in_alarm_min_apnea = 0;
-  var norm_in_alarm_max_apnea = 1;
+  var norm_in_alarm_min_exhale_minute_volume = 0;
+  var norm_in_alarm_max_exhale_minute_volume = 1;
   var in_alarm_min_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_min_pressure);
   var in_alarm_max_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_max_pressure);
   var in_alarm_min_rate = lerp(min_in_alarm_rate, max_in_alarm_rate, norm_in_alarm_min_rate);
   var in_alarm_max_rate = lerp(min_in_alarm_rate, max_in_alarm_rate, norm_in_alarm_max_rate);
-  var in_alarm_min_apnea = lerp(min_in_alarm_apnea, max_in_alarm_apnea, norm_in_alarm_min_apnea);
-  var in_alarm_max_apnea = lerp(min_in_alarm_apnea, max_in_alarm_apnea, norm_in_alarm_max_apnea);
+  var in_alarm_min_exhale_minute_volume = lerp(min_in_alarm_exhale_minute_volume, max_in_alarm_exhale_minute_volume, norm_in_alarm_min_exhale_minute_volume);
+  var in_alarm_max_exhale_minute_volume = lerp(min_in_alarm_exhale_minute_volume, max_in_alarm_exhale_minute_volume, norm_in_alarm_max_exhale_minute_volume);
   var commit_in_volume   = in_volume;
   var commit_in_pressure = in_pressure;
   var commit_in_rate     = in_rate;
@@ -199,7 +199,7 @@ var GamePlayScene = function(game, stage)
   var patient_flow_graph;
   var pressure_alarm;
   var rate_alarm;
-  var apnea_alarm;
+  var exhale_minute_volume_alarm;
   var vent_knob;
   var alarm_knob;
   var out_channel_btns;
@@ -258,7 +258,7 @@ var GamePlayScene = function(game, stage)
     return false;
   }
 
-  var alarm = function(min_select,max_select,min_selected,max_selected,min_text,max_text,text,minmin_text,maxmax_text)
+  var alarm = function(min_select,max_select,min_selected,max_selected,min_text,max_text,text,minmin_text,maxmax_text,title,label)
   {
     var self = this;
     self.wx = 0;
@@ -279,12 +279,12 @@ var GamePlayScene = function(game, stage)
 
     self.calcBtns = function()
     {
-      self.min_box.w = 60;
+      self.min_box.w = 50;
       self.min_box.h = 40;
       self.min_box.x = self.x-self.min_box.w-5;
       self.min_box.y = self.y+self.h-(self.min_v*self.h);
 
-      self.max_box.w = 60;
+      self.max_box.w = 50;
       self.max_box.h = 40;
       self.max_box.x = self.x-self.max_box.w-5;
       self.max_box.y = self.y+self.h-self.max_box.h-(self.max_v*self.h);
@@ -295,12 +295,19 @@ var GamePlayScene = function(game, stage)
       ctx.strokeRect(self.x,self.y,self.w,self.h);
 
       ctx.fillStyle = dark_blue;
+      ctx.font = "20px Helvetica";
+      ctx.fillStyle = dark_blue;
+      ctx.fillText(title,self.x,self.y-50);
+      ctx.font = "14px Helvetica";
+      ctx.fillText(label,self.x,self.y-30);
+
+      ctx.fillStyle = dark_blue;
       if(min_selected()) canv.fillRoundRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h,5);
       ctx.fillStyle = light_blue;
-      ctx.font = "16px Helvetica";
-      ctx.fillText("min",self.min_box.x+10,self.min_box.y+20);
       ctx.font = "14px Helvetica";
-      ctx.fillText(min_text(),self.min_box.x+10,self.min_box.y+33);
+      ctx.fillText("min",self.min_box.x+7,self.min_box.y+20);
+      ctx.font = "12px Helvetica";
+      ctx.fillText(min_text(),self.min_box.x+7,self.min_box.y+33);
       ctx.strokeStyle = light_blue;
       canv.strokeRoundRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h,5);
       ctx.strokeRect(self.x-2,self.min_box.y-2,self.w+4,4);
@@ -308,10 +315,10 @@ var GamePlayScene = function(game, stage)
       ctx.fillStyle = dark_blue;
       if(max_selected()) canv.fillRoundRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h,5);
       ctx.fillStyle = light_blue;
-      ctx.font = "16px Helvetica";
-      ctx.fillText("max",self.max_box.x+10,self.max_box.y+20);
       ctx.font = "14px Helvetica";
-      ctx.fillText(max_text(),self.max_box.x+10,self.max_box.y+33);
+      ctx.fillText("max",self.max_box.x+7,self.max_box.y+20);
+      ctx.font = "12px Helvetica";
+      ctx.fillText(max_text(),self.max_box.x+7,self.max_box.y+33);
       ctx.strokeStyle = light_blue;
       canv.strokeRoundRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h,5);
       ctx.strokeRect(self.x-2,self.max_box.y+self.max_box.h-2,self.w+4,4);
@@ -734,12 +741,12 @@ var GamePlayScene = function(game, stage)
     in_alarm_max_rate = lerp(min_in_alarm_rate, max_in_alarm_rate, norm_in_alarm_max_rate);
     rate_alarm.calcBtns();
 
-    apnea_alarm.v = mapVal(min_in_alarm_apnea,max_in_alarm_apnea,0,1,0.5);
-    apnea_alarm.min_v = norm_in_alarm_min_apnea;
-    apnea_alarm.max_v = norm_in_alarm_max_apnea;
-    in_alarm_min_apnea = lerp(min_in_alarm_apnea, max_in_alarm_apnea, norm_in_alarm_min_apnea);
-    in_alarm_max_apnea = lerp(min_in_alarm_apnea, max_in_alarm_apnea, norm_in_alarm_max_apnea);
-    apnea_alarm.calcBtns();
+    exhale_minute_volume_alarm.v = mapVal(min_in_alarm_exhale_minute_volume,max_in_alarm_exhale_minute_volume,0,1,out_exhale_minute_volume);
+    exhale_minute_volume_alarm.min_v = norm_in_alarm_min_exhale_minute_volume;
+    exhale_minute_volume_alarm.max_v = norm_in_alarm_max_exhale_minute_volume;
+    in_alarm_min_exhale_minute_volume = lerp(min_in_alarm_exhale_minute_volume, max_in_alarm_exhale_minute_volume, norm_in_alarm_min_exhale_minute_volume);
+    in_alarm_max_exhale_minute_volume = lerp(min_in_alarm_exhale_minute_volume, max_in_alarm_exhale_minute_volume, norm_in_alarm_max_exhale_minute_volume);
+    exhale_minute_volume_alarm.calcBtns();
   }
 
   self.ready = function()
@@ -824,15 +831,16 @@ var GamePlayScene = function(game, stage)
       function(){selected_alarm = IN_ALARM_MAX_PRESSURE;},
       function(){return selected_alarm == IN_ALARM_MIN_PRESSURE;},
       function(){return selected_alarm == IN_ALARM_MAX_PRESSURE;},
-      function(){return fdisp(in_alarm_min_pressure,1)+" cm H2O";},
-      function(){return fdisp(in_alarm_max_pressure,1)+" cm H2O";},
-      function(){return fdisp(out_peak_pressure,1)+" cm H2O";},
-      function(){return fdisp(min_in_alarm_pressure,1)+" cm H2O";},
-      function(){return fdisp(max_in_alarm_pressure,1)+" cm H2O";},
+      function(){return fdisp(in_alarm_min_pressure,0);},
+      function(){return fdisp(in_alarm_max_pressure,0);},
+      function(){return fdisp(out_peak_pressure,0);},
+      function(){return fdisp(min_in_alarm_pressure,0);},
+      function(){return fdisp(max_in_alarm_pressure,0);},
+      "Pressure",
+      "cm H20"
       );
-    //pressure_alarm.wx = -0.25;
-    pressure_alarm.wx = -0.2;
-    pressure_alarm.wy = 0.2;
+    pressure_alarm.wx = -0.27;
+    pressure_alarm.wy = 0.15;
     pressure_alarm.ww = 0.1;
     pressure_alarm.wh = 0.5;
     screenSpace(cam,canv,pressure_alarm);
@@ -842,34 +850,38 @@ var GamePlayScene = function(game, stage)
       function(){selected_alarm = IN_ALARM_MAX_RATE;},
       function(){return selected_alarm == IN_ALARM_MIN_RATE;},
       function(){return selected_alarm == IN_ALARM_MAX_RATE;},
-      function(){return fdisp(in_alarm_min_rate,1)+" cm H2O";},
-      function(){return fdisp(in_alarm_max_rate,1)+" cm H2O";},
-      function(){return fdisp(out_rate,1)+" cm H2O";},
-      function(){return fdisp(min_in_alarm_rate,1)+" cm H2O";},
-      function(){return fdisp(max_in_alarm_rate,1)+" cm H2O";},
+      function(){return fdisp(in_alarm_min_rate,0);},
+      function(){return fdisp(in_alarm_max_rate,0);},
+      function(){return fdisp(out_rate,0);},
+      function(){return fdisp(min_in_alarm_rate,0);},
+      function(){return fdisp(max_in_alarm_rate,0);},
+      "Rate",
+      "b/min"
       );
-    rate_alarm.wx = 0.2;
-    rate_alarm.wy = 0.2;
-    rate_alarm.ww = 0.1;
-    rate_alarm.wh = 0.5;
+    rate_alarm.wx = 0.05;
+    rate_alarm.wy = pressure_alarm.wy;
+    rate_alarm.ww = pressure_alarm.ww;
+    rate_alarm.wh = pressure_alarm.wh;
     screenSpace(cam,canv,rate_alarm);
 
-    apnea_alarm = new alarm(
-      function(){selected_alarm = IN_ALARM_MIN_APNEA;},
-      function(){selected_alarm = IN_ALARM_MAX_APNEA;},
-      function(){return selected_alarm == IN_ALARM_MIN_APNEA;},
-      function(){return selected_alarm == IN_ALARM_MAX_APNEA;},
-      function(){return fdisp(in_alarm_min_apnea,1)+" cm H2O";},
-      function(){return fdisp(in_alarm_max_apnea,1)+" cm H2O";},
-      function(){return fdisp(0.5,1)+" cm H2O";},
-      function(){return fdisp(min_in_alarm_apnea,1)+" cm H2O";},
-      function(){return fdisp(max_in_alarm_apnea,1)+" cm H2O";},
+    exhale_minute_volume_alarm = new alarm(
+      function(){selected_alarm = IN_ALARM_MIN_EXHALE_MINUTE_VOLUME;},
+      function(){selected_alarm = IN_ALARM_MAX_EXHALE_MINUTE_VOLUME;},
+      function(){return selected_alarm == IN_ALARM_MIN_EXHALE_MINUTE_VOLUME;},
+      function(){return selected_alarm == IN_ALARM_MAX_EXHALE_MINUTE_VOLUME;},
+      function(){return fdisp(in_alarm_min_exhale_minute_volume,1);},
+      function(){return fdisp(in_alarm_max_exhale_minute_volume,1);},
+      function(){return fdisp(out_exhale_minute_volume,1);},
+      function(){return fdisp(min_in_alarm_exhale_minute_volume,1);},
+      function(){return fdisp(max_in_alarm_exhale_minute_volume,1);},
+      "Exhaled Minute Volume",
+      "L/min"
       );
-    apnea_alarm.wx = 0.4;
-    apnea_alarm.wy = 0.2;
-    apnea_alarm.ww = 0.1;
-    apnea_alarm.wh = 0.5;
-    screenSpace(cam,canv,apnea_alarm);
+    exhale_minute_volume_alarm.wx = 0.4;
+    exhale_minute_volume_alarm.wy = pressure_alarm.wy;
+    exhale_minute_volume_alarm.ww = pressure_alarm.ww;
+    exhale_minute_volume_alarm.wh = pressure_alarm.wh;
+    screenSpace(cam,canv,exhale_minute_volume_alarm);
 
     alarm_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
     {
@@ -887,11 +899,11 @@ var GamePlayScene = function(game, stage)
         case IN_ALARM_MAX_RATE:
           norm_in_alarm_max_rate = clamp(norm_in_alarm_min_rate,1,norm_in_alarm_max_rate+v);
           break;
-        case IN_ALARM_MIN_APNEA:
-          norm_in_alarm_min_apnea = clamp(0,norm_in_alarm_max_apnea,norm_in_alarm_min_apnea+v);
+        case IN_ALARM_MIN_EXHALE_MINUTE_VOLUME:
+          norm_in_alarm_min_exhale_minute_volume = clamp(0,norm_in_alarm_max_exhale_minute_volume,norm_in_alarm_min_exhale_minute_volume+v);
           break;
-        case IN_ALARM_MAX_APNEA:
-          norm_in_alarm_max_apnea = clamp(norm_in_alarm_min_apnea,1,norm_in_alarm_max_apnea+v);
+        case IN_ALARM_MAX_EXHALE_MINUTE_VOLUME:
+          norm_in_alarm_max_exhale_minute_volume = clamp(norm_in_alarm_min_exhale_minute_volume,1,norm_in_alarm_max_exhale_minute_volume+v);
           break;
       }
 
@@ -901,7 +913,7 @@ var GamePlayScene = function(game, stage)
     alarm_knob.ww = 0.3;
     alarm_knob.wh = 0.3;
     alarm_knob.wx = -0.28;
-    alarm_knob.wy = -0.35;
+    alarm_knob.wy = -0.5;
     screenSpace(cam,canv,alarm_knob);
     update_alarms();
 
@@ -914,8 +926,8 @@ var GamePlayScene = function(game, stage)
     genOutChannelBtn(OUT_CHANNEL_MEAN_PRESSURE,        "MAP (cm H20)"  /*"Mean Pressure"*/,        x); x += s;
     genOutChannelBtn(OUT_CHANNEL_RATE,                 "Freq (b/min)"  /*"Frequency"*/,            x); x += s;
     genOutChannelBtn(OUT_CHANNEL_EXHALE_VOLUME,        "EV (L)"        /*"Exhale Volume"*/,        x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_EXHALE_MINUTE_VOLUME, "EMV" /*"Exhale Minute Volume"*/, x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "I:E" /*"I:E"*/,                  x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_EXHALE_MINUTE_VOLUME, "EMV (L/min)"   /*"Exhale Minute Volume"*/, x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "I:E"           /*"I:E"*/,                  x); x += s;
     x = -0.5+(in_btn_w/2)+0.05;
     s = in_btn_w+0.02;
     genInChannelBtn(IN_CHANNEL_MODE,   "Volume", x); x += s;
@@ -947,7 +959,7 @@ var GamePlayScene = function(game, stage)
     commit_btn.wy = -0.42;
     screenSpace(cam,canv,commit_btn);
 
-    x_btn = new ButtonBox(canv.width-50,30,40,40, function()
+    x_btn = new ButtonBox(canv.width-50,10,40,40, function()
     {
       cur_screen = SCREEN_VENTILATOR;
     });
@@ -1012,8 +1024,8 @@ var GamePlayScene = function(game, stage)
         clicker.filter(pressure_alarm.max_box);
         clicker.filter(rate_alarm.min_box);
         clicker.filter(rate_alarm.max_box);
-        //clicker.filter(apnea_alarm.min_box);
-        //clicker.filter(apnea_alarm.max_box);
+        clicker.filter(exhale_minute_volume_alarm.min_box);
+        clicker.filter(exhale_minute_volume_alarm.max_box);
         dragger.filter(alarm_knob);
         break;
       case SCREEN_NOTIF:
@@ -1139,24 +1151,32 @@ var GamePlayScene = function(game, stage)
       ctx.fillStyle = white;
       ctx.drawImage(icon_alarms_img,20,15,30,40);
       ctx.font = "30px Helvetica";
-      ctx.fillStyle = light_blue;
+      ctx.fillStyle = dark_blue;
       ctx.fillText("alarms",70,45);
 
-      ctx.font = "20px Helvetica";
-      ctx.fillStyle = light_blue;
-      ctx.fillText("Pressure",pressure_alarm.x,pressure_alarm.y-30);
       pressure_alarm.draw();
-      ctx.font = "20px Helvetica";
-      ctx.fillStyle = light_blue;
-      ctx.fillText("Rate",rate_alarm.x,rate_alarm.y-30);
       rate_alarm.draw();
-      //apnea_alarm.draw();
+      exhale_minute_volume_alarm.draw();
 
       ctx.drawImage(knob_range_img,alarm_knob.x,alarm_knob.y,alarm_knob.w,alarm_knob.h);
       ctx.drawImage(knob_img,alarm_knob.x+10,alarm_knob.y+10,alarm_knob.w-20,alarm_knob.h-20);
       ctx.drawImage(knob_indicator_img,alarm_knob.x+alarm_knob.w/2+cos(alarm_knob.viz_theta)*alarm_knob.w/3.5-4,alarm_knob.y+alarm_knob.h/2+sin(alarm_knob.viz_theta)*alarm_knob.w/3.5-4,8,8);
 
-      ctx.fillStyle = white;
+      switch(selected_alarm)
+      {
+        case IN_ALARM_MIN_PRESSURE:             sub = fdisp(in_alarm_min_pressure,0)            +" cm H2O"; title = "Min Pressure"; break;
+        case IN_ALARM_MAX_PRESSURE:             sub = fdisp(in_alarm_max_pressure,0)            +" cm H2O"; title = "Max Pressure"; break;
+        case IN_ALARM_MIN_RATE:                 sub = fdisp(in_alarm_min_rate,0)                +" b/min";  title = "Apnea"; break;
+        case IN_ALARM_MAX_RATE:                 sub = fdisp(in_alarm_max_rate,0)                +" b/min";  title = "Max Rate"; break;
+        case IN_ALARM_MIN_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_min_exhale_minute_volume,1)+" L/min";  title = "Min Exhale Minute Volume"; break;
+        case IN_ALARM_MAX_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_max_exhale_minute_volume,1)+" L/min";  title = "Max Exhale Minute Volume"; break;
+      }
+      ctx.fillStyle = dark_blue;
+      ctx.fillText(title,commit_btn.x,commit_btn.y);
+      ctx.font = "22px Helvetica";
+      ctx.fillText(sub,commit_btn.x,commit_btn.y+28);
+
+      ctx.fillStyle = dark_blue;
       ctx.font = "30px Helvetica"
       ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
     }
