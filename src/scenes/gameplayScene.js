@@ -55,7 +55,7 @@ var GamePlayScene = function(game, stage)
   var SCREEN_COMPLETE    = ENUM; ENUM++;
 
   var min_in_volume = 0;
-  var max_in_volume = 2000;
+  var max_in_volume = 2;
   var min_in_pressure = 1;
   var max_in_pressure = 2;
   var min_in_rate = 0;
@@ -70,7 +70,7 @@ var GamePlayScene = function(game, stage)
   var max_in_peep = 10;
 
   var min_in_alarm_pressure = 0;
-  var max_in_alarm_pressure = 100;
+  var max_in_alarm_pressure = 80;
 
   var min_out_peak_pressure        = 10;
   var max_out_peak_pressure        = 80;
@@ -79,7 +79,7 @@ var GamePlayScene = function(game, stage)
   var min_out_rate                 = 0;
   var max_out_rate                 = 40;
   var min_out_exhale_volume        = 0;
-  var max_out_exhale_volume        = 2000;
+  var max_out_exhale_volume        = 2;
   var min_out_exhale_minute_volume = min_out_exhale_volume*min_out_rate;
   var max_out_exhale_minute_volume = max_out_exhale_volume*max_out_rate;
   var min_out_ie_ratio             = 0;
@@ -277,25 +277,25 @@ var GamePlayScene = function(game, stage)
       ctx.strokeRect(self.x,self.y,self.w,self.h);
 
       ctx.fillStyle = dark_blue;
-      if(min_selected()) ctx.fillRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h);
+      if(min_selected()) canv.fillRoundRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h,5);
       ctx.fillStyle = light_blue;
       ctx.font = "20px Helvetica";
       ctx.fillText("min",self.min_box.x+10,self.min_box.y+20);
       ctx.font = "14px Helvetica";
       ctx.fillText(min_text(),self.min_box.x+10,self.min_box.y+33);
       ctx.strokeStyle = light_blue;
-      ctx.strokeRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h);
+      canv.strokeRoundRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h,5);
       ctx.strokeRect(self.x-2,self.min_box.y-2,self.w+4,4);
 
       ctx.fillStyle = dark_blue;
-      if(max_selected()) ctx.fillRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h);
+      if(max_selected()) canv.fillRoundRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h,5);
       ctx.fillStyle = light_blue;
       ctx.font = "20px Helvetica";
       ctx.fillText("max",self.max_box.x+10,self.max_box.y+20);
       ctx.font = "14px Helvetica";
       ctx.fillText(max_text(),self.max_box.x+10,self.max_box.y+33);
       ctx.strokeStyle = light_blue;
-      ctx.strokeRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h);
+      canv.strokeRoundRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h,5);
       ctx.strokeRect(self.x-2,self.max_box.y+self.max_box.h-2,self.w+4,4);
 
       ctx.fillText(minmin_text(),self.x+4,self.y+self.h+20);
@@ -790,11 +790,11 @@ var GamePlayScene = function(game, stage)
       function(){selected_alarm = IN_ALARM_MAX_PRESSURE;},
       function(){return selected_alarm == IN_ALARM_MIN_PRESSURE;},
       function(){return selected_alarm == IN_ALARM_MAX_PRESSURE;},
-      function(){return fdisp(in_alarm_min_pressure,1)+"P";},
-      function(){return fdisp(in_alarm_max_pressure,1)+"P";},
-      function(){return fdisp(0.5,1)+"P";},
-      function(){return fdisp(min_in_alarm_pressure,1)+"P";},
-      function(){return fdisp(max_in_alarm_pressure,1)+"P";},
+      function(){return fdisp(in_alarm_min_pressure,1)+"cwp";},
+      function(){return fdisp(in_alarm_max_pressure,1)+"cwp";},
+      function(){return fdisp(0.5,1)+"cwp";},
+      function(){return fdisp(min_in_alarm_pressure,1)+"cwp";},
+      function(){return fdisp(max_in_alarm_pressure,1)+"cwp";},
       );
     pressure_alarm.wx = 0;
     pressure_alarm.wy = 0.2;
@@ -1177,12 +1177,12 @@ var GamePlayScene = function(game, stage)
       {
         switch(in_channel_btns[i].channel)
         {
-          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume,1)+" ml";  subsub = fdisp(in_volume,1)+" ml"; break;
-          case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate,1)+" b/m";  subsub = fdisp(in_rate,1)+" b/m";   break;
-          case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow,1)+" l/m";  subsub = fdisp(in_flow,1)+" l/m";   break;
-          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy,1)+"% O2";   subsub = fdisp(in_oxy,1)+"% O2";    break;
-          case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout,1)+" s"; subsub = fdisp(in_timeout,1)+" s";  break;
-          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep,1)+"";      subsub = fdisp(in_peep,1)+"";       break;
+          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume,3)+" L";  subsub = fdisp(in_volume,3)+" L";  break;
+          case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate,1)+" b/m";  subsub = fdisp(in_rate,1)+" b/m";  break;
+          case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow,1)+" l/m";  subsub = fdisp(in_flow,1)+" l/m";  break;
+          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy,1)+"% O2";   subsub = fdisp(in_oxy,1)+"% O2";   break;
+          case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout,1)+" s"; subsub = fdisp(in_timeout,1)+" s"; break;
+          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep,1)+"";      subsub = fdisp(in_peep,1)+"";      break;
         }
         if(subsub != sub) drawInBtn(in_channel_btns[i],sub,subsub);
         else              drawInBtn(in_channel_btns[i],sub);
@@ -1190,7 +1190,7 @@ var GamePlayScene = function(game, stage)
 
       switch(in_channel_btns[selected_channel].channel)
       {
-        case IN_CHANNEL_MODE:    sub = fdisp(in_volume,1)+" ml"; break;
+        case IN_CHANNEL_MODE:    sub = fdisp(in_volume,3)+" L";  break;
         case IN_CHANNEL_RATE:    sub = fdisp(in_rate,1)+" b/m";  break;
         case IN_CHANNEL_FLOW:    sub = fdisp(in_flow,1)+" l/m";  break;
         case IN_CHANNEL_OXY:     sub = fdisp(in_oxy,1)+"% O2";   break;
