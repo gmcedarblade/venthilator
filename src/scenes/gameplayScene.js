@@ -45,6 +45,9 @@ var GamePlayScene = function(game, stage)
   var IN_CHANNEL_TIMEOUT = ENUM; ENUM++;
   var IN_CHANNEL_PEEP    = ENUM; ENUM++;
   ENUM = 0;
+  var IN_ALARM_MIN_PRESSURE = ENUM; ENUM++;
+  var IN_ALARM_MAX_PRESSURE = ENUM; ENUM++;
+  ENUM = 0;
   var SCREEN_PATIENT     = ENUM; ENUM++;
   var SCREEN_VENTILATOR  = ENUM; ENUM++;
   var SCREEN_ALARMS      = ENUM; ENUM++;
@@ -65,6 +68,9 @@ var GamePlayScene = function(game, stage)
   var max_in_timeout = 1;
   var min_in_peep = 0;
   var max_in_peep = 10;
+
+  var min_in_alarm_pressure = 0;
+  var max_in_alarm_pressure = 100;
 
   var min_out_peak_pressure        = 10;
   var max_out_peak_pressure        = 80;
@@ -93,6 +99,7 @@ var GamePlayScene = function(game, stage)
   //data
   var selected_mode = 0;
   var selected_channel = 0;
+  var selected_alarm = 0;
   var alert_t = 0;
   var norm_in_volume   = 0.5;
   var norm_in_pressure = 0.5;
@@ -108,6 +115,8 @@ var GamePlayScene = function(game, stage)
   var in_oxy      = lerp(min_in_oxy,      max_in_oxy,      norm_in_oxy);
   var in_timeout  = lerp(min_in_timeout,  max_in_timeout,  norm_in_timeout);
   var in_peep     = lerp(min_in_peep,     max_in_peep,     norm_in_peep);
+  var in_alarm_min_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_min_pressure);
+  var in_alarm_max_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_max_pressure);
   var commit_in_volume   = in_volume;
   var commit_in_pressure = in_pressure;
   var commit_in_rate     = in_rate;
@@ -139,6 +148,8 @@ var GamePlayScene = function(game, stage)
   var out_exhale_volume        = lerp(min_out_exhale_volume,        max_out_exhale_volume,        norm_out_exhale_volume);
   var out_exhale_minute_volume = lerp(min_out_exhale_minute_volume, max_out_exhale_minute_volume, norm_out_exhale_minute_volume);
   var out_ie_ratio             = lerp(min_out_ie_ratio,             max_out_ie_ratio,             norm_out_ie_ratio);
+  var norm_in_alarm_min_pressure = 0.5;
+  var norm_in_alarm_max_pressure = 0.5;
   var patient_compliance = 1;
   var patient_volume = 0;
   var patient_pressure = 0;
@@ -170,7 +181,9 @@ var GamePlayScene = function(game, stage)
   var patient_volume_graph;
   var patient_pressure_graph;
   var patient_flow_graph;
-  var my_knob;
+  var pressure_alarm;
+  var vent_knob;
+  var alarm_knob;
   var out_channel_btns;
   var in_channel_btns;
   var commit_btn;
@@ -225,6 +238,72 @@ var GamePlayScene = function(game, stage)
       )
       return true;
     return false;
+  }
+
+  var alarm = function(min_select,max_select,min_selected,max_selected,min_text,max_text,text,minmin_text,maxmax_text)
+  {
+    var self = this;
+    self.wx = 0;
+    self.wy = 0;
+    self.ww = 0;
+    self.wh = 0;
+    self.x = 0;
+    self.y = 0;
+    self.w = 0;
+    self.h = 0;
+
+    self.v = 0.5;
+    self.min_v = 0;
+    self.max_v = 1;
+
+    self.min_box = {x:0,y:0,w:0,h:0,click:function(evt){min_select();}};
+    self.max_box = {x:0,y:0,w:0,h:0,click:function(evt){max_select();}};
+
+    self.calcBtns = function()
+    {
+      self.min_box.w = 90;
+      self.min_box.h = 40;
+      self.min_box.x = self.x-100;
+      self.min_box.y = self.y+self.h-(self.min_v*self.h);
+
+      self.max_box.w = 90;
+      self.max_box.h = 40;
+      self.max_box.x = self.x-100;
+      self.max_box.y = self.y+self.h-self.max_box.h-(self.max_v*self.h);
+    }
+
+    self.draw = function()
+    {
+      ctx.strokeRect(self.x,self.y,self.w,self.h);
+
+      ctx.fillStyle = dark_blue;
+      if(min_selected()) ctx.fillRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h);
+      ctx.fillStyle = light_blue;
+      ctx.font = "20px Helvetica";
+      ctx.fillText("min",self.min_box.x+10,self.min_box.y+20);
+      ctx.font = "14px Helvetica";
+      ctx.fillText(min_text(),self.min_box.x+10,self.min_box.y+33);
+      ctx.strokeStyle = light_blue;
+      ctx.strokeRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h);
+      ctx.strokeRect(self.x-2,self.min_box.y-2,self.w+4,4);
+
+      ctx.fillStyle = dark_blue;
+      if(max_selected()) ctx.fillRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h);
+      ctx.fillStyle = light_blue;
+      ctx.font = "20px Helvetica";
+      ctx.fillText("max",self.max_box.x+10,self.max_box.y+20);
+      ctx.font = "14px Helvetica";
+      ctx.fillText(max_text(),self.max_box.x+10,self.max_box.y+33);
+      ctx.strokeStyle = light_blue;
+      ctx.strokeRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h);
+      ctx.strokeRect(self.x-2,self.max_box.y+self.max_box.h-2,self.w+4,4);
+
+      ctx.fillText(minmin_text(),self.x+4,self.y+self.h+20);
+      ctx.fillText(maxmax_text(),self.x+4,self.y-4);
+
+      ctx.strokeRect(self.x-1,self.y+self.h-(self.h*self.v)-1,self.w+2,2);
+      ctx.fillText(text(),self.x+self.w+5,self.y+self.h-(self.v*self.h));
+    }
   }
 
   var graph_data = function()
@@ -563,7 +642,7 @@ var GamePlayScene = function(game, stage)
   {
     ctx.fillStyle = light_blue;
     ctx.strokeStyle = light_blue;
-    ctx.strokeRect(btn.x,btn.y,btn.w,btn.h);
+    canv.strokeRoundRect(btn.x,btn.y,btn.w,btn.h,5);
     ctx.font = "10px Helvetica";
     ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2-10);
     ctx.font = "12px Helvetica";
@@ -574,7 +653,7 @@ var GamePlayScene = function(game, stage)
   var drawBtn = function(btn,sub,subsub)
   {
     ctx.fillStyle = dark_blue;
-    ctx.fillRect(btn.x,btn.y,btn.w,btn.h);
+    canv.fillRoundRect(btn.x,btn.y,btn.w,btn.h,5);
     ctx.fillStyle = white;
     ctx.font = "18px Helvetica";
     ctx.fillText(btn.title,btn.x+10,btn.y+btn.h/2+8);
@@ -618,6 +697,17 @@ var GamePlayScene = function(game, stage)
     }
   }
 
+  var update_alarms = function()
+  {
+    var cur_pressure = 0.5;
+    pressure_alarm.v = mapVal(min_in_alarm_pressure,max_in_alarm_pressure,0,1,cur_pressure);
+    pressure_alarm.min_v = norm_in_alarm_min_pressure;
+    pressure_alarm.max_v = norm_in_alarm_max_pressure;
+    in_alarm_min_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_min_pressure);
+    in_alarm_max_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_max_pressure);
+    pressure_alarm.calcBtns();
+  }
+
   self.ready = function()
   {
     cam.wh = isTo(canv.width,1,canv.height);
@@ -654,7 +744,7 @@ var GamePlayScene = function(game, stage)
     patient_flow_graph.data.max_y = 1.8;
     setup_graph_set(patient_flow_graph,2);
 
-    my_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
+    vent_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
     {
       switch(selected_channel)
       {
@@ -687,13 +777,52 @@ var GamePlayScene = function(game, stage)
       }
       update_graphs();
 
-      my_knob.val = 0;
+      vent_knob.val = 0;
     });
-    my_knob.ww = 0.3;
-    my_knob.wh = 0.3;
-    my_knob.wx = -0.28;
-    my_knob.wy = -0.35;
-    screenSpace(cam,canv,my_knob);
+    vent_knob.ww = 0.3;
+    vent_knob.wh = 0.3;
+    vent_knob.wx = -0.28;
+    vent_knob.wy = -0.35;
+    screenSpace(cam,canv,vent_knob);
+
+    pressure_alarm = new alarm(
+      function(){selected_alarm = IN_ALARM_MIN_PRESSURE;},
+      function(){selected_alarm = IN_ALARM_MAX_PRESSURE;},
+      function(){return selected_alarm == IN_ALARM_MIN_PRESSURE;},
+      function(){return selected_alarm == IN_ALARM_MAX_PRESSURE;},
+      function(){return fdisp(in_alarm_min_pressure,1)+"P";},
+      function(){return fdisp(in_alarm_max_pressure,1)+"P";},
+      function(){return fdisp(0.5,1)+"P";},
+      function(){return fdisp(min_in_alarm_pressure,1)+"P";},
+      function(){return fdisp(max_in_alarm_pressure,1)+"P";},
+      );
+    pressure_alarm.wx = 0;
+    pressure_alarm.wy = 0.2;
+    pressure_alarm.ww = 0.1;
+    pressure_alarm.wh = 0.5;
+    screenSpace(cam,canv,pressure_alarm);
+    update_alarms();
+
+    alarm_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
+    {
+      switch(selected_alarm)
+      {
+        case IN_ALARM_MIN_PRESSURE:
+          norm_in_alarm_min_pressure = clamp(0,norm_in_alarm_max_pressure,norm_in_alarm_min_pressure+v);
+          break;
+        case IN_ALARM_MAX_PRESSURE:
+          norm_in_alarm_max_pressure = clamp(norm_in_alarm_min_pressure,1,norm_in_alarm_max_pressure+v);
+          break;
+      }
+
+      update_alarms();
+      alarm_knob.val = 0;
+    });
+    alarm_knob.ww = 0.3;
+    alarm_knob.wh = 0.3;
+    alarm_knob.wx = -0.28;
+    alarm_knob.wy = -0.35;
+    screenSpace(cam,canv,alarm_knob);
 
     out_channel_btns = [];
     in_channel_btns = [];
@@ -791,11 +920,16 @@ var GamePlayScene = function(game, stage)
         //clicker.filter(patient_btn);
         clicker.filter(alarms_btn);
         clicker.filter(next_btn);
-        dragger.filter(my_knob);
+        dragger.filter(vent_knob);
       break;
       case SCREEN_PATIENT:
+        clicker.filter(x_btn);
+      break;
       case SCREEN_ALARMS:
         clicker.filter(x_btn);
+        clicker.filter(pressure_alarm.min_box);
+        clicker.filter(pressure_alarm.max_box);
+        dragger.filter(alarm_knob);
         break;
       case SCREEN_NOTIF:
         clicker.filter(x_btn);
@@ -911,12 +1045,16 @@ var GamePlayScene = function(game, stage)
     }
     else if(cur_screen == SCREEN_ALARMS)
     {
-      ctx.fillStyle = light_blue;
-      ctx.fillRect(0,0,canv.width,canv.height);
       ctx.fillStyle = white;
       ctx.drawImage(icon_alarms_img,20,15,30,40);
       ctx.font = "30px Helvetica";
       ctx.fillText("alarms",70,45);
+
+      pressure_alarm.draw();
+
+      ctx.drawImage(knob_range_img,alarm_knob.x,alarm_knob.y,alarm_knob.w,alarm_knob.h);
+      ctx.drawImage(knob_img,alarm_knob.x+10,alarm_knob.y+10,alarm_knob.w-20,alarm_knob.h-20);
+      ctx.drawImage(knob_indicator_img,alarm_knob.x+alarm_knob.w/2+cos(alarm_knob.viz_theta)*alarm_knob.w/3.5-4,alarm_knob.y+alarm_knob.h/2+sin(alarm_knob.viz_theta)*alarm_knob.w/3.5-4,8,8);
 
       ctx.fillStyle = white;
       ctx.font = "30px Helvetica"
@@ -974,7 +1112,7 @@ var GamePlayScene = function(game, stage)
       ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
 
       ctx.fillText(dismiss_submit_btn.title,dismiss_submit_btn.x,dismiss_submit_btn.y+dismiss_submit_btn.h/2+18);
-      ctx.strokeRect(dismiss_submit_btn.x,dismiss_submit_btn.y,dismiss_submit_btn.w,dismiss_submit_btn.h);
+      canv.strokeRoundRect(dismiss_submit_btn.x,dismiss_submit_btn.y,dismiss_submit_btn.w,dismiss_submit_btn.h,5);
     }
     else if(cur_screen == SCREEN_VENTILATOR)
     {
@@ -1031,7 +1169,7 @@ var GamePlayScene = function(game, stage)
       }
 
       ctx.fillStyle = dark_blue;
-      ctx.fillRect(in_channel_btns[selected_channel].x,in_channel_btns[selected_channel].y,in_channel_btns[selected_channel].w,in_channel_btns[selected_channel].h);
+      canv.fillRoundRect(in_channel_btns[selected_channel].x,in_channel_btns[selected_channel].y,in_channel_btns[selected_channel].w,in_channel_btns[selected_channel].h,5);
 
       var sub;
       var subsub;
@@ -1065,9 +1203,9 @@ var GamePlayScene = function(game, stage)
       ctx.fillText(sub,commit_btn.x,commit_btn.y-12);
       drawBtn(commit_btn);
 
-      ctx.drawImage(knob_range_img,my_knob.x,my_knob.y,my_knob.w,my_knob.h);
-      ctx.drawImage(knob_img,my_knob.x+10,my_knob.y+10,my_knob.w-20,my_knob.h-20);
-      ctx.drawImage(knob_indicator_img,my_knob.x+my_knob.w/2+cos(my_knob.viz_theta)*my_knob.w/3.5-4,my_knob.y+my_knob.h/2+sin(my_knob.viz_theta)*my_knob.w/3.5-4,8,8);
+      ctx.drawImage(knob_range_img,vent_knob.x,vent_knob.y,vent_knob.w,vent_knob.h);
+      ctx.drawImage(knob_img,vent_knob.x+10,vent_knob.y+10,vent_knob.w-20,vent_knob.h-20);
+      ctx.drawImage(knob_indicator_img,vent_knob.x+vent_knob.w/2+cos(vent_knob.viz_theta)*vent_knob.w/3.5-4,vent_knob.y+vent_knob.h/2+sin(vent_knob.viz_theta)*vent_knob.w/3.5-4,8,8);
 
       ctx.strokeStyle = gray;
       ctx.beginPath();
@@ -1082,7 +1220,7 @@ var GamePlayScene = function(game, stage)
       ctx.drawImage(icon_alarms_img,alarms_btn.x+5,alarms_btn.y,alarms_btn.w-10,alarms_btn.h-5);
       ctx.fillText("alarms",alarms_btn.x,alarms_btn.y+alarms_btn.h+12);
       ctx.fillStyle = light_blue;
-      ctx.fillRect(next_btn.x,next_btn.y,next_btn.w,next_btn.h);
+      canv.fillRoundRect(next_btn.x,next_btn.y,next_btn.w,next_btn.h,5);
       ctx.fillStyle = white;
       ctx.font = "20px Helvetica";
       ctx.fillText("Next Patient",next_btn.x+10,next_btn.y+next_btn.h/2);
