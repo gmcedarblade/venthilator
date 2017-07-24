@@ -264,6 +264,7 @@ var GamePlayScene = function(game, stage)
 
   var evaluate_alarms = function()
   {
+    return true;
     return
       pressure_alarm.v             < pressure_alarm.v_max            *1.0 && pressure_alarm.v             > pressure_alarm.v_min            *1.0 &&
       rate_alarm.v                 < rate_alarm.v_max                *1.0 && rate_alarm.v                 > rate_alarm.v_min                *1.0 &&
