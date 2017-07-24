@@ -97,10 +97,10 @@ var GamePlayScene = function(game, stage)
   var max_x_offset = 1;
   var min_y_offset = 0;
   var max_y_offset = 1;
-  var min_wavelength = 0.01;
-  var max_wavelength = 0.5;
+  var min_wavelength = 0.02;
+  var max_wavelength = 1.;
   var min_amplitude = 0;
-  var max_amplitude = 2;
+  var max_amplitude = 1;
   var min_spacing = 0;
   var max_spacing = 0.2;
 
@@ -204,7 +204,8 @@ var GamePlayScene = function(game, stage)
   var alarm_knob;
   var out_channel_btns;
   var in_channel_btns;
-  var commit_btn;
+  var commit_vent_btn;
+  var commit_alarm_btn;
   var alarms_btn;
   var patient_btn;
   var next_btn;
@@ -240,13 +241,16 @@ var GamePlayScene = function(game, stage)
     var expected_volume = 0.007*ibw;
     var expected_rate = 12;
     var expected_peep = 5;
-    var expected_oxy = 50;
-    var expected_flow = 50;
+    var expected_oxy = 21;
+    var expected_flow = 40;
 
-    //console.log((expected_volume/out_exhale_volume)-1);
-    //console.log((expected_peep/in_peep)-1);
-    //console.log((expected_oxy/in_oxy)-1);
-    //console.log((expected_flow/in_flow)-1);
+/*
+    console.log((expected_volume/out_exhale_volume)-1);
+    console.log((expected_peep/in_peep)-1);
+    console.log((expected_oxy/in_oxy)-1);
+    console.log((expected_flow/in_flow)-1);
+    console.log("done");
+*/
 
     if(
       abs((expected_volume/out_exhale_volume)-1) < 0.2 &&
@@ -297,9 +301,9 @@ var GamePlayScene = function(game, stage)
       ctx.fillStyle = dark_blue;
       ctx.font = "20px Helvetica";
       ctx.fillStyle = dark_blue;
-      ctx.fillText(title,self.x,self.y-50);
+      ctx.fillText(title,self.x,self.y-70);
       ctx.font = "14px Helvetica";
-      ctx.fillText(label,self.x,self.y-30);
+      ctx.fillText(label,self.x,self.y-50);
 
       ctx.fillStyle = dark_blue;
       if(min_selected()) canv.fillRoundRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h,5);
@@ -414,8 +418,7 @@ var GamePlayScene = function(game, stage)
     self.pulses[j][self.pulse_pts-1] = 0;
     j++;
 
-    self.pulse_from_i = 0;
-    self.pulse_t = 0;
+    self.pulse_i = 0;
     self.x_offset   = min_x_offset;
     self.y_offset   = min_y_offset;
     self.wavelength = lerp(min_wavelength,max_wavelength,0.5);
@@ -427,39 +430,11 @@ var GamePlayScene = function(game, stage)
     self.min_y = -1;
     self.max_y = 1;
 
-    self.delta_pulse = function(amt)
-    {
-      self.pulse_t += amt;
-
-      while(self.pulse_t > 1)
-      {
-        self.pulse_t -= 1;
-        self.pulse_from_i++;
-        while(self.pulse_from_i > self.pulses.length-2)
-        {
-          self.pulse_from_i--;
-          self.pulse_t = 1;
-        }
-      }
-
-      while(self.pulse_t < 0)
-      {
-        self.pulse_t += 1;
-        self.pulse_from_i--;
-        while(self.pulse_from_i < 0)
-        {
-          self.pulse_from_i++;
-          self.pulse_t = 0;
-        }
-      }
-    }
     self.sample_pulse = function(t)
     {
       var from_i = floor(t*self.pulse_pts);
       var to_i   = ceil(t*self.pulse_pts);
-      var from = lerp(self.pulses[self.pulse_from_i][from_i],self.pulses[self.pulse_from_i+1][from_i],self.pulse_t);
-      var to   = lerp(self.pulses[self.pulse_from_i][to_i],  self.pulses[self.pulse_from_i+1][to_i],  self.pulse_t);
-      return lerp(from,to,t);
+      return lerp(self.pulses[self.pulse_i][from_i],self.pulses[self.pulse_i][to_i],t);
     }
 
     var gen_data_in_pulse = false;
@@ -624,9 +599,6 @@ var GamePlayScene = function(game, stage)
       ctx.stroke();
       ctx.lineWidth = 1;
       ctx.drawImage(self.cache,0,0,self.w*blip_t,self.h,self.x,self.y,self.w*blip_t,self.h);
-
-      ctx.fillText("A",self.x+self.w-15,self.y+15);
-      ctx.fillText("B",self.x+self.w-15,self.y+self.h-5);
     }
   }
 
@@ -714,13 +686,16 @@ var GamePlayScene = function(game, stage)
         case 2: cur_graph = patient_flow_graph;     cur_graph.data.x_offset = 0.0; break;
       }
 
-           if(selected_mode == MODE_VOLUME)   cur_graph.data.amplitude = lerp(min_amplitude, max_amplitude, norm_in_volume);
-      else if(selected_mode == MODE_PRESSURE) cur_graph.data.amplitude = lerp(min_amplitude, max_amplitude, norm_in_pressure);
+           //if(selected_mode == MODE_VOLUME)   cur_graph.data.amplitude = lerp(min_amplitude, max_amplitude, norm_in_volume);
+      //else if(selected_mode == MODE_PRESSURE) cur_graph.data.amplitude = lerp(min_amplitude, max_amplitude, norm_in_pressure);
 
-      cur_graph.data.wavelength = lerp(min_wavelength, max_wavelength, norm_in_rate);
-      cur_graph.data.spacing    = lerp(min_spacing,    max_spacing,    norm_in_timeout);
+      cur_graph.data.wavelength = lerp(min_wavelength, max_wavelength, norm_in_timeout);
+      cur_graph.data.spacing    = lerp(min_spacing,    max_spacing,    1-norm_in_rate);
       if(cur_graph == patient_pressure_graph)
-      cur_graph.data.y_offset   = lerp(min_y_offset,   max_y_offset,   norm_in_peep);
+      {
+        cur_graph.data.y_offset   = -1+lerp(min_y_offset,   max_y_offset,   norm_in_peep);
+        cur_graph.data.amplitude  = 1.5*lerp(min_amplitude,  max_amplitude,  1-norm_in_peep);
+      }
       cur_graph.update();
     }
   }
@@ -767,22 +742,24 @@ var GamePlayScene = function(game, stage)
     icon_sad_face_img.src = "assets/sad-face.png"
 
     patient_volume_graph = new graph_set(red);
-    patient_volume_graph.data.pulse_from_i = 0;
-    patient_volume_graph.data.pulse_t = 0;
+    patient_volume_graph.data.pulse_i = 0;
     patient_volume_graph.data.min_y = -1.4;
     patient_volume_graph.data.max_y = 1.4;
+    patient_volume_graph.data.y_offset = -1;
+    patient_volume_graph.data.amplitude = 1.5;
     setup_graph_set(patient_volume_graph,0);
     patient_pressure_graph = new graph_set(yellow);
-    patient_pressure_graph.data.pulse_from_i = 1;
-    patient_pressure_graph.data.pulse_t = 0;
+    patient_pressure_graph.data.pulse_i = 1;
     patient_pressure_graph.data.min_y = -1.4;
     patient_pressure_graph.data.max_y = 1.4;
+    patient_pressure_graph.data.y_offset = -1;
+    patient_pressure_graph.data.amplitude = 1.5;
     setup_graph_set(patient_pressure_graph,1);
     patient_flow_graph = new graph_set(green);
-    patient_flow_graph.data.pulse_from_i = 1;
-    patient_flow_graph.data.pulse_t = 1;
+    patient_flow_graph.data.pulse_i = 2;
     patient_flow_graph.data.min_y = -1.8;
     patient_flow_graph.data.max_y = 1.8;
+    patient_flow_graph.data.amplitude = 1.2;
     setup_graph_set(patient_flow_graph,2);
 
     vent_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
@@ -840,9 +817,9 @@ var GamePlayScene = function(game, stage)
       "cm H20"
       );
     pressure_alarm.wx = -0.27;
-    pressure_alarm.wy = 0.15;
+    pressure_alarm.wy = 0.09;
     pressure_alarm.ww = 0.1;
-    pressure_alarm.wh = 0.5;
+    pressure_alarm.wh = 0.55;
     screenSpace(cam,canv,pressure_alarm);
 
     rate_alarm = new alarm(
@@ -937,7 +914,7 @@ var GamePlayScene = function(game, stage)
     genInChannelBtn(IN_CHANNEL_TIMEOUT,"I Time", x); x += s;
     genInChannelBtn(IN_CHANNEL_PEEP,   "PEEP",   x); x += s;
 
-    commit_btn = new ButtonBox(0,0,0,0, function()
+    commit_vent_btn = new ButtonBox(0,0,0,0, function()
     {
       blip_t = 0;
       patient_volume_graph.commit();
@@ -953,12 +930,23 @@ var GamePlayScene = function(game, stage)
       blip_running = true;
       update_alarms();
     });
-    commit_btn.title = "Commit Changes";
-    commit_btn.ww = 0.4;
-    commit_btn.wx = 0.15;
-    commit_btn.wh = 0.08;
-    commit_btn.wy = -0.42;
-    screenSpace(cam,canv,commit_btn);
+    commit_vent_btn.title = "Commit Changes";
+    commit_vent_btn.ww = 0.4;
+    commit_vent_btn.wx = 0.15;
+    commit_vent_btn.wh = 0.08;
+    commit_vent_btn.wy = -0.42;
+    screenSpace(cam,canv,commit_vent_btn);
+
+    commit_alarm_btn = new ButtonBox(0,0,0,0, function()
+    {
+      cur_screen = SCREEN_VENTILATOR;
+    });
+    commit_alarm_btn.title = "Commit Changes";
+    commit_alarm_btn.ww = 0.4;
+    commit_alarm_btn.wx = 0.15;
+    commit_alarm_btn.wh = 0.08;
+    commit_alarm_btn.wy = -0.54;
+    screenSpace(cam,canv,commit_alarm_btn);
 
     x_btn = new ButtonBox(canv.width-50,10,40,40, function()
     {
@@ -1011,7 +999,7 @@ var GamePlayScene = function(game, stage)
       case SCREEN_VENTILATOR:
         for(var i = 0; i < in_channel_btns.length; i++)
           clicker.filter(in_channel_btns[i]);
-        clicker.filter(commit_btn);
+        clicker.filter(commit_vent_btn);
         //clicker.filter(patient_btn);
         clicker.filter(alarms_btn);
         clicker.filter(next_btn);
@@ -1028,6 +1016,7 @@ var GamePlayScene = function(game, stage)
         clicker.filter(rate_alarm.max_box);
         clicker.filter(exhale_minute_volume_alarm.min_box);
         clicker.filter(exhale_minute_volume_alarm.max_box);
+        clicker.filter(commit_alarm_btn);
         dragger.filter(alarm_knob);
         break;
       case SCREEN_NOTIF:
@@ -1047,7 +1036,7 @@ var GamePlayScene = function(game, stage)
     else         alert_t = 0;
 
     if(blip_running) blip_t += blip_rate;
-    if(floor((blip_t-blip_rate)/patient_volume_graph.data.wavelength) != floor(blip_t/patient_volume_graph.data.wavelength))
+    if(blip_t == blip_rate || floor((blip_t-blip_rate)/patient_volume_graph.data.wavelength) != floor(blip_t/patient_volume_graph.data.wavelength))
     {
       var ibw;
       if(patient_sex == "M") ibw = 50  +2.3*(patient_height-(5*12));
@@ -1080,12 +1069,11 @@ var GamePlayScene = function(game, stage)
       out_exhale_minute_volume = lerp(min_out_exhale_minute_volume, max_out_exhale_minute_volume, norm_out_exhale_minute_volume);
 
       out_ie_ratio_variance = out_ie_ratio_max_variance * rand0();
-      norm_patient_ie_ratio = 1;
+      norm_patient_ie_ratio = norm_in_timeout/norm_out_rate;
       norm_out_ie_ratio = norm_patient_ie_ratio + norm_patient_ie_ratio * out_ie_ratio_variance;
       out_ie_ratio = lerp(min_out_ie_ratio, max_out_ie_ratio, norm_out_ie_ratio);
     }
     while(blip_t > 1) blip_t -= 1;
-    evaluate_patient();
   };
 
   self.draw = function()
@@ -1173,10 +1161,12 @@ var GamePlayScene = function(game, stage)
         case IN_ALARM_MIN_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_min_exhale_minute_volume,1)+" L/min";  title = "Min Exhale Minute Volume"; break;
         case IN_ALARM_MAX_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_max_exhale_minute_volume,1)+" L/min";  title = "Max Exhale Minute Volume"; break;
       }
+
       ctx.fillStyle = dark_blue;
-      ctx.fillText(title,commit_btn.x,commit_btn.y);
+      ctx.fillText(title,commit_alarm_btn.x,commit_alarm_btn.y-40);
       ctx.font = "22px Helvetica";
-      ctx.fillText(sub,commit_btn.x,commit_btn.y+28);
+      ctx.fillText(sub,commit_alarm_btn.x,commit_alarm_btn.y-12);
+      drawBtn(commit_alarm_btn);
 
       ctx.fillStyle = dark_blue;
       ctx.font = "30px Helvetica"
@@ -1261,10 +1251,20 @@ var GamePlayScene = function(game, stage)
       ctx.font = "15px Helvetica";
       patient_volume_graph.draw();
       ctx.fillText("Volume",patient_volume_graph.x+10,patient_volume_graph.y+20);
+      ctx.fillText(fdisp(commit_in_volume* 1.5,1),patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+15);
+      ctx.fillText(0,patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+patient_volume_graph.h-5);
       patient_pressure_graph.draw();
       ctx.fillText("Pressure",patient_pressure_graph.x+10,patient_pressure_graph.y+20);
+      if(blip_running)
+        ctx.fillText(fdisp(lerp(min_out_peak_pressure, max_out_peak_pressure, norm_patient_peak_pressure)*1.5,0),patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
+      else
+        ctx.fillText(50,patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
+      ctx.fillText(0,patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+patient_pressure_graph.h-5);
       patient_flow_graph.draw();
       ctx.fillText("Flow",patient_flow_graph.x+10,patient_flow_graph.y+20);
+      ctx.fillText(fdisp( commit_in_flow*1.2,0),patient_flow_graph.x+patient_flow_graph.w-30,patient_flow_graph.y+15);
+      ctx.fillText(fdisp(-commit_in_flow*1.2,0),patient_flow_graph.x+patient_flow_graph.w-30,patient_flow_graph.y+patient_flow_graph.h-5);
+
       ctx.fillStyle = dark_blue;
       ctx.fillText("0s", patient_flow_graph.x+4          ,patient_flow_graph.y+patient_flow_graph.h+14);
       ctx.fillText("12s",patient_flow_graph.x+patient_flow_graph.w-27,patient_flow_graph.y+patient_flow_graph.h+14);
@@ -1321,10 +1321,10 @@ var GamePlayScene = function(game, stage)
         case IN_CHANNEL_PEEP:    sub = fdisp(in_peep,1)+" cm H2O";      break;
       }
       ctx.fillStyle = dark_blue;
-      ctx.fillText(in_channel_btns[selected_channel].title,commit_btn.x,commit_btn.y-40);
+      ctx.fillText(in_channel_btns[selected_channel].title,commit_vent_btn.x,commit_vent_btn.y-40);
       ctx.font = "22px Helvetica";
-      ctx.fillText(sub,commit_btn.x,commit_btn.y-12);
-      drawBtn(commit_btn);
+      ctx.fillText(sub,commit_vent_btn.x,commit_vent_btn.y-12);
+      drawBtn(commit_vent_btn);
 
       ctx.drawImage(knob_range_img,vent_knob.x,vent_knob.y,vent_knob.w,vent_knob.h);
       ctx.drawImage(knob_img,vent_knob.x+10,vent_knob.y+10,vent_knob.w-20,vent_knob.h-20);
