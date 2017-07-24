@@ -38,12 +38,12 @@ var GamePlayScene = function(game, stage)
   var OUT_CHANNEL_EXHALE_MINUTE_VOLUME = ENUM; ENUM++;
   var OUT_CHANNEL_IE_RATIO             = ENUM; ENUM++;
   ENUM = 0;
-  var IN_CHANNEL_MODE    = ENUM; ENUM++;
-  var IN_CHANNEL_RATE    = ENUM; ENUM++;
-  var IN_CHANNEL_FLOW    = ENUM; ENUM++;
-  var IN_CHANNEL_OXY     = ENUM; ENUM++;
-  var IN_CHANNEL_TIMEOUT = ENUM; ENUM++;
-  var IN_CHANNEL_PEEP    = ENUM; ENUM++;
+  var IN_CHANNEL_MODE  = ENUM; ENUM++;
+  var IN_CHANNEL_RATE  = ENUM; ENUM++;
+  var IN_CHANNEL_FLOW  = ENUM; ENUM++;
+  var IN_CHANNEL_OXY   = ENUM; ENUM++;
+  var IN_CHANNEL_ITIME = ENUM; ENUM++;
+  var IN_CHANNEL_PEEP  = ENUM; ENUM++;
   ENUM = 0;
   var IN_ALARM_MIN_PRESSURE = ENUM; ENUM++;
   var IN_ALARM_MAX_PRESSURE = ENUM; ENUM++;
@@ -68,8 +68,8 @@ var GamePlayScene = function(game, stage)
   var max_in_flow = 100;
   var min_in_oxy = 21;
   var max_in_oxy = 100;
-  var min_in_timeout = 0;
-  var max_in_timeout = 5;
+  var min_in_itime = 0;
+  var max_in_itime = 5;
   var min_in_peep = 0;
   var max_in_peep = 20;
 
@@ -114,14 +114,14 @@ var GamePlayScene = function(game, stage)
   var norm_in_rate     = 0.3;
   var norm_in_flow     = 0.294;
   var norm_in_oxy      = 0.0;
-  var norm_in_timeout  = 0.2;
+  var norm_in_itime    = 0.2;
   var norm_in_peep     = 0.0;
   var in_volume   = lerp(min_in_volume,   max_in_volume,   norm_in_volume);
   var in_pressure = lerp(min_in_pressure, max_in_pressure, norm_in_pressure);
   var in_rate     = lerp(min_in_rate,     max_in_rate,     norm_in_rate);
   var in_flow     = lerp(min_in_flow,     max_in_flow,     norm_in_flow);
   var in_oxy      = lerp(min_in_oxy,      max_in_oxy,      norm_in_oxy);
-  var in_timeout  = lerp(min_in_timeout,  max_in_timeout,  norm_in_timeout);
+  var in_itime    = lerp(min_in_itime  ,  max_in_itime  ,  norm_in_itime);
   var in_peep     = lerp(min_in_peep,     max_in_peep,     norm_in_peep);
   var norm_in_alarm_min_pressure = 0;
   var norm_in_alarm_max_pressure = 1;
@@ -140,7 +140,7 @@ var GamePlayScene = function(game, stage)
   var commit_in_rate     = in_rate;
   var commit_in_flow     = in_flow;
   var commit_in_oxy      = in_oxy;
-  var commit_in_timeout  = in_timeout;
+  var commit_in_itime    = in_itime;
   var commit_in_peep     = in_peep;
   var norm_out_peak_pressure        = 0.5;
   var norm_out_mean_pressure        = 0.5;
@@ -215,22 +215,6 @@ var GamePlayScene = function(game, stage)
   //filters
   var clicker;
   var dragger;
-
-  // MODES
-
-  //  lungs have different "compliance" (willingness to change in volume w/ increase of pressure)
-  //  patient triggers via detected negative pressure
-  //  also triggers via timeout
-
-  //AC (assist control) (CMV, continuous manditory venthilation) common
-  //  delivers specific volume
-  //  outputs pressure to watch changes in compliance
-
-  //PC (pressure control)
-  //  delivers specific pressure
-  //  outputs volume to watch changes in compliance
-
-  //commit
 
   var evaluate_patient = function()
   {
@@ -698,7 +682,7 @@ var GamePlayScene = function(game, stage)
            //if(selected_mode == MODE_VOLUME)   cur_graph.data.amplitude = lerp(min_amplitude, max_amplitude, norm_in_volume);
       //else if(selected_mode == MODE_PRESSURE) cur_graph.data.amplitude = lerp(min_amplitude, max_amplitude, norm_in_pressure);
 
-      cur_graph.data.wavelength = lerp(min_wavelength, max_wavelength, norm_in_timeout);
+      cur_graph.data.wavelength = lerp(min_wavelength, max_wavelength, norm_in_itime);
       cur_graph.data.spacing    = lerp(min_spacing,    max_spacing,    1-norm_in_rate);
       if(cur_graph == patient_pressure_graph)
       {
@@ -793,9 +777,9 @@ var GamePlayScene = function(game, stage)
           norm_in_oxy = clamp(0,1,norm_in_oxy+v);
           in_oxy = lerp(min_in_oxy, max_in_oxy, norm_in_oxy);
           break;
-        case IN_CHANNEL_TIMEOUT:
-          norm_in_timeout = clamp(0,1,norm_in_timeout+v);
-          in_timeout = lerp(min_in_timeout, max_in_timeout, norm_in_timeout);
+        case IN_CHANNEL_ITIME:
+          norm_in_itime = clamp(0,1,norm_in_itime+v);
+          in_itime = lerp(min_in_itime, max_in_itime, norm_in_itime);
           break;
         case IN_CHANNEL_PEEP:
           norm_in_peep = clamp(0,1,norm_in_peep+v);
@@ -906,7 +890,7 @@ var GamePlayScene = function(game, stage)
     out_channel_btns = [];
     in_channel_btns = [];
 
-    var x = -0.5+(out_btn_w/2)+0.05;
+    var x = -0.52+(out_btn_w/2)+0.05;
     var s = out_btn_w+0.02;
     genOutChannelBtn(OUT_CHANNEL_PEAK_PRESSURE,        "PIP (cm H20)"  /*"Peak Pressure"*/,        x); x += s;
     genOutChannelBtn(OUT_CHANNEL_MEAN_PRESSURE,        "MAP (cm H20)"  /*"Mean Pressure"*/,        x); x += s;
@@ -916,12 +900,12 @@ var GamePlayScene = function(game, stage)
     genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "I:E"           /*"I:E"*/,                  x); x += s;
     x = -0.5+(in_btn_w/2)+0.05;
     s = in_btn_w+0.02;
-    genInChannelBtn(IN_CHANNEL_MODE,   "Volume", x); x += s;
-    genInChannelBtn(IN_CHANNEL_RATE,   "Freq",   x); x += s;
-    genInChannelBtn(IN_CHANNEL_FLOW,   "Flow",   x); x += s;
-    genInChannelBtn(IN_CHANNEL_OXY,    "Oxygen", x); x += s;
-    genInChannelBtn(IN_CHANNEL_TIMEOUT,"I Time", x); x += s;
-    genInChannelBtn(IN_CHANNEL_PEEP,   "PEEP",   x); x += s;
+    genInChannelBtn(IN_CHANNEL_MODE,  "Volume", x); x += s;
+    genInChannelBtn(IN_CHANNEL_RATE,  "Freq",   x); x += s;
+    genInChannelBtn(IN_CHANNEL_FLOW,  "Flow",   x); x += s;
+    genInChannelBtn(IN_CHANNEL_OXY,   "Oxygen", x); x += s;
+    genInChannelBtn(IN_CHANNEL_ITIME, "I Time", x); x += s;
+    genInChannelBtn(IN_CHANNEL_PEEP,  "PEEP",   x); x += s;
 
     commit_vent_btn = new ButtonBox(0,0,0,0, function()
     {
@@ -934,7 +918,7 @@ var GamePlayScene = function(game, stage)
       commit_in_rate     = in_rate;
       commit_in_flow     = in_flow;
       commit_in_oxy      = in_oxy;
-      commit_in_timeout  = in_timeout;
+      commit_in_itime    = in_itime;
       commit_in_peep     = in_peep;
       blip_running = true;
       update_alarms();
@@ -1078,7 +1062,7 @@ var GamePlayScene = function(game, stage)
       out_exhale_minute_volume = lerp(min_out_exhale_minute_volume, max_out_exhale_minute_volume, norm_out_exhale_minute_volume);
 
       out_ie_ratio_variance = out_ie_ratio_max_variance * rand0();
-      norm_patient_ie_ratio = norm_in_timeout/norm_out_rate;
+      norm_patient_ie_ratio = (patient_volume_graph.data.wavelength+patient_volume_graph.data.spacing)/(patient_volume_graph.data.wavelength/2);
       norm_out_ie_ratio = norm_patient_ie_ratio + norm_patient_ie_ratio * out_ie_ratio_variance;
       out_ie_ratio = lerp(min_out_ie_ratio, max_out_ie_ratio, norm_out_ie_ratio);
     }
@@ -1320,7 +1304,7 @@ var GamePlayScene = function(game, stage)
             case OUT_CHANNEL_RATE:                 sub = fdisp(out_rate,1);                 break;
             case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume,1);        break;
             case OUT_CHANNEL_EXHALE_MINUTE_VOLUME: sub = fdisp(out_exhale_minute_volume,1); break;
-            case OUT_CHANNEL_IE_RATIO:             sub = "1:"+fdisp(1/out_ie_ratio,1);      break;
+            case OUT_CHANNEL_IE_RATIO:             sub = "1:"+fdisp(out_ie_ratio,1);      break;
           }
         }
         drawOutBtn(out_channel_btns[i],sub);
@@ -1335,12 +1319,12 @@ var GamePlayScene = function(game, stage)
       {
         switch(in_channel_btns[i].channel)
         {
-          case IN_CHANNEL_MODE:    sub = fdisp(commit_in_volume,3)+" L";    subsub = fdisp(in_volume,3)+" L";  break;
-          case IN_CHANNEL_RATE:    sub = fdisp(commit_in_rate,1)+" b/min";  subsub = fdisp(in_rate,1)+" b/min";  break;
-          case IN_CHANNEL_FLOW:    sub = fdisp(commit_in_flow,0)+" l/min";  subsub = fdisp(in_flow,0)+" l/min";  break;
-          case IN_CHANNEL_OXY:     sub = fdisp(commit_in_oxy,0)+"%";        subsub = fdisp(in_oxy,0)+"%";   break;
-          case IN_CHANNEL_TIMEOUT: sub = fdisp(commit_in_timeout,1)+" sec"; subsub = fdisp(in_timeout,1)+" sec"; break;
-          case IN_CHANNEL_PEEP:    sub = fdisp(commit_in_peep,1)+" cm H2O"; subsub = fdisp(in_peep,1)+" cm H2O";      break;
+          case IN_CHANNEL_MODE:  sub = fdisp(commit_in_volume,3)+" L";      subsub = fdisp(in_volume,3)+" L";      break;
+          case IN_CHANNEL_RATE:  sub = fdisp(commit_in_rate,  1)+" b/min";  subsub = fdisp(in_rate,  1)+" b/min";  break;
+          case IN_CHANNEL_FLOW:  sub = fdisp(commit_in_flow,  0)+" l/min";  subsub = fdisp(in_flow,  0)+" l/min";  break;
+          case IN_CHANNEL_OXY:   sub = fdisp(commit_in_oxy,   0)+"%";       subsub = fdisp(in_oxy,   0)+"%";       break;
+          case IN_CHANNEL_ITIME: sub = fdisp(commit_in_itime, 1)+" sec";    subsub = fdisp(in_itime, 1)+" sec";    break;
+          case IN_CHANNEL_PEEP:  sub = fdisp(commit_in_peep,  1)+" cm H2O"; subsub = fdisp(in_peep,  1)+" cm H2O"; break;
         }
         if(subsub != sub) drawInBtn(in_channel_btns[i],sub,subsub);
         else              drawInBtn(in_channel_btns[i],sub);
@@ -1348,12 +1332,12 @@ var GamePlayScene = function(game, stage)
 
       switch(in_channel_btns[selected_channel].channel)
       {
-        case IN_CHANNEL_MODE:    sub = fdisp(in_volume,3)+" L";  break;
-        case IN_CHANNEL_RATE:    sub = fdisp(in_rate,1)+" b/min";  break;
-        case IN_CHANNEL_FLOW:    sub = fdisp(in_flow,0)+" l/min";  break;
-        case IN_CHANNEL_OXY:     sub = fdisp(in_oxy,0)+"%";   break;
-        case IN_CHANNEL_TIMEOUT: sub = fdisp(in_timeout,1)+" sec"; break;
-        case IN_CHANNEL_PEEP:    sub = fdisp(in_peep,1)+" cm H2O";      break;
+        case IN_CHANNEL_MODE:  sub = fdisp(in_volume,3)+" L";      break;
+        case IN_CHANNEL_RATE:  sub = fdisp(in_rate,  1)+" b/min";  break;
+        case IN_CHANNEL_FLOW:  sub = fdisp(in_flow,  0)+" l/min";  break;
+        case IN_CHANNEL_OXY:   sub = fdisp(in_oxy,   0)+"%";       break;
+        case IN_CHANNEL_ITIME: sub = fdisp(in_itime, 1)+" sec";    break;
+        case IN_CHANNEL_PEEP:  sub = fdisp(in_peep,  1)+" cm H2O"; break;
       }
       ctx.fillStyle = dark_blue;
       ctx.fillText(in_channel_btns[selected_channel].title,commit_vent_btn.x,commit_vent_btn.y-40);
