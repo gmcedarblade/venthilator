@@ -1063,7 +1063,7 @@ var GamePlayScene = function(game, stage)
       out_exhale_minute_volume = lerp(min_out_exhale_minute_volume, max_out_exhale_minute_volume, norm_out_exhale_minute_volume);
 
       out_ie_ratio_variance = out_ie_ratio_max_variance * rand0();
-      norm_patient_ie_ratio = (patient_volume_graph.data.wavelength+patient_volume_graph.data.spacing)/(patient_volume_graph.data.wavelength/2);
+      norm_patient_ie_ratio = (patient_volume_graph.data.wavelength+patient_volume_graph.data.spacing-(patient_volume_graph.data.wavelength/2))/(patient_volume_graph.data.wavelength/2);
       norm_out_ie_ratio = norm_patient_ie_ratio + norm_patient_ie_ratio * out_ie_ratio_variance;
       out_ie_ratio = lerp(min_out_ie_ratio, max_out_ie_ratio, norm_out_ie_ratio);
     }
