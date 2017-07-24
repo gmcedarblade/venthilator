@@ -262,6 +262,14 @@ var GamePlayScene = function(game, stage)
     return false;
   }
 
+  var evaluate_alarms = function()
+  {
+    return
+      pressure_alarm.v             < pressure_alarm.v_max            *1.0 && pressure_alarm.v             > pressure_alarm.v_min            *1.0 &&
+      rate_alarm.v                 < rate_alarm.v_max                *1.0 && rate_alarm.v                 > rate_alarm.v_min                *1.0 &&
+      exhale_minute_volume_alarm.v < exhale_minute_volume_alarm.v_max*1.0 && exhale_minute_volume_alarm.v > exhale_minute_volume_alarm.v_min*1.0;
+  }
+
   var alarm = function(min_select,max_select,min_selected,max_selected,min_text,max_text,text,minmin_text,maxmax_text,title,label)
   {
     var self = this;
@@ -1179,22 +1187,48 @@ var GamePlayScene = function(game, stage)
       var x;
       if(evaluate_patient())
       {
-        ctx.fillStyle = green;
-        ctx.fillRect(0,0,canv.width,canv.height);
-        ctx.fillStyle = white;
-        x = 40;
-        ctx.font = "35px Helvetica";
-        ctx.fillText("patient stable",x,45);
-        y = 200;
-        yd = 40;
-        ctx.font = "38px Helvetica";
-        ctx.fillText("Nice! This",x,y); y+=yd;
-        ctx.fillText("patient is",x,y); y+=yd;
-        ctx.fillText("stabilized.",x,y); y+=yd;
-        ctx.font = "20px Helvetica";
-        y = 380;
-        yd = 25;
-        ctx.fillText("Good Job",x,y); y+=yd;
+        if(evaluate_alarms())
+        {
+          ctx.fillStyle = green;
+          ctx.fillRect(0,0,canv.width,canv.height);
+          ctx.fillStyle = white;
+          x = 40;
+          ctx.font = "35px Helvetica";
+          ctx.fillText("patient stable",x,45);
+          y = 200;
+          yd = 40;
+          ctx.font = "38px Helvetica";
+          ctx.fillText("Nice! This",x,y); y+=yd;
+          ctx.fillText("patient is",x,y); y+=yd;
+          ctx.fillText("stabilized.",x,y); y+=yd;
+          ctx.font = "20px Helvetica";
+          y = 380;
+          yd = 25;
+          ctx.fillText("Good Job",x,y); y+=yd;
+        }
+        else
+        {
+          ctx.fillStyle = red;
+          ctx.fillRect(0,0,canv.width,canv.height);
+          ctx.fillStyle = white;
+          x = 40;
+          ctx.font = "35px Helvetica";
+          ctx.fillText("alarms not set",x,45);
+          y = 160;
+          yd = 40;
+          ctx.font = "38px Helvetica";
+          ctx.fillText("The patient looks",x,y); y+=yd;
+          ctx.fillText("stable! But,",x,y); y+=yd;
+          ctx.fillText("should that change,",x,y); y+=yd;
+          ctx.fillText("your alarms aren't",x,y); y+=yd;
+          ctx.fillText("ready to detect it!",x,y); y+=yd;
+          ctx.font = "20px Helvetica";
+          y = 380;
+          yd = 25;
+          ctx.fillText("Continue to adjust alarms",x,y); y+=yd;
+          ctx.fillText("until they are set to recognize",x,y); y+=yd;
+          ctx.fillText("a negative change.",x,y); y+=yd;
+        }
       }
       else
       {
