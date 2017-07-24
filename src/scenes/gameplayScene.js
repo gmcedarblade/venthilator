@@ -46,7 +46,7 @@ var GamePlayScene = function(game, stage)
   var IN_CHANNEL_PEEP    = ENUM; ENUM++;
   ENUM = 0;
   var SCREEN_PATIENT     = ENUM; ENUM++;
-  var SCREEN_VENTHILATOR = ENUM; ENUM++;
+  var SCREEN_VENTILATOR  = ENUM; ENUM++;
   var SCREEN_ALARMS      = ENUM; ENUM++;
   var SCREEN_NOTIF       = ENUM; ENUM++;
   var SCREEN_COMPLETE    = ENUM; ENUM++;
@@ -148,7 +148,7 @@ var GamePlayScene = function(game, stage)
   var patient_description_0 = "You are called to the Post-anasthesia Care Unit";
   var patient_description_1 = "for a patient who is not waking up following";
   var patient_description_2 = "a right total knee replacement. They would like";
-  var patient_description_3 = "her set up on a venthilator STAT.";
+  var patient_description_3 = "her set up on a ventilator STAT.";
   var patient_description_4 = "";
   var norm_patient_peak_pressure = 0.5;
   var norm_patient_mean_pressure = 0.5;
@@ -739,13 +739,13 @@ var GamePlayScene = function(game, stage)
 
     x_btn = new ButtonBox(canv.width-50,30,40,40, function()
     {
-      cur_screen = SCREEN_VENTHILATOR;
+      cur_screen = SCREEN_VENTILATOR;
     });
     x_btn.title = "X";
 
     dismiss_submit_btn = new ButtonBox(canv.width/2-50,450,100,40, function()
     {
-      cur_screen = SCREEN_VENTHILATOR;
+      cur_screen = SCREEN_VENTILATOR;
     });
     dismiss_submit_btn.title = "Got It";
 
@@ -784,7 +784,7 @@ var GamePlayScene = function(game, stage)
 
     switch(cur_screen)
     {
-      case SCREEN_VENTHILATOR:
+      case SCREEN_VENTILATOR:
         for(var i = 0; i < in_channel_btns.length; i++)
           clicker.filter(in_channel_btns[i]);
         clicker.filter(commit_btn);
@@ -964,7 +964,7 @@ var GamePlayScene = function(game, stage)
         ctx.font = "20px Helvetica";
         y = 380;
         yd = 25;
-        ctx.fillText("Continue to adjust venthilator",x,y); y+=yd;
+        ctx.fillText("Continue to adjust ventilator",x,y); y+=yd;
         ctx.fillText("until the patient can",x,y); y+=yd;
         ctx.fillText("stabilize.",x,y); y+=yd;
       }
@@ -976,7 +976,7 @@ var GamePlayScene = function(game, stage)
       ctx.fillText(dismiss_submit_btn.title,dismiss_submit_btn.x,dismiss_submit_btn.y+dismiss_submit_btn.h/2+18);
       ctx.strokeRect(dismiss_submit_btn.x,dismiss_submit_btn.y,dismiss_submit_btn.w,dismiss_submit_btn.h);
     }
-    else if(cur_screen == SCREEN_VENTHILATOR)
+    else if(cur_screen == SCREEN_VENTILATOR)
     {
       ctx.lineWidth = 1;
       ctx.fillStyle = dark_blue;
@@ -1010,7 +1010,7 @@ var GamePlayScene = function(game, stage)
 
       ctx.font = "14px Helvetica";
       ctx.fillStyle = light_blue;
-      ctx.fillText("Venthilator Output",out_channel_btns[0].x,out_channel_btns[0].y-10);
+      ctx.fillText("Ventilator Output",out_channel_btns[0].x,out_channel_btns[0].y-10);
       var sub;
       for(var i = 0; i < out_channel_btns.length; i++)
       {
