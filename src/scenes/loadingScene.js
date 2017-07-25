@@ -24,6 +24,9 @@ var LoadingScene = function(game, stage)
   var n_imgs_loaded;
   var img_srcs;
   var imgs;
+  var n_audios_loaded;
+  var audio_srcs;
+  var audios;
 
   var loadingImageLoaded = function()
   {
@@ -32,6 +35,10 @@ var LoadingScene = function(game, stage)
   var imageLoaded = function()
   {
     n_imgs_loaded++;
+  };
+  var audioLoaded = function()
+  {
+    n_audios_loaded++;
   };
 
   self.ready = function()
@@ -54,6 +61,9 @@ var LoadingScene = function(game, stage)
     n_imgs_loaded = 0;
     img_srcs = [];
     imgs = [];
+    n_audios_loaded = 0;
+    audio_srcs = [];
+    audios = [];
 
     //ctx.font = "12px Special Font"; //put font that nees loading here
     ctx.fillStyle = "#000000";
@@ -84,6 +94,17 @@ var LoadingScene = function(game, stage)
       imgs[i].src = img_srcs[i];
     }
     imageLoaded(); //call once to prevent 0/0 != 100% bug
+
+    //put asset paths in audio_srcs
+    //audio_srcs.push("assets/sound.mp3");
+    audio_srcs.push("assets/beep.mp3");
+    for(var i = 0; i < audio_srcs.length; i++)
+    {
+      audios[i] = new Audio();
+      audios[i].addEventListener('canplaythrough', audioLoaded, false);
+      audios[i].src = audio_srcs[i];
+    }
+    audioLoaded(); //call once to prevent 0/0 != 100% bug
   };
 
   self.tick = function()
@@ -91,7 +112,7 @@ var LoadingScene = function(game, stage)
     //note- assets used on loading screen itself NOT included in wait
     loading_percent_loaded = n_loading_imgs_loaded/(loading_img_srcs.length+1);
     if(loading_percent_loaded >= 1.0) ticks_since_loading_ready++;
-    percent_loaded = n_imgs_loaded/(img_srcs.length+1);
+    percent_loaded = (n_imgs_loaded+n_audios_loaded)/((img_srcs.length+1)+(audio_srcs.length+1));
     if(chase_percent_loaded <= percent_loaded) chase_percent_loaded += 0.01;
     lerp_percent_loaded = lerp(lerp_percent_loaded,percent_loaded,0.1);
     lerp_chase_percent_loaded = lerp(lerp_chase_percent_loaded,chase_percent_loaded,0.1);
@@ -117,6 +138,7 @@ var LoadingScene = function(game, stage)
 
   self.cleanup = function()
   {
+    audios = [];//just used them to cache assets in browser; let garbage collector handle 'em.
     imgs = [];//just used them to cache assets in browser; let garbage collector handle 'em.
     loading_imgs = [];//just used them to cache assets in browser; let garbage collector handle 'em.
   };

@@ -24,6 +24,7 @@ var GamePlayScene = function(game, stage)
   var icon_patient_img;
   var icon_alarms_img;
   var icon_sad_face_img;
+  var beep_aud;
 
   //definition
   var ENUM;
@@ -246,13 +247,21 @@ var GamePlayScene = function(game, stage)
     return false;
   }
 
+  var triggered_alarms = function()
+  {
+    return blip_running &&
+      (
+      pressure_alarm.v             > pressure_alarm.max_v            *1.0 || pressure_alarm.v             < pressure_alarm.min_v            *1.0 ||
+      rate_alarm.v                 > rate_alarm.max_v                *1.0 || rate_alarm.v                 < rate_alarm.min_v                *1.0 ||
+      exhale_minute_volume_alarm.v > exhale_minute_volume_alarm.max_v*1.0 || exhale_minute_volume_alarm.v < exhale_minute_volume_alarm.min_v*1.0
+      );
+  }
   var evaluate_alarms = function()
   {
-    return true;
-    return
-      pressure_alarm.v             < pressure_alarm.v_max            *1.0 && pressure_alarm.v             > pressure_alarm.v_min            *1.0 &&
-      rate_alarm.v                 < rate_alarm.v_max                *1.0 && rate_alarm.v                 > rate_alarm.v_min                *1.0 &&
-      exhale_minute_volume_alarm.v < exhale_minute_volume_alarm.v_max*1.0 && exhale_minute_volume_alarm.v > exhale_minute_volume_alarm.v_min*1.0;
+    return blip_running &&
+      pressure_alarm.v             < pressure_alarm.max_v            *1.0 && pressure_alarm.v             > pressure_alarm.min_v            *1.0 &&
+      rate_alarm.v                 < rate_alarm.max_v                *1.0 && rate_alarm.v                 > rate_alarm.min_v                *1.0 &&
+      exhale_minute_volume_alarm.v < exhale_minute_volume_alarm.max_v*1.0 && exhale_minute_volume_alarm.v > exhale_minute_volume_alarm.min_v*1.0;
   }
 
   var alarm = function(min_select,max_select,min_selected,max_selected,min_text,max_text,text,minmin_text,maxmax_text,title,label)
@@ -773,6 +782,8 @@ var GamePlayScene = function(game, stage)
     icon_patient_img.src = "assets/icon-patient.png"
     icon_sad_face_img = new Image();
     icon_sad_face_img.src = "assets/sad-face.png"
+    beep_aud = new Audio();
+    beep_aud.src = "assets/beep.mp3";
 
     patient_volume_graph = new graph_set(red);
     patient_volume_graph.data.pulse_i = 0;
@@ -1065,9 +1076,12 @@ var GamePlayScene = function(game, stage)
     if(selected_mode == MODE_VOLUME)   in_channel_btns[0].title = "Volume"
     if(selected_mode == MODE_PRESSURE) in_channel_btns[0].title = "Pressure"
 
-    var in_error = false;
-    if(in_error) alert_t += 0.1;
+    var in_error = triggered_alarms();
+    if(in_error) alert_t += 0.01;
     else         alert_t = 0;
+
+    if(alert_t-0.1 > 0 && floor(alert_t)-floor(alert_t-0.1) > 0)
+      beep_aud.play();
 
     if(blip_running) blip_t += blip_rate;
     if(blip_t == blip_rate || floor((blip_t-blip_rate)/patient_volume_graph.data.itime) != floor(blip_t/patient_volume_graph.data.itime))
@@ -1411,11 +1425,11 @@ var GamePlayScene = function(game, stage)
       ctx.font = "30px Helvetica";
       ctx.fillStyle = black;
 
-      if(alert_t)
-      {
-        ctx.fillStyle = "rgba(255,0,0,"+(psin(alert_t)/2)+")";
-        ctx.fillRect(0,0,canv.width,canv.height);
-      }
+    }
+    if(alert_t)
+    {
+      ctx.fillStyle = "rgba(255,0,0,"+(psin(alert_t)/2)+")";
+      ctx.fillRect(0,0,canv.width,canv.height);
     }
   };
 
