@@ -217,6 +217,29 @@ var GamePlayScene = function(game, stage)
   var clicker;
   var dragger;
 
+  var vol_disp = function(vol)
+  {
+    vol *= 1000;
+    vol /= 5;
+    vol = round(vol);
+    vol *= 5;
+    vol /= 1000;
+    var construct = "";
+    var t = 0;
+    construct += floor(vol);
+    t += floor(vol);
+    t *= 10;
+    construct += ".";
+    construct += floor(vol*10)-t;
+    t += floor(vol*10)-t;
+    t *= 10;
+    construct += floor(vol*100)-t;
+    t += floor(vol*100)-t;
+    t *= 10;
+    construct += floor(vol*1000)-t;
+    return construct.substr(0,5);
+  }
+
   var evaluate_patient = function()
   {
     var kg = patient_weight*0.453592;
@@ -1374,7 +1397,7 @@ var GamePlayScene = function(game, stage)
       {
         switch(in_channel_btns[i].channel)
         {
-          case IN_CHANNEL_MODE:  sub = fdisp(commit_in_volume,3)+" L";      subsub = fdisp(in_volume,3)+" L";      break;
+          case IN_CHANNEL_MODE:  sub = vol_disp(commit_in_volume,3)+" L";      subsub = vol_disp(in_volume,3)+" L";      break;
           case IN_CHANNEL_RATE:  sub = fdisp(commit_in_rate,  0)+" b/min";  subsub = fdisp(in_rate,  0)+" b/min";  break;
           case IN_CHANNEL_FLOW:  sub = fdisp(commit_in_flow,  0)+" l/min";  subsub = fdisp(in_flow,  0)+" l/min";  break;
           case IN_CHANNEL_OXY:   sub = fdisp(commit_in_oxy,   0)+"%";       subsub = fdisp(in_oxy,   0)+"%";       break;
@@ -1387,7 +1410,7 @@ var GamePlayScene = function(game, stage)
 
       switch(in_channel_btns[selected_channel].channel)
       {
-        case IN_CHANNEL_MODE:  sub = fdisp(in_volume,3)+" L";      break;
+        case IN_CHANNEL_MODE:  sub = vol_disp(in_volume,3)+" L";      break;
         case IN_CHANNEL_RATE:  sub = fdisp(in_rate,  0)+" b/min";  break;
         case IN_CHANNEL_FLOW:  sub = fdisp(in_flow,  0)+" l/min";  break;
         case IN_CHANNEL_OXY:   sub = fdisp(in_oxy,   0)+"%";       break;
