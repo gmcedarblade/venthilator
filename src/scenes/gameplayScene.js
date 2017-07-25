@@ -534,7 +534,7 @@ var GamePlayScene = function(game, stage)
       {
         if(gen_data_in_inspiration)     self.data[i] = self.sample_inspiration(gen_data_t_in_state/self.itime)*self.amplitude+self.y_offset;
         else if(gen_data_in_expiration) self.data[i] = self.sample_expiration( gen_data_t_in_state/self.etime)*self.amplitude+self.y_offset;
-        else                            self.data[i] = self.sample_inspiration(                             0)*self.amplitude+self.y_offset;
+        else                            self.data[i] = self.y_offset;
 
         gen_data_t_in_state += 1/self.data_pts;
         gen_data_advance_state();
@@ -588,10 +588,10 @@ var GamePlayScene = function(game, stage)
       self.commit_graph.consume_data(self.data);
     }
 
-    self.draw = function()
+    self.draw = function(linethru)
     {
-      //self.graph.draw();
-      self.commit_graph.draw();
+      //self.graph.draw(linethru);
+      self.commit_graph.draw(linethru);
     }
   }
 
@@ -626,7 +626,7 @@ var GamePlayScene = function(game, stage)
 
     self.gen_cache = function() { self.cache = GenIcon(self.w,self.h); }
 
-    self.draw = function()
+    self.draw = function(linethru)
     {
       if(self.dirty)
       {
@@ -656,8 +656,11 @@ var GamePlayScene = function(game, stage)
       ctx.beginPath();
       ctx.moveTo(self.x,       self.y);
       ctx.lineTo(self.x+self.w,self.y);
-      ctx.moveTo(self.x,       self.y+self.h/2);
-      ctx.lineTo(self.x+self.w,self.y+self.h/2);
+      if(linethru)
+      {
+        ctx.moveTo(self.x,       self.y+self.h/2);
+        ctx.lineTo(self.x+self.w,self.y+self.h/2);
+      }
       ctx.moveTo(self.x,       self.y+self.h);
       ctx.lineTo(self.x+self.w,self.y+self.h);
       ctx.stroke();
@@ -758,8 +761,8 @@ var GamePlayScene = function(game, stage)
       cur_graph.data.dtime = 1/((in_rate/60)*12)-(cur_graph.data.itime+cur_graph.data.etime);
       if(cur_graph == patient_pressure_graph)
       {
-        cur_graph.data.y_offset   = -1+lerp(min_y_offset,   max_y_offset,   norm_in_peep);
-        cur_graph.data.amplitude  = 1.5*lerp(min_amplitude,  max_amplitude,  1-norm_in_peep);
+        cur_graph.data.y_offset   = lerp(min_y_offset,   max_y_offset,   norm_in_peep)+0.05;
+        cur_graph.data.amplitude  = lerp(min_amplitude,  max_amplitude,  1-norm_in_peep);
       }
       cur_graph.update();
     }
@@ -810,16 +813,16 @@ var GamePlayScene = function(game, stage)
 
     patient_volume_graph = new graph_set(red);
     patient_volume_graph.data.pulse_i = 0;
-    patient_volume_graph.data.min_y = -1.4;
+    patient_volume_graph.data.min_y = 0;
     patient_volume_graph.data.max_y = 1.4;
-    patient_volume_graph.data.y_offset = -1;
-    patient_volume_graph.data.amplitude = 1.5;
+    patient_volume_graph.data.y_offset = 0.05;
+    patient_volume_graph.data.amplitude = 1;
     setup_graph_set(patient_volume_graph,0);
     patient_pressure_graph = new graph_set(yellow);
     patient_pressure_graph.data.pulse_i = 1;
-    patient_pressure_graph.data.min_y = -1.4;
+    patient_pressure_graph.data.min_y = 0;
     patient_pressure_graph.data.max_y = 1.4;
-    patient_pressure_graph.data.y_offset = -1;
+    patient_pressure_graph.data.y_offset = 0.05;
     patient_pressure_graph.data.amplitude = 1.5;
     setup_graph_set(patient_pressure_graph,1);
     patient_flow_graph = new graph_set(green);
@@ -1051,7 +1054,7 @@ var GamePlayScene = function(game, stage)
     update_graphs();
     patient_volume_graph.draw(false);
     patient_pressure_graph.draw(false);
-    patient_flow_graph.draw(false);
+    patient_flow_graph.draw(true);
     update_alarms();
 
     clicker = new Clicker({source:stage.dispCanv.canvas});
@@ -1346,18 +1349,18 @@ var GamePlayScene = function(game, stage)
 
       ctx.fillStyle = light_blue;
       ctx.font = "15px Helvetica";
-      patient_volume_graph.draw();
+      patient_volume_graph.draw(false);
       ctx.fillText("Volume",patient_volume_graph.x+10,patient_volume_graph.y+20);
       ctx.fillText(fdisp(commit_in_volume* 1.5,1),patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+15);
       ctx.fillText(0,patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+patient_volume_graph.h-5);
-      patient_pressure_graph.draw();
+      patient_pressure_graph.draw(false);
       ctx.fillText("Pressure",patient_pressure_graph.x+10,patient_pressure_graph.y+20);
       if(blip_running)
         ctx.fillText(fdisp(lerp(min_out_peak_pressure, max_out_peak_pressure, norm_patient_peak_pressure)*1.5,0),patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
       else
         ctx.fillText(50,patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
       ctx.fillText(0,patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+patient_pressure_graph.h-5);
-      patient_flow_graph.draw();
+      patient_flow_graph.draw(true);
       ctx.fillText("Flow",patient_flow_graph.x+10,patient_flow_graph.y+20);
       ctx.fillText(fdisp( commit_in_flow*1.2,0),patient_flow_graph.x+patient_flow_graph.w-30,patient_flow_graph.y+15);
       ctx.fillText(fdisp(-commit_in_flow*1.2,0),patient_flow_graph.x+patient_flow_graph.w-30,patient_flow_graph.y+patient_flow_graph.h-5);
