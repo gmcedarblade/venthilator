@@ -93,16 +93,16 @@ var GamePlayScene = function(game, stage)
   var min_out_ie_ratio             = 0;
   var max_out_ie_ratio             = 1;
 
-  var min_x_offset = 0;
-  var max_x_offset = 1;
   var min_y_offset = 0;
   var max_y_offset = 1;
-  var min_wavelength = 0.02;
-  var max_wavelength = 1.;
+  var min_itime = 0.02;
+  var max_itime = 1;
+  var min_etime = 0.02;
+  var max_etime = 1;
+  var min_dtime = 0.02;
+  var max_dtime = 1;
   var min_amplitude = 0;
   var max_amplitude = 1;
-  var min_spacing = 0;
-  var max_spacing = 0.2;
 
   //data
   var selected_mode = 0;
@@ -335,102 +335,136 @@ var GamePlayScene = function(game, stage)
   {
     var self = this;
 
-    self.pulses = [];
-    self.pulse_pts = 1000;
+    self.inspirations = [];
+    self.inspiration_pts = 500;
     var j = 0;
     //volume
-    self.pulses[j] = [];
-    for(var i = 0; i < self.pulse_pts; i++)
+    self.inspirations[j] = [];
+    for(var i = 0; i < self.inspiration_pts; i++)
     {
-      if(i < self.pulse_pts/2-self.pulse_pts/20)
+      var t = i/self.inspiration_pts;
+      if(t < 0.8)
       {
-        self.pulses[j][i] = sqrt(pcos((i/self.pulse_pts)*twopi-pi));
-      }
-      else if(i < self.pulse_pts/2+self.pulse_pts/20)
-      {
-        var t = mapVal(self.pulse_pts/2-self.pulse_pts/20,self.pulse_pts/2+self.pulse_pts/20,0,1,i);
-        self.pulses[j][i] = lerp(sqrt(pcos((i/self.pulse_pts)*twopi-pi)),pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),3),t);
+        self.inspirations[j][i] = sqrt(pcos(t/2*twopi-pi));
       }
       else
       {
-        self.pulses[j][i] = pow(1-((i-self.pulse_pts/2)/(self.pulse_pts/2)),3);
+        var fade = mapVal(0.8,1.2,0,1,t);
+        self.inspirations[j][i] = lerp(
+          sqrt(pcos(t/2*twopi-pi)),
+          pow(1-(t-1),3),
+          fade);
       }
     }
     j++;
     //pressure
-    self.pulses[j] = [];
-    for(var i = 0; i < self.pulse_pts; i++)
+    self.inspirations[j] = [];
+    for(var i = 0; i < self.inspiration_pts; i++)
     {
-        /*
-      if(i < self.pulse_pts/2)
+      if(i < self.inspiration_pts/2)
       {
-        //should work, but pow doesn't like - numbers?
-        var x = i/self.pulse_pts/2;
-        var a = (x*16)-8;
-        var b = 0.333;
-        self.pulses[j][i] = 1+pow(a,b)/4;
-      }
-        */
-      if(i < self.pulse_pts/4)
-      {
-        var x = i/(self.pulse_pts/4);
+        var x = i/(self.inspiration_pts/2);
         x += 2;
         x /= 3;
         var y = pow(x,8)/2;
-        self.pulses[j][i] = y;
+        self.inspirations[j][i] = y;
       }
-      else if(i < self.pulse_pts/2)
+      else
       {
-        var x = (i-self.pulse_pts/4)/(self.pulse_pts/4);
+        var x = (i-self.inspiration_pts/2)/(self.inspiration_pts/2);
         x += 1;
         x /= 2;
         x -= 0.5;
         var y = 1-pow((1-x),8)/2;
-        self.pulses[j][i] = y;
+        self.inspirations[j][i] = y;
       }
-      else if(i < self.pulse_pts*3/4)
-      {
-        var x = (i-self.pulse_pts/2)/(self.pulse_pts/2);
-        var y = pow((1-x*2),8);
-        self.pulses[j][i] = y;
-      }
-      else
-        self.pulses[j][i] = 0;
     }
     j++;
     //flow
-    self.pulses[j] = [];
-    self.pulses[j][0] = 0.0;
-    for(var i = 1; i < self.pulse_pts-1; i++)
+    self.inspirations[j] = [];
+    self.inspirations[j][0] = 0.0;
+    for(var i = 1; i < self.inspiration_pts-1; i++)
     {
-      if(i < self.pulse_pts/2)
-        self.pulses[j][i] = 1;
-      else
-        self.pulses[j][i] = pow(-1+((i-self.pulse_pts/2)/(self.pulse_pts/2)),3);
+      self.inspirations[j][i] = 1;
     }
-    self.pulses[j][self.pulse_pts-1] = 0;
+    self.inspirations[j][self.inspiration_pts-1] = 0;
+    j++;
+
+    self.expirations = [];
+    self.expiration_pts = 500;
+    var j = 0;
+    //volume
+    self.expirations[j] = [];
+    for(var i = 0; i < self.expiration_pts; i++)
+    {
+      var t = i/self.expiration_pts;
+      if(t < 0.2)
+      {
+        var fade = mapVal(-0.2,0.2,0,1,t);
+        self.expirations[j][i] = lerp(
+          sqrt(pcos((0.5+t/2)*twopi-pi)),
+          pow(1-t,3),
+        fade);
+      }
+      else
+      {
+        self.expirations[j][i] = pow(1-t,3);
+      }
+    }
+    j++;
+    //pressure
+    self.expirations[j] = [];
+    for(var i = 0; i < self.expiration_pts; i++)
+    {
+      t = i/self.expiration_pts;
+      if(t < 0.5)
+      {
+        var x = t;
+        var y = pow((1-x*2),8);
+        self.expirations[j][i] = y;
+      }
+      else
+        self.expirations[j][i] = 0;
+    }
+    j++;
+    //flow
+    self.expirations[j] = [];
+    self.expirations[j][0] = 0.0;
+    for(var i = 1; i < self.expiration_pts-1; i++)
+    {
+      var t = i/self.expiration_pts;
+      self.expirations[j][i] = pow(-1+t,3);
+    }
+    self.expirations[j][self.expiration_pts-1] = 0;
     j++;
 
     self.pulse_i = 0;
-    self.x_offset   = min_x_offset;
     self.y_offset   = min_y_offset;
-    self.wavelength = lerp(min_wavelength,max_wavelength,0.5);
+    self.itime = lerp(min_itime,max_itime,0.5);
+    self.etime = lerp(min_etime,max_etime,0.5);
+    self.dtime = lerp(min_dtime,max_dtime,0.5);
     self.amplitude  = lerp(min_amplitude,max_amplitude,0.5);
-    self.spacing    = lerp(min_spacing,max_spacing,0.5);
 
     self.data = [];
     self.data_pts = 1000;
     self.min_y = -1;
     self.max_y = 1;
 
-    self.sample_pulse = function(t)
+    self.sample_inspiration = function(t)
     {
-      var from_i = floor(t*self.pulse_pts);
-      var to_i   = ceil(t*self.pulse_pts);
-      return lerp(self.pulses[self.pulse_i][from_i],self.pulses[self.pulse_i][to_i],t);
+      var from_i = floor(t*self.inspiration_pts);
+      var to_i   = ceil(t*self.inspiration_pts);
+      return lerp(self.inspirations[self.pulse_i][from_i],self.inspirations[self.pulse_i][to_i],t);
+    }
+    self.sample_expiration = function(t)
+    {
+      var from_i = floor(t*self.expiration_pts);
+      var to_i   = ceil(t*self.expiration_pts);
+      return lerp(self.expirations[self.pulse_i][from_i],self.expirations[self.pulse_i][to_i],t);
     }
 
-    var gen_data_in_pulse = false;
+    var gen_data_in_inspiration = false;
+    var gen_data_in_expiration = false;
     var gen_data_t_in_state = 0;
     var gen_data_advance_state = function()
     {
@@ -438,32 +472,37 @@ var GamePlayScene = function(game, stage)
       while(changed)
       {
         changed = false;
-        if( gen_data_in_pulse && gen_data_t_in_state > self.wavelength)
+        if(gen_data_in_inspiration && gen_data_t_in_state > self.itime)
         {
-          gen_data_in_pulse = !gen_data_in_pulse;
-          gen_data_t_in_state -= self.wavelength;
+          gen_data_in_inspiration = false;
+          gen_data_in_expiration = true;
+          gen_data_t_in_state -= self.itime;
           changed = true;
         }
-        if(!gen_data_in_pulse && gen_data_t_in_state > self.spacing)
+        if(gen_data_in_expiration && gen_data_t_in_state > self.etime)
         {
-          gen_data_in_pulse = !gen_data_in_pulse;
-          gen_data_t_in_state -= self.spacing;
+          gen_data_in_expiration = false;
+          gen_data_t_in_state -= self.etime;
+          changed = true;
+        }
+        if(!gen_data_in_inspiration && !gen_data_in_expiration && gen_data_t_in_state > self.dtime)
+        {
+          gen_data_in_inspiration = true;
+          gen_data_t_in_state -= self.dtime;
           changed = true;
         }
       }
     }
     self.gen_data = function()
     {
-      gen_data_in_pulse = false;
-      gen_data_t_in_state = self.x_offset;
-      gen_data_advance_state();
+      gen_data_in_inspiration = true;
+      gen_data_in_expiration = false;
+      gen_data_t_in_state = 0;
       for(var i = 0; i < self.data_pts; i++)
       {
-        if(gen_data_in_pulse) self.data[i] = self.sample_pulse(gen_data_t_in_state/self.wavelength)*self.amplitude+self.y_offset;
-        else                  self.data[i] = self.sample_pulse(                                  0)*self.amplitude+self.y_offset;
-
-        if(i == 0)
-          i = 0;
+        if(gen_data_in_inspiration)     self.data[i] = self.sample_inspiration(gen_data_t_in_state/self.itime)*self.amplitude+self.y_offset;
+        else if(gen_data_in_expiration) self.data[i] = self.sample_expiration( gen_data_t_in_state/self.etime)*self.amplitude+self.y_offset;
+        else                            self.data[i] = self.sample_inspiration(                             0)*self.amplitude+self.y_offset;
 
         gen_data_t_in_state += 1/self.data_pts;
         gen_data_advance_state();
@@ -674,16 +713,17 @@ var GamePlayScene = function(game, stage)
       var cur_graph;
       switch(i)
       {
-        case 0: cur_graph = patient_volume_graph;   cur_graph.data.x_offset = 0.0; break;
-        case 1: cur_graph = patient_pressure_graph; cur_graph.data.x_offset = 0.0; break;
-        case 2: cur_graph = patient_flow_graph;     cur_graph.data.x_offset = 0.0; break;
+        case 0: cur_graph = patient_volume_graph;   break;
+        case 1: cur_graph = patient_pressure_graph; break;
+        case 2: cur_graph = patient_flow_graph;     break;
       }
 
            //if(selected_mode == MODE_VOLUME)   cur_graph.data.amplitude = lerp(min_amplitude, max_amplitude, norm_in_volume);
       //else if(selected_mode == MODE_PRESSURE) cur_graph.data.amplitude = lerp(min_amplitude, max_amplitude, norm_in_pressure);
 
-      cur_graph.data.wavelength = lerp(min_wavelength, max_wavelength, norm_in_itime);
-      cur_graph.data.spacing    = lerp(min_spacing,    max_spacing,    1-norm_in_rate);
+      cur_graph.data.itime = in_itime/12;
+      cur_graph.data.etime = 0.1;
+      cur_graph.data.dtime = 1/((in_rate/60)*12)-(cur_graph.data.itime+cur_graph.data.etime);
       if(cur_graph == patient_pressure_graph)
       {
         cur_graph.data.y_offset   = -1+lerp(min_y_offset,   max_y_offset,   norm_in_peep);
@@ -1030,7 +1070,7 @@ var GamePlayScene = function(game, stage)
     else         alert_t = 0;
 
     if(blip_running) blip_t += blip_rate;
-    if(blip_t == blip_rate || floor((blip_t-blip_rate)/patient_volume_graph.data.wavelength) != floor(blip_t/patient_volume_graph.data.wavelength))
+    if(blip_t == blip_rate || floor((blip_t-blip_rate)/patient_volume_graph.data.itime) != floor(blip_t/patient_volume_graph.data.itime))
     {
       var ibw;
       if(patient_sex == "M") ibw = 50  +2.3*(patient_height-(5*12));
@@ -1063,7 +1103,7 @@ var GamePlayScene = function(game, stage)
       out_exhale_minute_volume = lerp(min_out_exhale_minute_volume, max_out_exhale_minute_volume, norm_out_exhale_minute_volume);
 
       out_ie_ratio_variance = out_ie_ratio_max_variance * rand0();
-      norm_patient_ie_ratio = (patient_volume_graph.data.wavelength+patient_volume_graph.data.spacing-(patient_volume_graph.data.wavelength/2))/(patient_volume_graph.data.wavelength/2);
+      norm_patient_ie_ratio = (patient_volume_graph.data.etime+patient_volume_graph.data.dtime)/patient_volume_graph.data.itime;
       norm_out_ie_ratio = norm_patient_ie_ratio + norm_patient_ie_ratio * out_ie_ratio_variance;
       out_ie_ratio = lerp(min_out_ie_ratio, max_out_ie_ratio, norm_out_ie_ratio);
     }
@@ -1302,7 +1342,7 @@ var GamePlayScene = function(game, stage)
           {
             case OUT_CHANNEL_PEAK_PRESSURE:        sub = fdisp(out_peak_pressure,1); break;
             case OUT_CHANNEL_MEAN_PRESSURE:        sub = fdisp(out_mean_pressure,1);        break;
-            case OUT_CHANNEL_RATE:                 sub = fdisp(out_rate,1);                 break;
+            case OUT_CHANNEL_RATE:                 sub = fdisp(out_rate,0);                 break;
             case OUT_CHANNEL_EXHALE_VOLUME:        sub = fdisp(out_exhale_volume,1);        break;
             case OUT_CHANNEL_EXHALE_MINUTE_VOLUME: sub = fdisp(out_exhale_minute_volume,1); break;
             case OUT_CHANNEL_IE_RATIO:             sub = "1:"+fdisp(out_ie_ratio,1);      break;
@@ -1321,7 +1361,7 @@ var GamePlayScene = function(game, stage)
         switch(in_channel_btns[i].channel)
         {
           case IN_CHANNEL_MODE:  sub = fdisp(commit_in_volume,3)+" L";      subsub = fdisp(in_volume,3)+" L";      break;
-          case IN_CHANNEL_RATE:  sub = fdisp(commit_in_rate,  1)+" b/min";  subsub = fdisp(in_rate,  1)+" b/min";  break;
+          case IN_CHANNEL_RATE:  sub = fdisp(commit_in_rate,  0)+" b/min";  subsub = fdisp(in_rate,  0)+" b/min";  break;
           case IN_CHANNEL_FLOW:  sub = fdisp(commit_in_flow,  0)+" l/min";  subsub = fdisp(in_flow,  0)+" l/min";  break;
           case IN_CHANNEL_OXY:   sub = fdisp(commit_in_oxy,   0)+"%";       subsub = fdisp(in_oxy,   0)+"%";       break;
           case IN_CHANNEL_ITIME: sub = fdisp(commit_in_itime, 1)+" sec";    subsub = fdisp(in_itime, 1)+" sec";    break;
@@ -1334,7 +1374,7 @@ var GamePlayScene = function(game, stage)
       switch(in_channel_btns[selected_channel].channel)
       {
         case IN_CHANNEL_MODE:  sub = fdisp(in_volume,3)+" L";      break;
-        case IN_CHANNEL_RATE:  sub = fdisp(in_rate,  1)+" b/min";  break;
+        case IN_CHANNEL_RATE:  sub = fdisp(in_rate,  0)+" b/min";  break;
         case IN_CHANNEL_FLOW:  sub = fdisp(in_flow,  0)+" l/min";  break;
         case IN_CHANNEL_OXY:   sub = fdisp(in_oxy,   0)+"%";       break;
         case IN_CHANNEL_ITIME: sub = fdisp(in_itime, 1)+" sec";    break;
