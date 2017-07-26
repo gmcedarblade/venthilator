@@ -386,6 +386,7 @@ var GamePlayScene = function(game, stage)
           pow(1-(t-1),3),
           fade);
       }
+      if(self.inspirations[j][i] > 1) self.inspirations[j][i] = 1+pow(self.inspirations[j][i]-1,3);
     }
     j++;
     //pressure
@@ -441,6 +442,7 @@ var GamePlayScene = function(game, stage)
       {
         self.expirations[j][i] = pow(1-t,3);
       }
+      if(self.inspirations[j][i] > 1) self.inspirations[j][i] = 1+pow(self.inspirations[j][i]-1,3);
     }
     j++;
     //pressure
@@ -1347,16 +1349,72 @@ var GamePlayScene = function(game, stage)
       h = patient_flow_graph.y-y;
       ctx.fillRect(0,y,canv.width,h);
 
+      var cur_graph;
+
       ctx.fillStyle = light_blue;
       ctx.font = "15px Helvetica";
       patient_volume_graph.draw(false);
       ctx.fillText("Volume",patient_volume_graph.x+10,patient_volume_graph.y+20);
-      ctx.fillText(fdisp(commit_in_volume*patient_volume_graph.data.max_y,1),patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+15);
+      cur_graph = patient_volume_graph;
+      var maxvol = commit_in_volume*patient_volume_graph.data.max_y;
+
+      if(maxvol > 0.5)
+      {
+        ctx.lineWidth = 0.25;
+        ctx.strokeStyle = light_blue;
+        ctx.beginPath();
+        ctx.moveTo(cur_graph.x,            cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*0.5));
+        ctx.lineTo(cur_graph.x+cur_graph.w,cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*0.5));
+        if(maxvol > 1)
+        {
+        ctx.moveTo(cur_graph.x,            cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*1));
+        ctx.lineTo(cur_graph.x+cur_graph.w,cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*1));
+        }
+        if(maxvol > 1.5)
+        {
+        ctx.moveTo(cur_graph.x,            cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*1.5));
+        ctx.lineTo(cur_graph.x+cur_graph.w,cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*1.5));
+        }
+        if(maxvol > 2)
+        {
+        ctx.moveTo(cur_graph.x,            cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*2));
+        ctx.lineTo(cur_graph.x+cur_graph.w,cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*2));
+        }
+        ctx.stroke();
+        ctx.lineWidth = 1;
+      }
+
+      ctx.fillText(fdisp(maxvol,1),patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+15);
       ctx.fillText(0,patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+patient_volume_graph.h-5);
+
       patient_pressure_graph.draw(false);
       ctx.fillText("Pressure",patient_pressure_graph.x+10,patient_pressure_graph.y+20);
+      cur_graph = patient_pressure_graph;
+      var maxpress = lerp(min_out_peak_pressure, max_out_peak_pressure, norm_patient_peak_pressure)*patient_pressure_graph.data.max_y;
+
+      if(maxpress > 25)
+      {
+        ctx.lineWidth = 0.25;
+        ctx.strokeStyle = light_blue;
+        ctx.beginPath();
+        ctx.moveTo(cur_graph.x,            cur_graph.y+cur_graph.h-(cur_graph.h/maxpress*25));
+        ctx.lineTo(cur_graph.x+cur_graph.w,cur_graph.y+cur_graph.h-(cur_graph.h/maxpress*25));
+        if(maxpress > 50)
+        {
+        ctx.moveTo(cur_graph.x,            cur_graph.y+cur_graph.h-(cur_graph.h/maxpress*50));
+        ctx.lineTo(cur_graph.x+cur_graph.w,cur_graph.y+cur_graph.h-(cur_graph.h/maxpress*50));
+        }
+        if(maxpress > 75)
+        {
+        ctx.moveTo(cur_graph.x,            cur_graph.y+cur_graph.h-(cur_graph.h/maxpress*75));
+        ctx.lineTo(cur_graph.x+cur_graph.w,cur_graph.y+cur_graph.h-(cur_graph.h/maxpress*75));
+        }
+        ctx.stroke();
+        ctx.lineWidth = 1;
+      }
+
       if(blip_running)
-        ctx.fillText(fdisp(lerp(min_out_peak_pressure, max_out_peak_pressure, norm_patient_peak_pressure)*patient_pressure_graph.data.max_y,0),patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
+        ctx.fillText(fdisp(maxpress,0),patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
       else
         ctx.fillText(50,patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
       ctx.fillText(0,patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+patient_pressure_graph.h-5);
