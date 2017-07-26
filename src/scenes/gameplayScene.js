@@ -1009,7 +1009,7 @@ var GamePlayScene = function(game, stage)
 
     commit_alarm_btn = new ButtonBox(0,0,0,0, function()
     {
-      cur_screen = SCREEN_VENTILATOR;
+      //cur_screen = SCREEN_VENTILATOR;
     });
     commit_alarm_btn.title = "Commit Changes";
     commit_alarm_btn.ww = 0.4;
@@ -1110,7 +1110,8 @@ var GamePlayScene = function(game, stage)
       beep_aud.play();
 
     if(blip_running) blip_t += blip_rate;
-    if(blip_t == blip_rate || floor((blip_t-blip_rate)/patient_volume_graph.data.itime) != floor(blip_t/patient_volume_graph.data.itime))
+    var fulllen = patient_volume_graph.data.itime+patient_volume_graph.data.etime+patient_volume_graph.data.dtime;
+    if(blip_t == blip_rate || floor(((blip_t-patient_volume_graph.data.itime)-blip_rate)/fulllen) != floor((blip_t-patient_volume_graph.data.itime)/fulllen))
     {
       var ibw;
       if(patient_sex == "M") ibw = 50  +2.3*(patient_height-(5*12));
