@@ -16,6 +16,7 @@ var GamePlayScene = function(game, stage)
   var white      = "#FFFFFF";
   var black      = "#000000";
   var gray       = "#888888";
+  var light_gray = "#EEEEEE";
   var darken     = "rgba(0,0,0,0.5)";
 
   var knob_range_img;
@@ -252,39 +253,29 @@ var GamePlayScene = function(game, stage)
     var expected_oxy = 21;
     var expected_flow = 40;
 
-/*
-    console.log((expected_volume/out_exhale_volume)-1);
-    console.log((expected_peep/in_peep)-1);
-    console.log((expected_oxy/in_oxy)-1);
-    console.log((expected_flow/in_flow)-1);
-    console.log("done");
-*/
+    if(abs((expected_volume/out_exhale_volume)-1) > 0.2) { console.log("vol");  return false; }
+    if(abs((expected_peep/in_peep)            -1) > 0.2) { console.log("peep"); return false; }
+    if(abs((expected_oxy/in_oxy)              -1) > 0.2) { console.log("oxy");  return false; }
+    if(abs((expected_flow/in_flow)            -1) > 0.2) { console.log("flow"); return false; }
 
-    if(
-      abs((expected_volume/out_exhale_volume)-1) < 0.2 &&
-      abs((expected_peep/in_peep)-1) < 0.2 &&
-      abs((expected_oxy/in_oxy)-1) < 0.2 &&
-      abs((expected_flow/in_flow)-1) < 0.2
-      )
-      return true;
-    return false;
+    return true;
   }
 
   var triggered_alarms = function()
   {
-    return blip_running &&
-      (
-      pressure_alarm.v             > pressure_alarm.max_v            *1.0 || pressure_alarm.v             < pressure_alarm.min_v            *1.0 ||
-      rate_alarm.v                 > rate_alarm.max_v                *1.0 || rate_alarm.v                 < rate_alarm.min_v                *1.0 ||
-      exhale_minute_volume_alarm.v > exhale_minute_volume_alarm.max_v*1.0 || exhale_minute_volume_alarm.v < exhale_minute_volume_alarm.min_v*1.0
-      );
+    if(!blip_running)                                                                                                                              { return false; }
+    if(pressure_alarm.v             > pressure_alarm.max_v            *1.0 || pressure_alarm.v             < pressure_alarm.min_v            *1.0) { return true; }
+    if(rate_alarm.v                 > rate_alarm.max_v                *1.0 || rate_alarm.v                 < rate_alarm.min_v                *1.0) { return true; }
+    if(exhale_minute_volume_alarm.v > exhale_minute_volume_alarm.max_v*1.0 || exhale_minute_volume_alarm.v < exhale_minute_volume_alarm.min_v*1.0) { return true; }
+    return false;
   }
   var evaluate_alarms = function()
   {
-    return blip_running &&
-      pressure_alarm.v             < pressure_alarm.max_v            *1.0 && pressure_alarm.v             > pressure_alarm.min_v            *1.0 &&
-      rate_alarm.v                 < rate_alarm.max_v                *1.0 && rate_alarm.v                 > rate_alarm.min_v                *1.0 &&
-      exhale_minute_volume_alarm.v < exhale_minute_volume_alarm.max_v*1.0 && exhale_minute_volume_alarm.v > exhale_minute_volume_alarm.min_v*1.0;
+    if(!blip_running)                                                                                                                              { console.log("blip"); return false; }
+    if(pressure_alarm.v             > pressure_alarm.max_v            *1.0 || pressure_alarm.v             < pressure_alarm.min_v            *1.0) { console.log("pressure alarm"); return false; }
+    if(rate_alarm.v                 > rate_alarm.max_v                *1.0 || rate_alarm.v                 < rate_alarm.min_v                *1.0) { console.log("rate alarm");     return false; }
+    if(exhale_minute_volume_alarm.v > exhale_minute_volume_alarm.max_v*1.0 || exhale_minute_volume_alarm.v < exhale_minute_volume_alarm.min_v*1.0) { console.log("emv alarm");      return false; }
+    return true;
   }
 
   var alarm = function(min_select,max_select,min_selected,max_selected,min_text,max_text,text,minmin_text,maxmax_text,title,label)
@@ -321,7 +312,10 @@ var GamePlayScene = function(game, stage)
 
     self.draw = function()
     {
+      ctx.strokeStyle = dark_blue;
+      ctx.fillStyle = light_gray;
       ctx.strokeRect(self.x,self.y,self.w,self.h);
+      ctx.fillRect(self.x,self.y,self.w,self.h);
 
       ctx.fillStyle = dark_blue;
       ctx.font = "20px Helvetica";
@@ -338,7 +332,9 @@ var GamePlayScene = function(game, stage)
       ctx.font = "12px Helvetica";
       ctx.fillText(min_text(),self.min_box.x+7,self.min_box.y+33);
       ctx.strokeStyle = light_blue;
+      ctx.fillStyle = white;
       canv.strokeRoundRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h,5);
+      ctx.fillRect(self.x-2,self.min_box.y-2,self.w+4,4);
       ctx.strokeRect(self.x-2,self.min_box.y-2,self.w+4,4);
 
       ctx.fillStyle = dark_blue;
@@ -349,15 +345,18 @@ var GamePlayScene = function(game, stage)
       ctx.font = "12px Helvetica";
       ctx.fillText(max_text(),self.max_box.x+7,self.max_box.y+33);
       ctx.strokeStyle = light_blue;
+      ctx.fillStyle = white;
       canv.strokeRoundRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h,5);
       ctx.strokeRect(self.x-2,self.max_box.y+self.max_box.h-2,self.w+4,4);
+      ctx.fillRect(self.x-2,self.max_box.y+self.max_box.h-2,self.w+4,4);
 
       ctx.fillText(minmin_text(),self.x+4,self.y+self.h+20);
       ctx.fillText(maxmax_text(),self.x+4,self.y-4);
 
       if(blip_running)
       {
-        ctx.strokeRect(self.x-1,self.y+self.h-(self.h*self.v)-1,self.w+2,2);
+        ctx.fillStyle = dark_blue;
+        ctx.fillRect(self.x-1,self.y+self.h-(self.h*self.v)-1,self.w+2,2);
         ctx.fillText(text(),self.x+self.w+5,self.y+self.h-(self.v*self.h));
       }
     }
@@ -670,8 +669,7 @@ var GamePlayScene = function(game, stage)
   }
 
   var out_btn_w = 0.15;
-  var in_btn_w = 0.135;
-  var btn_w = 0.12;
+  var in_btn_w = cam.ww/6;
   var genOutChannelBtn = function(channel, title, x)
   {
     btn = new ButtonBox(0,0,0,0, function(){selected_channel = channel; })
@@ -691,7 +689,7 @@ var GamePlayScene = function(game, stage)
     btn.title = title;
     btn.wx = x;
     btn.wy = -0.1
-    btn.ww = btn_w;
+    btn.ww = in_btn_w;
     btn.wh = 0.1;
     screenSpace(cam,canv,btn);
     in_channel_btns[channel] = btn;
@@ -709,7 +707,7 @@ var GamePlayScene = function(game, stage)
   {
     ctx.fillStyle = light_blue;
     ctx.strokeStyle = light_blue;
-    canv.strokeRoundRect(btn.x,btn.y,btn.w,btn.h,5);
+    canv.roundRectOptions(btn.x,btn.y,btn.w,btn.h,5,0,0,1,1,light_blue,0);
     ctx.font = "10px Helvetica";
     ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2-10);
     ctx.font = "12px Helvetica";
@@ -975,8 +973,8 @@ var GamePlayScene = function(game, stage)
     genOutChannelBtn(OUT_CHANNEL_EXHALE_VOLUME,        "EV (L)"        /*"Exhale Volume"*/,        x); x += s;
     genOutChannelBtn(OUT_CHANNEL_EXHALE_MINUTE_VOLUME, "EMV (L/min)"   /*"Exhale Minute Volume"*/, x); x += s;
     genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "I:E"           /*"I:E"*/,                  x); x += s;
-    x = -0.5+(in_btn_w/2)+0.05;
-    s = in_btn_w+0.02;
+    x = -0.5+(in_btn_w/2);
+    s = in_btn_w;
     genInChannelBtn(IN_CHANNEL_MODE,  "Volume", x); x += s;
     genInChannelBtn(IN_CHANNEL_RATE,  "Freq",   x); x += s;
     genInChannelBtn(IN_CHANNEL_FLOW,  "Flow",   x); x += s;
@@ -1146,6 +1144,8 @@ var GamePlayScene = function(game, stage)
       norm_patient_ie_ratio = (patient_volume_graph.data.etime+patient_volume_graph.data.dtime)/patient_volume_graph.data.itime;
       norm_out_ie_ratio = norm_patient_ie_ratio + norm_patient_ie_ratio * out_ie_ratio_variance;
       out_ie_ratio = lerp(min_out_ie_ratio, max_out_ie_ratio, norm_out_ie_ratio);
+
+      update_alarms();
     }
     while(blip_t > 1) blip_t -= 1;
   };
