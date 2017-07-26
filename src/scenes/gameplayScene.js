@@ -1382,9 +1382,13 @@ var GamePlayScene = function(game, stage)
         }
         ctx.stroke();
         ctx.lineWidth = 1;
+             if(maxvol > 2)   ctx.fillText("2",  patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+15);
+        else if(maxvol > 1.5) ctx.fillText("1.5",patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+15);
+        else if(maxvol > 1)   ctx.fillText("1",  patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+15);
+        else if(maxvol > 0.5) ctx.fillText("0.5",patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+15);
       }
-
-      ctx.fillText(fdisp(maxvol,1),patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+15);
+      else
+        ctx.fillText(fdisp(maxvol,1),patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+15);
       ctx.fillText(0,patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+patient_volume_graph.h-5);
 
       patient_pressure_graph.draw(false);
@@ -1411,12 +1415,14 @@ var GamePlayScene = function(game, stage)
         }
         ctx.stroke();
         ctx.lineWidth = 1;
+             if(maxpress > 75) ctx.fillText("75",patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
+        else if(maxpress > 50) ctx.fillText("50",patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
+        else if(maxpress > 25) ctx.fillText("25",patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
       }
-
-      if(blip_running)
-        ctx.fillText(fdisp(maxpress,0),patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
       else
-        ctx.fillText(50,patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
+      {
+        ctx.fillText(fdisp(maxpress,0),patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
+      }
       ctx.fillText(0,patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+patient_pressure_graph.h-5);
       patient_flow_graph.draw(true);
       ctx.fillText("Flow",patient_flow_graph.x+10,patient_flow_graph.y+20);
