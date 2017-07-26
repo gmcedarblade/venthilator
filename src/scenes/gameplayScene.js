@@ -1131,12 +1131,12 @@ var GamePlayScene = function(game, stage)
       out_rate = lerp(min_out_rate, max_out_rate, norm_out_rate);
 
       out_exhale_volume_variance = out_exhale_volume_max_variance * rand0();
-      norm_patient_exhale_volume = mapVal(min_out_exhale_volume,max_out_exhale_volume,0,1,commit_in_volume);
+      norm_patient_exhale_volume = mapVal(min_out_exhale_volume, max_out_exhale_volume, 0, 1, commit_in_volume);
       norm_out_exhale_volume = norm_patient_exhale_volume + norm_patient_exhale_volume * out_exhale_volume_variance;
       out_exhale_volume = lerp(min_out_exhale_volume, max_out_exhale_volume, norm_out_exhale_volume);
 
       out_exhale_minute_volume_variance = out_exhale_minute_volume_max_variance * rand0();
-      norm_patient_exhale_minute_volume = ((out_rate*out_exhale_volume)-min_out_exhale_minute_volume)/(max_out_exhale_minute_volume-min_out_exhale_minute_volume);
+      norm_patient_exhale_minute_volume = mapVal(min_out_exhale_minute_volume, max_out_exhale_minute_volume, 0, 1, out_rate*out_exhale_volume);
       norm_out_exhale_minute_volume = norm_patient_exhale_minute_volume + norm_patient_exhale_minute_volume * out_exhale_minute_volume_variance;
       out_exhale_minute_volume = lerp(min_out_exhale_minute_volume, max_out_exhale_minute_volume, norm_out_exhale_minute_volume);
 
