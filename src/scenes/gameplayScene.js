@@ -96,7 +96,7 @@ var GamePlayScene = function(game, stage)
   var max_out_ie_ratio             = 1;
 
   var min_y_offset = 0;
-  var max_y_offset = 1;
+  var max_y_offset = 0.5;
   var min_itime = 0.02;
   var max_itime = 1;
   var min_etime = 0.02;
@@ -762,7 +762,7 @@ var GamePlayScene = function(game, stage)
       if(cur_graph == patient_pressure_graph)
       {
         cur_graph.data.y_offset   = lerp(min_y_offset,   max_y_offset,   norm_in_peep)+0.02;
-        cur_graph.data.amplitude  = lerp(min_amplitude,  max_amplitude,  0.2+(1-norm_in_peep)*0.8);
+        cur_graph.data.amplitude  = 1-cur_graph.data.y_offset;
       }
       cur_graph.update();
     }
@@ -1388,14 +1388,14 @@ var GamePlayScene = function(game, stage)
         }
         ctx.stroke();
         ctx.lineWidth = 1;
-             if(maxvol > 2)   ctx.fillText("2",  patient_volume_graph.x+patient_volume_graph.w-30,label_disp_y+15);
-        else if(maxvol > 1.5) ctx.fillText("1.5",patient_volume_graph.x+patient_volume_graph.w-30,label_disp_y+15);
-        else if(maxvol > 1)   ctx.fillText("1",  patient_volume_graph.x+patient_volume_graph.w-30,label_disp_y+15);
-        else if(maxvol > 0.5) ctx.fillText("0.5",patient_volume_graph.x+patient_volume_graph.w-30,label_disp_y+15);
+             if(maxvol > 2)   ctx.fillText("2",  patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+12);
+        else if(maxvol > 1.5) ctx.fillText("1.5",patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+12);
+        else if(maxvol > 1)   ctx.fillText("1",  patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+12);
+        else if(maxvol > 0.5) ctx.fillText("0.5",patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+12);
       }
       else
-        ctx.fillText(fdisp(maxvol,1),patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+15);
-      ctx.fillText(0,patient_volume_graph.x+patient_volume_graph.w-30,patient_volume_graph.y+patient_volume_graph.h-5);
+        ctx.fillText(fdisp(maxvol,1),patient_volume_graph.x+patient_volume_graph.w-20,patient_volume_graph.y+12);
+      ctx.fillText(0,patient_volume_graph.x+patient_volume_graph.w-20,patient_volume_graph.y+patient_volume_graph.h-5);
 
       patient_pressure_graph.draw(false);
       ctx.fillText("Pressure",patient_pressure_graph.x+10,patient_pressure_graph.y+20);
@@ -1425,19 +1425,19 @@ var GamePlayScene = function(game, stage)
         }
         ctx.stroke();
         ctx.lineWidth = 1;
-             if(maxpress > 75) ctx.fillText("75",patient_pressure_graph.x+patient_pressure_graph.w-30,label_disp_y+15);
-        else if(maxpress > 50) ctx.fillText("50",patient_pressure_graph.x+patient_pressure_graph.w-30,label_disp_y+15);
-        else if(maxpress > 25) ctx.fillText("25",patient_pressure_graph.x+patient_pressure_graph.w-30,label_disp_y+15);
+             if(maxpress > 75) ctx.fillText("75",patient_pressure_graph.x+patient_pressure_graph.w-20,label_disp_y+12);
+        else if(maxpress > 50) ctx.fillText("50",patient_pressure_graph.x+patient_pressure_graph.w-20,label_disp_y+12);
+        else if(maxpress > 25) ctx.fillText("25",patient_pressure_graph.x+patient_pressure_graph.w-20,label_disp_y+12);
       }
       else
       {
-        ctx.fillText(fdisp(maxpress,0),patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+15);
+        ctx.fillText(fdisp(maxpress,0),patient_pressure_graph.x+patient_pressure_graph.w-20,patient_pressure_graph.y+12);
       }
-      ctx.fillText(0,patient_pressure_graph.x+patient_pressure_graph.w-30,patient_pressure_graph.y+patient_pressure_graph.h-5);
+      ctx.fillText(0,patient_pressure_graph.x+patient_pressure_graph.w-20,patient_pressure_graph.y+patient_pressure_graph.h-5);
       patient_flow_graph.draw(true);
       ctx.fillText("Flow",patient_flow_graph.x+10,patient_flow_graph.y+20);
-      ctx.fillText(fdisp(commit_in_flow*patient_flow_graph.data.max_y,0),patient_flow_graph.x+patient_flow_graph.w-30,patient_flow_graph.y+15);
-      ctx.fillText(fdisp(commit_in_flow*patient_flow_graph.data.min_y,0),patient_flow_graph.x+patient_flow_graph.w-30,patient_flow_graph.y+patient_flow_graph.h-5);
+      ctx.fillText(fdisp(commit_in_flow*patient_flow_graph.data.max_y,0),patient_flow_graph.x+patient_flow_graph.w-20,patient_flow_graph.y+12);
+      ctx.fillText(fdisp(commit_in_flow*patient_flow_graph.data.min_y,0),patient_flow_graph.x+patient_flow_graph.w-20,patient_flow_graph.y+patient_flow_graph.h-5);
 
       ctx.fillStyle = dark_blue;
       ctx.fillText("0s", patient_flow_graph.x+4          ,patient_flow_graph.y+patient_flow_graph.h+14);
