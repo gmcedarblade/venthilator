@@ -72,7 +72,7 @@ var GamePlayScene = function(game, stage)
   var max_in_flow = 100;
   var min_in_oxy = 21;
   var max_in_oxy = 100;
-  var min_in_itime = 0;
+  var min_in_itime = 0.6;
   var max_in_itime = 5;
   var min_in_peep = 0;
   var max_in_peep = 20;
@@ -867,6 +867,8 @@ var GamePlayScene = function(game, stage)
         case IN_CHANNEL_FLOW:
           norm_in_flow = clamp(0,1,norm_in_flow+v);
           in_flow = lerp(min_in_flow, max_in_flow, norm_in_flow);
+          in_itime = in_volume/(in_flow/60);
+          in_norm_itime = mapVal(min_in_itime,max_in_itime,0,1,in_itime);
           break;
         case IN_CHANNEL_OXY:
           norm_in_oxy = clamp(0,1,norm_in_oxy+v);
@@ -875,6 +877,8 @@ var GamePlayScene = function(game, stage)
         case IN_CHANNEL_ITIME:
           norm_in_itime = clamp(0,1,norm_in_itime+v);
           in_itime = lerp(min_in_itime, max_in_itime, norm_in_itime);
+          in_flow = in_volume/(in_itime/60);
+          in_norm_flow = mapVal(min_in_flow,max_in_flow,0,1,in_flow);
           break;
         case IN_CHANNEL_PEEP:
           norm_in_peep = clamp(0,1,norm_in_peep+v);
