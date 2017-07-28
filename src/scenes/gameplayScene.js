@@ -939,7 +939,7 @@ var GamePlayScene = function(game, stage)
       function(){return fdisp(out_exhale_minute_volume,1);},
       function(){return fdisp(min_in_alarm_exhale_minute_volume,1);},
       function(){return fdisp(max_in_alarm_exhale_minute_volume,1);},
-      "EMV",
+      "V̇E",
       "L/min"
       );
     exhale_minute_volume_alarm.wx = 0.2;
@@ -959,7 +959,7 @@ var GamePlayScene = function(game, stage)
       function(){return fdisp(min_in_alarm_apnea,0);},
       function(){return fdisp(max_in_alarm_apnea,0);},
       "Apnea",
-      "s/breath"
+      "seconds"
       );
     apnea_alarm.wx = 0.4;
     apnea_alarm.wy = pressure_alarm.wy;
@@ -993,7 +993,7 @@ var GamePlayScene = function(game, stage)
           norm_in_alarm_min_apnea = clamp(0,norm_in_alarm_max_apnea,norm_in_alarm_min_apnea+v);
           break;
         case IN_ALARM_MAX_APNEA:
-          norm_in_alarm_max_apnea = clamp(norm_in_alarm_min_apnea,1,norm_in_alarm_max_apnea+v);
+          norm_in_alarm_max_apnea = clamp(0,1,norm_in_alarm_max_apnea+v);
           break;
       }
 
@@ -1014,14 +1014,14 @@ var GamePlayScene = function(game, stage)
     var s = out_btn_w+0.02;
     genOutChannelBtn(OUT_CHANNEL_PEAK_PRESSURE,        "PIP (cm H₂O)"  /*"Peak Pressure"*/,        x); x += s;
     genOutChannelBtn(OUT_CHANNEL_MEAN_PRESSURE,        "MAP (cm H₂O)"  /*"Mean Pressure"*/,        x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_RATE,                 "Freq (b/min)"  /*"Frequency"*/,            x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_EXHALE_VOLUME,        "EV (L)"        /*"Exhale Volume"*/,        x); x += s;
-    genOutChannelBtn(OUT_CHANNEL_EXHALE_MINUTE_VOLUME, "EMV (L/min)"   /*"Exhale Minute Volume"*/, x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_RATE,                 "Rate (b/min)"  /*"Frequency"*/,            x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_EXHALE_VOLUME,        "Exp. Vt (L)"   /*"Exhale Volume"*/,        x); x += s;
+    genOutChannelBtn(OUT_CHANNEL_EXHALE_MINUTE_VOLUME, "V̇E (L/min)"    /*"Exhale Minute Volume"*/, x); x += s;
     genOutChannelBtn(OUT_CHANNEL_IE_RATIO,             "I:E"           /*"I:E"*/,                  x); x += s;
     x = -0.5+(in_btn_w/2);
     s = in_btn_w;
     genInChannelBtn(IN_CHANNEL_MODE,  "Volume", x); x += s;
-    genInChannelBtn(IN_CHANNEL_RATE,  "Freq",   x); x += s;
+    genInChannelBtn(IN_CHANNEL_RATE,  "Rate",   x); x += s;
     genInChannelBtn(IN_CHANNEL_FLOW,  "Flow",   x); x += s;
     genInChannelBtn(IN_CHANNEL_OXY,   "Oxygen", x); x += s;
     genInChannelBtn(IN_CHANNEL_ITIME, "I Time", x); x += s;
@@ -1061,11 +1061,11 @@ var GamePlayScene = function(game, stage)
     commit_alarm_btn.wy = -0.54;
     screenSpace(cam,canv,commit_alarm_btn);
 
-    x_btn = new ButtonBox(canv.width-50,10,40,40, function()
+    x_btn = new ButtonBox(canv.width-100,10,90,40, function()
     {
       cur_screen = SCREEN_VENTILATOR;
     });
-    x_btn.title = "X";
+    x_btn.title = "HOME";
 
     dismiss_submit_btn = new ButtonBox(canv.width/2-50,450,100,40, function()
     {
@@ -1079,14 +1079,14 @@ var GamePlayScene = function(game, stage)
     });
     patient_btn.title = "patient info";
 
-    alarms_btn = new ButtonBox(120,canv.height-65,40,40, function()
+    alarms_btn = new ButtonBox(80,canv.height-65,40,40, function()
     {
       cur_screen = SCREEN_ALARMS;
       update_alarms();
     });
     alarms_btn.title = "alarms";
 
-    next_btn = new ButtonBox(canv.width-200,canv.height-65,180,40, function()
+    next_btn = new ButtonBox(canv.width-240,canv.height-65,180,40, function()
     {
       cur_screen = SCREEN_NOTIF;
     });
@@ -1256,7 +1256,7 @@ var GamePlayScene = function(game, stage)
 
       ctx.fillStyle = white;
       ctx.font = "30px Helvetica"
-      ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
+      ctx.fillText(x_btn.title,x_btn.x,x_btn.y+x_btn.h/2+18);
     }
     else if(cur_screen == SCREEN_ALARMS)
     {
@@ -1277,14 +1277,14 @@ var GamePlayScene = function(game, stage)
 
       switch(selected_alarm)
       {
-        case IN_ALARM_MIN_PRESSURE:             sub = fdisp(in_alarm_min_pressure,0)            +" cm H₂0";    title = "Min Pressure"; break;
-        case IN_ALARM_MAX_PRESSURE:             sub = fdisp(in_alarm_max_pressure,0)            +" cm H₂0";    title = "Max Pressure"; break;
-        case IN_ALARM_MIN_RATE:                 sub = fdisp(in_alarm_min_rate,0)                +" b/min";     title = "Apnea"; break;
-        case IN_ALARM_MAX_RATE:                 sub = fdisp(in_alarm_max_rate,0)                +" b/min";     title = "Max Rate"; break;
-        case IN_ALARM_MIN_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_min_exhale_minute_volume,1)+" L/min";     title = "Min Exhale Minute Volume"; break;
-        case IN_ALARM_MAX_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_max_exhale_minute_volume,1)+" L/min";     title = "Max Exhale Minute Volume"; break;
-        case IN_ALARM_MIN_APNEA:                sub = fdisp(in_alarm_min_apnea,1)               +" s/breath";  title = "Apnea"; break;
-        case IN_ALARM_MAX_APNEA:                sub = fdisp(in_alarm_max_apnea,1)               +" s/breath";  title = "Apnea"; break;
+        case IN_ALARM_MIN_PRESSURE:             sub = fdisp(in_alarm_min_pressure,0)            +" cm H₂0";  title = "Min Pressure"; break;
+        case IN_ALARM_MAX_PRESSURE:             sub = fdisp(in_alarm_max_pressure,0)            +" cm H₂0";  title = "Max Pressure"; break;
+        case IN_ALARM_MIN_RATE:                 sub = fdisp(in_alarm_min_rate,0)                +" b/min";   title = "Min Rate"; break;
+        case IN_ALARM_MAX_RATE:                 sub = fdisp(in_alarm_max_rate,0)                +" b/min";   title = "Max Rate"; break;
+        case IN_ALARM_MIN_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_min_exhale_minute_volume,1)+" L/min";   title = "Min V̇E"; break;
+        case IN_ALARM_MAX_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_max_exhale_minute_volume,1)+" L/min";   title = "Max V̇E"; break;
+        case IN_ALARM_MIN_APNEA:                sub = fdisp(in_alarm_min_apnea,0)               +" seconds"; title = "Apnea"; break;
+        case IN_ALARM_MAX_APNEA:                sub = fdisp(in_alarm_max_apnea,0)               +" seconds"; title = "Apnea"; break;
       }
 
       ctx.fillStyle = dark_blue;
@@ -1295,7 +1295,7 @@ var GamePlayScene = function(game, stage)
 
       ctx.fillStyle = dark_blue;
       ctx.font = "30px Helvetica"
-      ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
+      ctx.fillText(x_btn.title,x_btn.x,x_btn.y+x_btn.h/2+18);
     }
     else if(cur_screen == SCREEN_NOTIF)
     {
@@ -1311,7 +1311,7 @@ var GamePlayScene = function(game, stage)
           ctx.fillStyle = white;
           x = 40;
           ctx.font = "35px Helvetica";
-          ctx.fillText("patient stable",x,45);
+          ctx.fillText("Patient Stable",x,125);
           y = 200;
           yd = 40;
           ctx.font = "38px Helvetica";
@@ -1354,7 +1354,7 @@ var GamePlayScene = function(game, stage)
         ctx.fillStyle = white;
         x = 40;
         ctx.font = "35px Helvetica";
-        ctx.fillText("patient not stable",x,45);
+        ctx.fillText("Patient Not Stable",x,125);
         y = 200;
         yd = 40;
         ctx.font = "38px Helvetica";
@@ -1373,7 +1373,7 @@ var GamePlayScene = function(game, stage)
       ctx.fillStyle = white;
       ctx.strokeStyle = white;
       ctx.font = "30px Helvetica"
-      ctx.fillText("X",x_btn.x,x_btn.y+x_btn.h/2+18);
+      ctx.fillText(x_btn.title,x_btn.x,x_btn.y+x_btn.h/2+18);
 
       ctx.fillText(dismiss_submit_btn.title,dismiss_submit_btn.x+10,dismiss_submit_btn.y+dismiss_submit_btn.h/2+8);
       canv.strokeRoundRect(dismiss_submit_btn.x,dismiss_submit_btn.y,dismiss_submit_btn.w,dismiss_submit_btn.h,5);
@@ -1569,7 +1569,7 @@ var GamePlayScene = function(game, stage)
       canv.fillRoundRect(next_btn.x,next_btn.y,next_btn.w,next_btn.h,5);
       ctx.fillStyle = white;
       ctx.font = "20px Helvetica";
-      ctx.fillText("Next Patient",next_btn.x+10,next_btn.y+next_btn.h/2);
+      ctx.fillText("Next Patient",next_btn.x+35,next_btn.y+next_btn.h/2+7);
 
       ctx.font = "30px Helvetica";
       ctx.fillStyle = black;
