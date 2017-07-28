@@ -53,6 +53,8 @@ var GamePlayScene = function(game, stage)
   var IN_ALARM_MAX_RATE = ENUM; ENUM++;
   var IN_ALARM_MIN_EXHALE_MINUTE_VOLUME = ENUM; ENUM++;
   var IN_ALARM_MAX_EXHALE_MINUTE_VOLUME = ENUM; ENUM++;
+  var IN_ALARM_MIN_APNEA = ENUM; ENUM++;
+  var IN_ALARM_MAX_APNEA = ENUM; ENUM++;
   ENUM = 0;
   var SCREEN_PATIENT     = ENUM; ENUM++;
   var SCREEN_VENTILATOR  = ENUM; ENUM++;
@@ -81,6 +83,8 @@ var GamePlayScene = function(game, stage)
   var max_in_alarm_rate = 60;
   var min_in_alarm_exhale_minute_volume = 0;
   var max_in_alarm_exhale_minute_volume = 45;
+  var min_in_alarm_apnea = 0;
+  var max_in_alarm_apnea = 45;
 
   var min_out_peak_pressure        = 10;
   var max_out_peak_pressure        = 80;
@@ -131,12 +135,16 @@ var GamePlayScene = function(game, stage)
   var norm_in_alarm_max_rate                 = mapVal(min_in_alarm_rate,                 max_in_alarm_rate,                 0,1, 30);
   var norm_in_alarm_min_exhale_minute_volume = mapVal(min_in_alarm_exhale_minute_volume, max_in_alarm_exhale_minute_volume, 0,1, 3);
   var norm_in_alarm_max_exhale_minute_volume = mapVal(min_in_alarm_exhale_minute_volume, max_in_alarm_exhale_minute_volume, 0,1, 25);
+  var norm_in_alarm_min_apnea                = mapVal(min_in_alarm_apnea               , max_in_alarm_apnea               , 0,1, -999999);
+  var norm_in_alarm_max_apnea                = mapVal(min_in_alarm_apnea               , max_in_alarm_apnea               , 0,1, 20);
   var in_alarm_min_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_min_pressure);
   var in_alarm_max_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_max_pressure);
   var in_alarm_min_rate = lerp(min_in_alarm_rate, max_in_alarm_rate, norm_in_alarm_min_rate);
   var in_alarm_max_rate = lerp(min_in_alarm_rate, max_in_alarm_rate, norm_in_alarm_max_rate);
   var in_alarm_min_exhale_minute_volume = lerp(min_in_alarm_exhale_minute_volume, max_in_alarm_exhale_minute_volume, norm_in_alarm_min_exhale_minute_volume);
   var in_alarm_max_exhale_minute_volume = lerp(min_in_alarm_exhale_minute_volume, max_in_alarm_exhale_minute_volume, norm_in_alarm_max_exhale_minute_volume);
+  var in_alarm_min_apnea = lerp(min_in_alarm_apnea, max_in_alarm_apnea, norm_in_alarm_min_apnea);
+  var in_alarm_max_apnea = lerp(min_in_alarm_apnea, max_in_alarm_apnea, norm_in_alarm_max_apnea);
   var commit_in_volume   = in_volume;
   var commit_in_pressure = in_pressure;
   var commit_in_rate     = in_rate;
@@ -202,6 +210,7 @@ var GamePlayScene = function(game, stage)
   var pressure_alarm;
   var rate_alarm;
   var exhale_minute_volume_alarm;
+  var apnea_alarm;
   var vent_knob;
   var alarm_knob;
   var out_channel_btns;
@@ -299,12 +308,12 @@ var GamePlayScene = function(game, stage)
 
     self.calcBtns = function()
     {
-      self.min_box.w = 50;
+      self.min_box.w = 40;
       self.min_box.h = 40;
       self.min_box.x = self.x-self.min_box.w-5;
       self.min_box.y = self.y+self.h-(self.min_v*self.h);
 
-      self.max_box.w = 50;
+      self.max_box.w = 40;
       self.max_box.h = 40;
       self.max_box.x = self.x-self.max_box.w-5;
       self.max_box.y = self.y+self.h-self.max_box.h-(self.max_v*self.h);
@@ -317,6 +326,7 @@ var GamePlayScene = function(game, stage)
       ctx.strokeRect(self.x,self.y,self.w,self.h);
       ctx.fillRect(self.x,self.y,self.w,self.h);
 
+      ctx.textAlign = "center";
       ctx.fillStyle = dark_blue;
       ctx.font = "20px Helvetica";
       ctx.fillStyle = dark_blue;
@@ -324,6 +334,7 @@ var GamePlayScene = function(game, stage)
       ctx.font = "14px Helvetica";
       ctx.fillText(label,self.x,self.y-50);
 
+      ctx.textAlign = "left";
       ctx.fillStyle = dark_blue;
       if(min_selected()) canv.fillRoundRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h,5);
       ctx.fillStyle = light_blue;
@@ -790,6 +801,13 @@ var GamePlayScene = function(game, stage)
     in_alarm_min_exhale_minute_volume = lerp(min_in_alarm_exhale_minute_volume, max_in_alarm_exhale_minute_volume, norm_in_alarm_min_exhale_minute_volume);
     in_alarm_max_exhale_minute_volume = lerp(min_in_alarm_exhale_minute_volume, max_in_alarm_exhale_minute_volume, norm_in_alarm_max_exhale_minute_volume);
     exhale_minute_volume_alarm.calcBtns();
+
+    apnea_alarm.v = mapVal(min_in_alarm_apnea,max_in_alarm_apnea,0,1,60/out_rate);
+    apnea_alarm.min_v = norm_in_alarm_min_apnea;
+    apnea_alarm.max_v = norm_in_alarm_max_apnea;
+    in_alarm_min_apnea = lerp(min_in_alarm_apnea, max_in_alarm_apnea, norm_in_alarm_min_apnea);
+    in_alarm_max_apnea = lerp(min_in_alarm_apnea, max_in_alarm_apnea, norm_in_alarm_max_apnea);
+    apnea_alarm.calcBtns();
   }
 
   self.ready = function()
@@ -886,9 +904,9 @@ var GamePlayScene = function(game, stage)
       "Pressure",
       "cm H₂O"
       );
-    pressure_alarm.wx = -0.27;
+    pressure_alarm.wx = -0.28;
     pressure_alarm.wy = 0.09;
-    pressure_alarm.ww = 0.1;
+    pressure_alarm.ww = 0.06;
     pressure_alarm.wh = 0.55;
     screenSpace(cam,canv,pressure_alarm);
 
@@ -905,7 +923,7 @@ var GamePlayScene = function(game, stage)
       "Rate",
       "b/min"
       );
-    rate_alarm.wx = 0.05;
+    rate_alarm.wx = -0.05;
     rate_alarm.wy = pressure_alarm.wy;
     rate_alarm.ww = pressure_alarm.ww;
     rate_alarm.wh = pressure_alarm.wh;
@@ -921,14 +939,33 @@ var GamePlayScene = function(game, stage)
       function(){return fdisp(out_exhale_minute_volume,1);},
       function(){return fdisp(min_in_alarm_exhale_minute_volume,1);},
       function(){return fdisp(max_in_alarm_exhale_minute_volume,1);},
-      "Exhaled Minute Volume",
+      "EMV",
       "L/min"
       );
-    exhale_minute_volume_alarm.wx = 0.4;
+    exhale_minute_volume_alarm.wx = 0.2;
     exhale_minute_volume_alarm.wy = pressure_alarm.wy;
     exhale_minute_volume_alarm.ww = pressure_alarm.ww;
     exhale_minute_volume_alarm.wh = pressure_alarm.wh;
     screenSpace(cam,canv,exhale_minute_volume_alarm);
+
+    apnea_alarm = new alarm(
+      function(){selected_alarm = IN_ALARM_MIN_APNEA;},
+      function(){selected_alarm = IN_ALARM_MAX_APNEA;},
+      function(){return selected_alarm == IN_ALARM_MIN_APNEA;},
+      function(){return selected_alarm == IN_ALARM_MAX_APNEA;},
+      function(){return fdisp(in_alarm_min_apnea,0);},
+      function(){return fdisp(in_alarm_max_apnea,0);},
+      function(){return fdisp(60/out_rate,0);},
+      function(){return fdisp(min_in_alarm_apnea,0);},
+      function(){return fdisp(max_in_alarm_apnea,0);},
+      "Apnea",
+      "s/breath"
+      );
+    apnea_alarm.wx = 0.4;
+    apnea_alarm.wy = pressure_alarm.wy;
+    apnea_alarm.ww = pressure_alarm.ww;
+    apnea_alarm.wh = pressure_alarm.wh;
+    screenSpace(cam,canv,apnea_alarm);
 
     alarm_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
     {
@@ -951,6 +988,12 @@ var GamePlayScene = function(game, stage)
           break;
         case IN_ALARM_MAX_EXHALE_MINUTE_VOLUME:
           norm_in_alarm_max_exhale_minute_volume = clamp(norm_in_alarm_min_exhale_minute_volume,1,norm_in_alarm_max_exhale_minute_volume+v);
+          break;
+        case IN_ALARM_MIN_APNEA:
+          norm_in_alarm_min_apnea = clamp(0,norm_in_alarm_max_apnea,norm_in_alarm_min_apnea+v);
+          break;
+        case IN_ALARM_MAX_APNEA:
+          norm_in_alarm_max_apnea = clamp(norm_in_alarm_min_apnea,1,norm_in_alarm_max_apnea+v);
           break;
       }
 
@@ -1087,6 +1130,8 @@ var GamePlayScene = function(game, stage)
         clicker.filter(rate_alarm.max_box);
         clicker.filter(exhale_minute_volume_alarm.min_box);
         clicker.filter(exhale_minute_volume_alarm.max_box);
+        clicker.filter(apnea_alarm.min_box);
+        clicker.filter(apnea_alarm.max_box);
         clicker.filter(commit_alarm_btn);
         dragger.filter(alarm_knob);
         break;
@@ -1224,6 +1269,7 @@ var GamePlayScene = function(game, stage)
       pressure_alarm.draw();
       rate_alarm.draw();
       exhale_minute_volume_alarm.draw();
+      apnea_alarm.draw();
 
       ctx.drawImage(knob_range_img,alarm_knob.x,alarm_knob.y,alarm_knob.w,alarm_knob.h);
       ctx.drawImage(knob_img,alarm_knob.x+10,alarm_knob.y+10,alarm_knob.w-20,alarm_knob.h-20);
@@ -1231,12 +1277,14 @@ var GamePlayScene = function(game, stage)
 
       switch(selected_alarm)
       {
-        case IN_ALARM_MIN_PRESSURE:             sub = fdisp(in_alarm_min_pressure,0)            +" cm H₂0"; title = "Min Pressure"; break;
-        case IN_ALARM_MAX_PRESSURE:             sub = fdisp(in_alarm_max_pressure,0)            +" cm H₂0"; title = "Max Pressure"; break;
-        case IN_ALARM_MIN_RATE:                 sub = fdisp(in_alarm_min_rate,0)                +" b/min";  title = "Apnea"; break;
-        case IN_ALARM_MAX_RATE:                 sub = fdisp(in_alarm_max_rate,0)                +" b/min";  title = "Max Rate"; break;
-        case IN_ALARM_MIN_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_min_exhale_minute_volume,1)+" L/min";  title = "Min Exhale Minute Volume"; break;
-        case IN_ALARM_MAX_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_max_exhale_minute_volume,1)+" L/min";  title = "Max Exhale Minute Volume"; break;
+        case IN_ALARM_MIN_PRESSURE:             sub = fdisp(in_alarm_min_pressure,0)            +" cm H₂0";    title = "Min Pressure"; break;
+        case IN_ALARM_MAX_PRESSURE:             sub = fdisp(in_alarm_max_pressure,0)            +" cm H₂0";    title = "Max Pressure"; break;
+        case IN_ALARM_MIN_RATE:                 sub = fdisp(in_alarm_min_rate,0)                +" b/min";     title = "Apnea"; break;
+        case IN_ALARM_MAX_RATE:                 sub = fdisp(in_alarm_max_rate,0)                +" b/min";     title = "Max Rate"; break;
+        case IN_ALARM_MIN_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_min_exhale_minute_volume,1)+" L/min";     title = "Min Exhale Minute Volume"; break;
+        case IN_ALARM_MAX_EXHALE_MINUTE_VOLUME: sub = fdisp(in_alarm_max_exhale_minute_volume,1)+" L/min";     title = "Max Exhale Minute Volume"; break;
+        case IN_ALARM_MIN_APNEA:                sub = fdisp(in_alarm_min_apnea,1)               +" s/breath";  title = "Apnea"; break;
+        case IN_ALARM_MAX_APNEA:                sub = fdisp(in_alarm_max_apnea,1)               +" s/breath";  title = "Apnea"; break;
       }
 
       ctx.fillStyle = dark_blue;
