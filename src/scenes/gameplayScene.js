@@ -677,7 +677,8 @@ var GamePlayScene = function(game, stage)
       ctx.lineTo(self.x+self.w,self.y+self.h);
       ctx.stroke();
       ctx.lineWidth = 1;
-      ctx.drawImage(self.cache,0,0,self.w*blip_t,self.h,self.x,self.y,self.w*blip_t,self.h);
+      if(blip_t != 0)
+      ctx.drawImage(self.cache,0,0,self.cache.width*blip_t,self.cache.height,self.x,self.y,self.w*blip_t,self.h);
     }
   }
 
