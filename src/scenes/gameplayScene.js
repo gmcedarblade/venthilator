@@ -1176,7 +1176,6 @@ var GamePlayScene = function(game, stage)
 
       out_peak_pressure_variance = out_peak_pressure_max_variance * rand0();
       norm_patient_peak_pressure = commit_in_volume/expected_volume * (0.155+norm_in_flow/20); //0.155 is ~ good readout
-      console.log(norm_in_flow);
       norm_out_peak_pressure = norm_patient_peak_pressure + norm_patient_peak_pressure * out_peak_pressure_variance;
       out_peak_pressure = lerp(min_out_peak_pressure, max_out_peak_pressure, norm_out_peak_pressure);
 
