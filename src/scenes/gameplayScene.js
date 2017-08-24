@@ -675,6 +675,12 @@ var GamePlayScene = function(game, stage)
       }
       ctx.moveTo(self.x,       self.y+self.h);
       ctx.lineTo(self.x+self.w,self.y+self.h);
+      for(var i = 1; i < 12; i++)
+      {
+        var x = lerp(self.x,self.x+self.w,i/12);
+        ctx.moveTo(x,self.y);
+        ctx.lineTo(x,self.y+self.h);
+      }
       ctx.stroke();
       ctx.lineWidth = 1;
       if(blip_t != 0)
@@ -1169,7 +1175,8 @@ var GamePlayScene = function(game, stage)
       var expected_volume = 0.007*ibw;
 
       out_peak_pressure_variance = out_peak_pressure_max_variance * rand0();
-      norm_patient_peak_pressure = commit_in_volume/expected_volume * 0.155; //0.155 is ~ good readout
+      norm_patient_peak_pressure = commit_in_volume/expected_volume * (0.155+norm_in_flow/20); //0.155 is ~ good readout
+      console.log(norm_in_flow);
       norm_out_peak_pressure = norm_patient_peak_pressure + norm_patient_peak_pressure * out_peak_pressure_variance;
       out_peak_pressure = lerp(min_out_peak_pressure, max_out_peak_pressure, norm_out_peak_pressure);
 
@@ -1202,6 +1209,25 @@ var GamePlayScene = function(game, stage)
     }
     while(blip_t > 1) blip_t -= 1;
   };
+
+  var strokeGraph = function(graph,max,mul)
+  {
+    var label_disp_y = graph.y+graph.h-(graph.h/max*mul);
+    ctx.moveTo(graph.x,            label_disp_y);
+    ctx.lineTo(graph.x+graph.w,label_disp_y);
+    return label_disp_y;
+  }
+
+  var strokeMirrorGraph = function(graph,max,mul)
+  {
+    var label_disp_y = graph.y+graph.h/2+((graph.h/2)/max*mul);
+    ctx.moveTo(graph.x,            label_disp_y);
+    ctx.lineTo(graph.x+graph.w,label_disp_y);
+    label_disp_y = graph.y+graph.h/2-((graph.h/2)/max*mul);
+    ctx.moveTo(graph.x,            label_disp_y);
+    ctx.lineTo(graph.x+graph.w,label_disp_y);
+    return label_disp_y;
+  }
 
   self.draw = function()
   {
@@ -1414,42 +1440,29 @@ var GamePlayScene = function(game, stage)
       var maxvol = commit_in_volume*patient_volume_graph.data.max_y;
 
       ctx.font = "12px Helvetica";
-      if(maxvol > 0.5)
+      if(maxvol > 0.25)
       {
         ctx.lineWidth = 0.25;
         ctx.strokeStyle = light_blue;
         ctx.beginPath();
-        label_disp_y = cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*0.5);
-        ctx.moveTo(cur_graph.x,            label_disp_y);
-        ctx.lineTo(cur_graph.x+cur_graph.w,label_disp_y);
-        if(maxvol > 1)
-        {
-        label_disp_y = cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*1);
-        ctx.moveTo(cur_graph.x,            label_disp_y);
-        ctx.lineTo(cur_graph.x+cur_graph.w,label_disp_y);
-        }
-        if(maxvol > 1.5)
-        {
-        label_disp_y = cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*1.5);
-        ctx.moveTo(cur_graph.x,            label_disp_y);
-        ctx.lineTo(cur_graph.x+cur_graph.w,label_disp_y);
-        }
-        if(maxvol > 2)
-        {
-        label_disp_y = cur_graph.y+cur_graph.h-(cur_graph.h/maxvol*2);
-        ctx.moveTo(cur_graph.x,            label_disp_y);
-        ctx.lineTo(cur_graph.x+cur_graph.w,label_disp_y);
-        }
+        if(maxvol > 0.25)                strokeGraph(cur_graph,maxvol,0.25);
+        if(maxvol > 0.5)  label_disp_y = strokeGraph(cur_graph,maxvol,0.5);
+        if(maxvol > 0.75)                strokeGraph(cur_graph,maxvol,0.75);
+        if(maxvol > 1.0)  label_disp_y = strokeGraph(cur_graph,maxvol,1.0);
+        if(maxvol > 1.25)                strokeGraph(cur_graph,maxvol,1.25);
+        if(maxvol > 1.5)  label_disp_y = strokeGraph(cur_graph,maxvol,1.5);
+        if(maxvol > 1.75)                strokeGraph(cur_graph,maxvol,1.75);
+        if(maxvol > 2.0)  label_disp_y = strokeGraph(cur_graph,maxvol,2.0);
         ctx.stroke();
         ctx.lineWidth = 1;
-             if(maxvol > 2)   ctx.fillText("2",  patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+12);
-        else if(maxvol > 1.5) ctx.fillText("1.5",patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+12);
-        else if(maxvol > 1)   ctx.fillText("1",  patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+12);
-        else if(maxvol > 0.5) ctx.fillText("0.5",patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+12);
+             if(maxvol > 2)   ctx.fillText("2",  patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+10);
+        else if(maxvol > 1.5) ctx.fillText("1.5",patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+10);
+        else if(maxvol > 1)   ctx.fillText("1",  patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+10);
+        else if(maxvol > 0.5) ctx.fillText("0.5",patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+10);
       }
       else
         ctx.fillText(fdisp(maxvol,1),patient_volume_graph.x+patient_volume_graph.w-20,patient_volume_graph.y+12);
-      ctx.fillText(0,patient_volume_graph.x+patient_volume_graph.w-20,patient_volume_graph.y+patient_volume_graph.h-5);
+      ctx.fillText("0",patient_volume_graph.x+patient_volume_graph.w-20,patient_volume_graph.y+patient_volume_graph.h-2);
 
       patient_pressure_graph.draw(false);
       ctx.fillText("Pressure",patient_pressure_graph.x+10,patient_pressure_graph.y+20);
@@ -1462,36 +1475,57 @@ var GamePlayScene = function(game, stage)
         ctx.lineWidth = 0.25;
         ctx.strokeStyle = light_blue;
         ctx.beginPath();
-        label_disp_y = cur_graph.y+cur_graph.h-(cur_graph.h/maxpress*25);
-        ctx.moveTo(cur_graph.x,            label_disp_y);
-        ctx.lineTo(cur_graph.x+cur_graph.w,label_disp_y);
-        if(maxpress > 50)
-        {
-        label_disp_y = cur_graph.y+cur_graph.h-(cur_graph.h/maxpress*50);
-        ctx.moveTo(cur_graph.x,            label_disp_y);
-        ctx.lineTo(cur_graph.x+cur_graph.w,label_disp_y);
-        }
-        if(maxpress > 75)
-        {
-        label_disp_y = cur_graph.y+cur_graph.h-(cur_graph.h/maxpress*75);
-        ctx.moveTo(cur_graph.x,            label_disp_y);
-        ctx.lineTo(cur_graph.x+cur_graph.w,label_disp_y);
-        }
+        if(maxpress > 10)                strokeGraph(cur_graph,maxpress,10);
+        if(maxpress > 20)                strokeGraph(cur_graph,maxpress,20);
+        if(maxpress > 30) label_disp_y = strokeGraph(cur_graph,maxpress,30);
+        if(maxpress > 40)                strokeGraph(cur_graph,maxpress,40);
+        if(maxpress > 50) label_disp_y = strokeGraph(cur_graph,maxpress,50);
+        if(maxpress > 60)                strokeGraph(cur_graph,maxpress,60);
+        if(maxpress > 70) label_disp_y = strokeGraph(cur_graph,maxpress,70);
+        if(maxpress > 80)                strokeGraph(cur_graph,maxpress,80);
         ctx.stroke();
         ctx.lineWidth = 1;
-             if(maxpress > 75) ctx.fillText("75",patient_pressure_graph.x+patient_pressure_graph.w-20,label_disp_y+12);
-        else if(maxpress > 50) ctx.fillText("50",patient_pressure_graph.x+patient_pressure_graph.w-20,label_disp_y+12);
-        else if(maxpress > 25) ctx.fillText("25",patient_pressure_graph.x+patient_pressure_graph.w-20,label_disp_y+12);
+             if(maxpress > 70) ctx.fillText("70",patient_pressure_graph.x+patient_pressure_graph.w-20,label_disp_y+10);
+        else if(maxpress > 50) ctx.fillText("50",patient_pressure_graph.x+patient_pressure_graph.w-20,label_disp_y+10);
+        else if(maxpress > 30) ctx.fillText("30",patient_pressure_graph.x+patient_pressure_graph.w-20,label_disp_y+10);
       }
       else
       {
         ctx.fillText(fdisp(maxpress,0),patient_pressure_graph.x+patient_pressure_graph.w-20,patient_pressure_graph.y+12);
       }
-      ctx.fillText(0,patient_pressure_graph.x+patient_pressure_graph.w-20,patient_pressure_graph.y+patient_pressure_graph.h-5);
+      ctx.fillText("0",patient_pressure_graph.x+patient_pressure_graph.w-20,patient_pressure_graph.y+patient_pressure_graph.h-2);
+
       patient_flow_graph.draw(true);
       ctx.fillText("Flow",patient_flow_graph.x+10,patient_flow_graph.y+20);
-      ctx.fillText(fdisp(commit_in_flow*patient_flow_graph.data.max_y,0),patient_flow_graph.x+patient_flow_graph.w-20,patient_flow_graph.y+12);
-      ctx.fillText(fdisp(commit_in_flow*patient_flow_graph.data.min_y,0),patient_flow_graph.x+patient_flow_graph.w-20,patient_flow_graph.y+patient_flow_graph.h-5);
+      cur_graph = patient_flow_graph;
+      var maxflow = commit_in_flow*patient_flow_graph.data.max_y;
+
+      ctx.font = "12px Helvetica";
+      if(maxflow > 10)
+      {
+        ctx.lineWidth = 0.25;
+        ctx.strokeStyle = light_blue;
+        ctx.beginPath();
+        if(maxflow > 25)                strokeMirrorGraph(cur_graph,maxflow,25);
+        if(maxflow > 50)  label_disp_y = strokeMirrorGraph(cur_graph,maxflow,50);
+        if(maxflow > 75)  label_disp_y = strokeMirrorGraph(cur_graph,maxflow,75);
+        if(maxflow > 100) label_disp_y = strokeMirrorGraph(cur_graph,maxflow,100);
+        if(maxflow > 125) label_disp_y = strokeMirrorGraph(cur_graph,maxflow,100);
+        if(maxflow > 150) label_disp_y = strokeMirrorGraph(cur_graph,maxflow,100);
+        ctx.stroke();
+        ctx.lineWidth = 1;
+             if(maxflow > 150) ctx.fillText("150",patient_flow_graph.x+patient_flow_graph.w-20,label_disp_y+10);
+             if(maxflow > 125) ctx.fillText("125",patient_flow_graph.x+patient_flow_graph.w-20,label_disp_y+10);
+             if(maxflow > 100) ctx.fillText("100",patient_flow_graph.x+patient_flow_graph.w-20,label_disp_y+10);
+             if(maxflow > 75)  ctx.fillText("75", patient_flow_graph.x+patient_flow_graph.w-20,label_disp_y+10);
+        else if(maxflow > 50)  ctx.fillText("50", patient_flow_graph.x+patient_flow_graph.w-20,label_disp_y+10);
+        else if(maxflow > 25)  ctx.fillText("25", patient_flow_graph.x+patient_flow_graph.w-20,label_disp_y+10);
+      }
+      else
+      {
+        ctx.fillText(fdisp(maxflow,0),patient_flow_graph.x+patient_flow_graph.w-20,patient_flow_graph.y+12);
+      }
+      ctx.fillText("0",patient_flow_graph.x+patient_flow_graph.w-20,patient_flow_graph.y+patient_flow_graph.h/2+10);
 
       ctx.fillStyle = dark_blue;
       ctx.fillText("0s", patient_flow_graph.x+4          ,patient_flow_graph.y+patient_flow_graph.h+14);

@@ -1,4 +1,4 @@
-var Game = function(init)
+var Game = function(init,args)
 {
   var default_init =
   {
@@ -15,7 +15,7 @@ var Game = function(init)
     new NullScene(self, stage),
     new LoadingScene(self, stage),
     //new TestScene(self, stage),
-    new GamePlayScene(self, stage),
+    new GamePlayScene(self, stage, args),
   ];
   var cur_scene = 0;
   var old_cur_scene = -1;

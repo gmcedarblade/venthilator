@@ -42,10 +42,34 @@ body,div
 <script type="text/javascript" src="src/scenes/gameplayScene.js"></script>
 
 <script type="text/javascript">
-var g;
-var d;
+
+var arisready = false;
+var jsready = false;
+
+var ARIS = {};
+ARIS.ready = function()
+{
+  arisready = true;
+  checkReady();
+}
+
 function begin()
 {
+  if(!ARIS.cache) ARIS.ready();
+  jsready = true;
+  checkReady();
+}
+
+var g;
+var d;
+function checkReady()
+{
+  if(!jsready || !arisready) return;
+
+  //var item_name = 'SimpleItem';
+  //var item_id = ARIS.cache.idForItemName(item_name);
+  //ARIS.givePlayerItemCount(item_id,1);
+
   var w = 420;
   var h = 640;
   var content          = document.getElementById("content");
@@ -60,9 +84,10 @@ function begin()
   debug_div.style.width        = w; debug_div.style.height        = w;
 
   d = new Debugger({source:debug_div});
-  g = new Game({width:w,height:h,container:"stage_container"});
+  g = new Game({width:w,height:h,container:"stage_container"},{});
   g.begin();
 }
+
 window.addEventListener('touchstart', function(e){ e.preventDefault() }); //prevent browser from doing anything funny
 window.addEventListener("load",begin,false);
 </script>
