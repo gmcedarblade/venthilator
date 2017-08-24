@@ -60,15 +60,27 @@ function begin()
   checkReady();
 }
 
+function playerSuccess()
+{
+  console.log("succeed");
+  //var item_name = 'SimpleItem';
+  //var item_id = ARIS.cache.idForItemName(item_name);
+  //ARIS.givePlayerItemCount(item_id,1);
+}
+
+function playerFailure()
+{
+  console.log("fail");
+  //var item_name = 'SimpleItem';
+  //var item_id = ARIS.cache.idForItemName(item_name);
+  //ARIS.givePlayerItemCount(item_id,1);
+}
+
 var g;
 var d;
 function checkReady()
 {
   if(!jsready || !arisready) return;
-
-  //var item_name = 'SimpleItem';
-  //var item_id = ARIS.cache.idForItemName(item_name);
-  //ARIS.givePlayerItemCount(item_id,1);
 
   var w = 420;
   var h = 640;
@@ -84,7 +96,7 @@ function checkReady()
   debug_div.style.width        = w; debug_div.style.height        = w;
 
   d = new Debugger({source:debug_div});
-  g = new Game({width:w,height:h,container:"stage_container"},{});
+  g = new Game({width:w,height:h,container:"stage_container"},jsonFromURL());
   g.begin();
 }
 

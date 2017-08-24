@@ -1,4 +1,4 @@
-var GamePlayScene = function(game, stage)
+var GamePlayScene = function(game, stage, args)
 {
   var self = this;
 
@@ -181,6 +181,7 @@ var GamePlayScene = function(game, stage)
   var patient_pressure = 0;
   var patient_height = 12*5+5;
   var patient_weight = 154;
+  if(args && args.weight && parseInt(args.weight) && !isNaN(parseInt(args.weight))) patient_weight = parseInt(args.weight);
   var patient_age = 68;
   var patient_description_0 = "You are called to the Post-anasthesia Care Unit";
   var patient_description_1 = "for a patient who is not waking up following";
@@ -194,6 +195,7 @@ var GamePlayScene = function(game, stage)
   var norm_patient_exhale_minute_volume = 0.5;
   var norm_patient_ie_ratio = 0.5;
   var patient_sex = "F";
+  if(args && args.sex && (args.sex == "M" || args.sex == "F")) patient_sex = args.sex;
   var patient_name_primary = "Jane";
   var patient_name_secondary = "Smith";
 
@@ -1100,6 +1102,8 @@ var GamePlayScene = function(game, stage)
     next_btn = new ButtonBox(canv.width-240,canv.height-65,180,40, function()
     {
       cur_screen = SCREEN_NOTIF;
+      if(evaluate_patient() && evaluate_alarms()) playerSuccess();
+      else playerFailure();
     });
     next_btn.title = "Next Patient";
 
