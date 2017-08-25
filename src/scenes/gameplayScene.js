@@ -1,10 +1,13 @@
+var gmul = 2;
 var GamePlayScene = function(game, stage, args)
 {
   var self = this;
 
   var canv = stage.drawCanv;
+  var bogus_canv = {width:canv.width/gmul,height:canv.height/gmul};
   var canvas = canv.canvas;
   var ctx = canv.context;
+  ctx.scale(gmul,gmul);
   var n_ticks = 0;
   var cam = {wx:0,wy:0,ww:1,wh:2};
 
@@ -701,7 +704,7 @@ var GamePlayScene = function(game, stage, args)
     btn.ww = out_btn_w;
     btn.wx = x;
     btn.wy = 0.75-(btn.ww/2)-0.05;
-    screenSpace(cam,canv,btn);
+    screenSpace(cam,bogus_canv,btn);
     out_channel_btns[channel] = btn;
   }
   var genInChannelBtn = function(channel, title, x)
@@ -713,7 +716,7 @@ var GamePlayScene = function(game, stage, args)
     btn.wy = -0.1
     btn.ww = in_btn_w;
     btn.wh = 0.1;
-    screenSpace(cam,canv,btn);
+    screenSpace(cam,bogus_canv,btn);
     in_channel_btns[channel] = btn;
   }
   var drawOutBtn = function(btn,sub,subsub)
@@ -754,7 +757,7 @@ var GamePlayScene = function(game, stage, args)
     gs.wh = 0.18;
     gs.ww = cam.ww;
     gs.wy = 0.5-(gs.wh*i*1.1);
-    screenSpace(cam,canv,gs);
+    screenSpace(cam,bogus_canv,gs);
     gs.apply_size();
 
     gs.update();
@@ -821,7 +824,7 @@ var GamePlayScene = function(game, stage, args)
 
   self.ready = function()
   {
-    cam.wh = isTo(canv.width,1,canv.height);
+    cam.wh = isTo((canv.width/gmul),1,(canv.height/gmul));
 
     knob_range_img = new Image();
     knob_range_img.src = "assets/knob-range.png";
@@ -902,7 +905,7 @@ var GamePlayScene = function(game, stage, args)
     vent_knob.wh = 0.3;
     vent_knob.wx = -0.28;
     vent_knob.wy = -0.35;
-    screenSpace(cam,canv,vent_knob);
+    screenSpace(cam,bogus_canv,vent_knob);
 
     pressure_alarm = new alarm(
       function(){selected_alarm = IN_ALARM_MIN_PRESSURE;},
@@ -921,7 +924,7 @@ var GamePlayScene = function(game, stage, args)
     pressure_alarm.wy = 0.09;
     pressure_alarm.ww = 0.06;
     pressure_alarm.wh = 0.55;
-    screenSpace(cam,canv,pressure_alarm);
+    screenSpace(cam,bogus_canv,pressure_alarm);
 
     rate_alarm = new alarm(
       function(){selected_alarm = IN_ALARM_MIN_RATE;},
@@ -940,7 +943,7 @@ var GamePlayScene = function(game, stage, args)
     rate_alarm.wy = pressure_alarm.wy;
     rate_alarm.ww = pressure_alarm.ww;
     rate_alarm.wh = pressure_alarm.wh;
-    screenSpace(cam,canv,rate_alarm);
+    screenSpace(cam,bogus_canv,rate_alarm);
 
     exhale_minute_volume_alarm = new alarm(
       function(){selected_alarm = IN_ALARM_MIN_EXHALE_MINUTE_VOLUME;},
@@ -959,7 +962,7 @@ var GamePlayScene = function(game, stage, args)
     exhale_minute_volume_alarm.wy = pressure_alarm.wy;
     exhale_minute_volume_alarm.ww = pressure_alarm.ww;
     exhale_minute_volume_alarm.wh = pressure_alarm.wh;
-    screenSpace(cam,canv,exhale_minute_volume_alarm);
+    screenSpace(cam,bogus_canv,exhale_minute_volume_alarm);
 
     apnea_alarm = new alarm(
       function(){selected_alarm = IN_ALARM_MIN_APNEA;},
@@ -978,7 +981,7 @@ var GamePlayScene = function(game, stage, args)
     apnea_alarm.wy = pressure_alarm.wy;
     apnea_alarm.ww = pressure_alarm.ww;
     apnea_alarm.wh = pressure_alarm.wh;
-    screenSpace(cam,canv,apnea_alarm);
+    screenSpace(cam,bogus_canv,apnea_alarm);
 
     alarm_knob = new KnobBox(0,0,0,0, -1,1,0.1,0,function(v)
     {
@@ -1017,7 +1020,7 @@ var GamePlayScene = function(game, stage, args)
     alarm_knob.wh = 0.3;
     alarm_knob.wx = -0.28;
     alarm_knob.wy = -0.5;
-    screenSpace(cam,canv,alarm_knob);
+    screenSpace(cam,bogus_canv,alarm_knob);
     update_alarms();
 
     out_channel_btns = [];
@@ -1061,7 +1064,7 @@ var GamePlayScene = function(game, stage, args)
     commit_vent_btn.wx = 0.15;
     commit_vent_btn.wh = 0.08;
     commit_vent_btn.wy = -0.42;
-    screenSpace(cam,canv,commit_vent_btn);
+    screenSpace(cam,bogus_canv,commit_vent_btn);
 
     commit_alarm_btn = new ButtonBox(0,0,0,0, function()
     {
@@ -1072,34 +1075,34 @@ var GamePlayScene = function(game, stage, args)
     commit_alarm_btn.wx = 0.15;
     commit_alarm_btn.wh = 0.08;
     commit_alarm_btn.wy = -0.54;
-    screenSpace(cam,canv,commit_alarm_btn);
+    screenSpace(cam,bogus_canv,commit_alarm_btn);
 
-    x_btn = new ButtonBox(canv.width-100,10,90,40, function()
+    x_btn = new ButtonBox((canv.width/gmul)-100,10,90,40, function()
     {
       cur_screen = SCREEN_VENTILATOR;
     });
     x_btn.title = "HOME";
 
-    dismiss_submit_btn = new ButtonBox(canv.width/2-50,450,100,40, function()
+    dismiss_submit_btn = new ButtonBox((canv.width/gmul)/2-50,450,100,40, function()
     {
       cur_screen = SCREEN_VENTILATOR;
     });
     dismiss_submit_btn.title = "Got It";
 
-    patient_btn = new ButtonBox(30,canv.height-65,40,40, function()
+    patient_btn = new ButtonBox(30,(canv.height/gmul)-65,40,40, function()
     {
       cur_screen = SCREEN_PATIENT;
     });
     patient_btn.title = "patient info";
 
-    alarms_btn = new ButtonBox(80,canv.height-65,40,40, function()
+    alarms_btn = new ButtonBox(80,(canv.height/gmul)-65,40,40, function()
     {
       cur_screen = SCREEN_ALARMS;
       update_alarms();
     });
     alarms_btn.title = "alarms";
 
-    next_btn = new ButtonBox(canv.width-240,canv.height-65,180,40, function()
+    next_btn = new ButtonBox((canv.width/gmul)-240,(canv.height/gmul)-65,180,40, function()
     {
       cur_screen = SCREEN_NOTIF;
       if(evaluate_patient() && evaluate_alarms()) playerSuccess();
@@ -1237,7 +1240,7 @@ var GamePlayScene = function(game, stage, args)
     if(cur_screen == SCREEN_PATIENT)
     {
       ctx.fillStyle = light_blue;
-      ctx.fillRect(0,0,canv.width,canv.height);
+      ctx.fillRect(0,0,(canv.width/gmul),(canv.height/gmul));
       ctx.fillStyle = white;
       ctx.drawImage(icon_patient_img,20,15,30,40);
       ctx.font = "30px Helvetica";
@@ -1248,45 +1251,45 @@ var GamePlayScene = function(game, stage, args)
       ctx.fillText(patient_name_secondary,30,220);
       ctx.strokeStyle = white;
       ctx.beginPath();
-      ctx.moveTo(30,canv.height*2/5);
-      ctx.lineTo(canv.width-60,canv.height*2/5);
+      ctx.moveTo(30,(canv.height/gmul)*2/5);
+      ctx.lineTo((canv.width/gmul)-60,(canv.height/gmul)*2/5);
       ctx.stroke();
 
       ctx.fillStyle = white;
       ctx.font = "22px Helvetica";
-      ctx.fillText("Height",30,canv.height*2/5+40);
+      ctx.fillText("Height",30,(canv.height/gmul)*2/5+40);
       ctx.fillStyle = dark_blue;
       ctx.font = "50px Helvetica";
-      ctx.fillText(parseInt(patient_height/12)+"'"+(patient_height%12)+"\"",30,canv.height*2/5+100);
+      ctx.fillText(parseInt(patient_height/12)+"'"+(patient_height%12)+"\"",30,(canv.height/gmul)*2/5+100);
 
       ctx.fillStyle = white;
       ctx.font = "22px Helvetica";
-      ctx.fillText("Sex",canv.width/2,canv.height*2/5+40);
+      ctx.fillText("Sex",(canv.width/gmul)/2,(canv.height/gmul)*2/5+40);
       ctx.fillStyle = dark_blue;
       ctx.font = "50px Helvetica";
-      ctx.fillText(patient_sex,canv.width/2,canv.height*2/5+100);
+      ctx.fillText(patient_sex,(canv.width/gmul)/2,(canv.height/gmul)*2/5+100);
 
       ctx.fillStyle = white;
       ctx.font = "22px Helvetica";
-      ctx.fillText("Weight",30,canv.height*2/5+150);
+      ctx.fillText("Weight",30,(canv.height/gmul)*2/5+150);
       ctx.fillStyle = dark_blue;
       ctx.font = "50px Helvetica";
-      ctx.fillText(patient_weight+" lb",30,canv.height*2/5+210);
+      ctx.fillText(patient_weight+" lb",30,(canv.height/gmul)*2/5+210);
 
       ctx.fillStyle = white;
       ctx.font = "22px Helvetica";
-      ctx.fillText("Age",canv.width/2,canv.height*2/5+150);
+      ctx.fillText("Age",(canv.width/gmul)/2,(canv.height/gmul)*2/5+150);
       ctx.fillStyle = dark_blue;
       ctx.font = "50px Helvetica";
-      ctx.fillText(patient_age,canv.width/2,canv.height*2/5+210);
+      ctx.fillText(patient_age,(canv.width/gmul)/2,(canv.height/gmul)*2/5+210);
 
       ctx.fillStyle = white;
       ctx.font = "16px Helvetica";
-      ctx.fillText(patient_description_0,30,canv.height*2/5+270);
-      ctx.fillText(patient_description_1,30,canv.height*2/5+300);
-      ctx.fillText(patient_description_2,30,canv.height*2/5+330);
-      ctx.fillText(patient_description_3,30,canv.height*2/5+360);
-      ctx.fillText(patient_description_4,30,canv.height*2/5+390);
+      ctx.fillText(patient_description_0,30,(canv.height/gmul)*2/5+270);
+      ctx.fillText(patient_description_1,30,(canv.height/gmul)*2/5+300);
+      ctx.fillText(patient_description_2,30,(canv.height/gmul)*2/5+330);
+      ctx.fillText(patient_description_3,30,(canv.height/gmul)*2/5+360);
+      ctx.fillText(patient_description_4,30,(canv.height/gmul)*2/5+390);
 
       ctx.fillStyle = white;
       ctx.font = "30px Helvetica"
@@ -1341,7 +1344,7 @@ var GamePlayScene = function(game, stage, args)
         if(evaluate_alarms())
         {
           ctx.fillStyle = green;
-          ctx.fillRect(0,0,canv.width,canv.height);
+          ctx.fillRect(0,0,(canv.width/gmul),(canv.height/gmul));
           ctx.fillStyle = white;
           x = 40;
           ctx.font = "35px Helvetica";
@@ -1360,7 +1363,7 @@ var GamePlayScene = function(game, stage, args)
         else
         {
           ctx.fillStyle = red;
-          ctx.fillRect(0,0,canv.width,canv.height);
+          ctx.fillRect(0,0,(canv.width/gmul),(canv.height/gmul));
           ctx.fillStyle = white;
           x = 40;
           ctx.font = "35px Helvetica";
@@ -1384,7 +1387,7 @@ var GamePlayScene = function(game, stage, args)
       else
       {
         ctx.fillStyle = red;
-        ctx.fillRect(0,0,canv.width,canv.height);
+        ctx.fillRect(0,0,(canv.width/gmul),(canv.height/gmul));
         ctx.fillStyle = white;
         x = 40;
         ctx.font = "35px Helvetica";
@@ -1416,21 +1419,21 @@ var GamePlayScene = function(game, stage, args)
     {
       ctx.lineWidth = 1;
       ctx.fillStyle = dark_blue;
-      ctx.fillRect(0,0,canv.width,patient_flow_graph.y+patient_flow_graph.h);
+      ctx.fillRect(0,0,(canv.width/gmul),patient_flow_graph.y+patient_flow_graph.h);
 
       var y;
       var h;
       ctx.fillStyle = darken;
 
-      ctx.fillRect(0,0,canv.width,patient_volume_graph.y);
+      ctx.fillRect(0,0,(canv.width/gmul),patient_volume_graph.y);
 
       y = patient_volume_graph.y+patient_volume_graph.h;
       h = patient_pressure_graph.y-y;
-      ctx.fillRect(0,y,canv.width,h);
+      ctx.fillRect(0,y,(canv.width/gmul),h);
 
       y = patient_pressure_graph.y+patient_pressure_graph.h;
       h = patient_flow_graph.y-y;
-      ctx.fillRect(0,y,canv.width,h);
+      ctx.fillRect(0,y,(canv.width/gmul),h);
 
       var cur_graph;
       var label_disp_y;
@@ -1597,8 +1600,8 @@ var GamePlayScene = function(game, stage, args)
 
       ctx.strokeStyle = gray;
       ctx.beginPath();
-      ctx.moveTo(0,canv.height-80);
-      ctx.lineTo(canv.width,canv.height-80);
+      ctx.moveTo(0,(canv.height/gmul)-80);
+      ctx.lineTo((canv.width/gmul),(canv.height/gmul)-80);
       ctx.stroke();
 
       ctx.fillStyle = dark_blue;
@@ -1620,7 +1623,7 @@ var GamePlayScene = function(game, stage, args)
     if(alert_t)
     {
       ctx.fillStyle = "rgba(255,0,0,"+(psin(alert_t)/2)+")";
-      ctx.fillRect(0,0,canv.width,canv.height);
+      ctx.fillRect(0,0,(canv.width/gmul),(canv.height/gmul));
     }
   };
 

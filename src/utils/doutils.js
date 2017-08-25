@@ -14,10 +14,11 @@ var doMapInitDefaults = function(obj, init, defaults)
 //sets doX and doY as x/y offset into the object listening for the event
 function doSetPosOnEvent(evt)
 {
+  var gmul = 2;
   if(evt.offsetX != undefined)
   {
-    evt.doX = evt.offsetX;
-    evt.doY = evt.offsetY;
+    evt.doX = evt.offsetX/gmul;
+    evt.doY = evt.offsetY/gmul;
   }
   else if(evt.touches != undefined && evt.touches[0] != undefined)
   {
@@ -37,14 +38,14 @@ function doSetPosOnEvent(evt)
     var top  = box.top +  scrollTop - clientTop;
     var left = box.left + scrollLeft - clientLeft;
 
-    evt.doX = evt.touches[0].pageX-left;
-    evt.doY = evt.touches[0].pageY-top;
+    evt.doX = (evt.touches[0].pageX-left)/gmul;
+    evt.doY = (evt.touches[0].pageY-top)/gmul;
 
   }
   else if(evt.layerX != undefined && evt.originalTarget != undefined)
   {
-    evt.doX = evt.layerX-evt.originalTarget.offsetLeft;
-    evt.doY = evt.layerY-evt.originalTarget.offsetTop;
+    evt.doX = (evt.layerX-evt.originalTarget.offsetLeft)/gmul;
+    evt.doY = (evt.layerY-evt.originalTarget.offsetTop)/gmul;
   }
   else //give up because javascript is terrible
   {
