@@ -1,4 +1,3 @@
-var gmul = 2;
 var GamePlayScene = function(game, stage, args)
 {
   var self = this;

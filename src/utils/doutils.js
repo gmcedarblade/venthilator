@@ -14,7 +14,6 @@ var doMapInitDefaults = function(obj, init, defaults)
 //sets doX and doY as x/y offset into the object listening for the event
 function doSetPosOnEvent(evt)
 {
-  var gmul = 2;
   if(evt.offsetX != undefined)
   {
     evt.doX = evt.offsetX/gmul;
