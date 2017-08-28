@@ -1461,9 +1461,9 @@ var GamePlayScene = function(game, stage, args)
         if(maxvol > 2.0)  label_disp_y = strokeGraph(cur_graph,maxvol,2.0);
         ctx.stroke();
         ctx.lineWidth = 1;
-             if(maxvol > 2)   ctx.fillText("2",  patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+10);
+             if(maxvol > 2)   ctx.fillText("2.0",patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+10);
         else if(maxvol > 1.5) ctx.fillText("1.5",patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+10);
-        else if(maxvol > 1)   ctx.fillText("1",  patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+10);
+        else if(maxvol > 1)   ctx.fillText("1.0",patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+10);
         else if(maxvol > 0.5) ctx.fillText("0.5",patient_volume_graph.x+patient_volume_graph.w-20,label_disp_y+10);
       }
       else
@@ -1534,8 +1534,11 @@ var GamePlayScene = function(game, stage, args)
       ctx.fillText("0",patient_flow_graph.x+patient_flow_graph.w-20,patient_flow_graph.y+patient_flow_graph.h/2+10);
 
       ctx.fillStyle = dark_blue;
-      ctx.fillText("0s", patient_flow_graph.x+4          ,patient_flow_graph.y+patient_flow_graph.h+14);
-      ctx.fillText("12s",patient_flow_graph.x+patient_flow_graph.w-27,patient_flow_graph.y+patient_flow_graph.h+14);
+      var start_x = patient_flow_graph.x+4;
+      var end_x = patient_flow_graph.x+patient_flow_graph.w-10;
+      for(var i = 0; i < 12; i+=3)
+        ctx.fillText(i+"s", lerp(start_x,end_x, i/12), patient_flow_graph.y+patient_flow_graph.h+14);
+      ctx.fillText(12+"s", end_x-10, patient_flow_graph.y+patient_flow_graph.h+14);
 
       ctx.font = "14px Helvetica";
       ctx.fillStyle = light_blue;
