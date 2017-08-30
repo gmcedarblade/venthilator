@@ -870,6 +870,10 @@ var GamePlayScene = function(game, stage, args)
           else if(selected_mode == MODE_PRESSURE) norm_in_pressure = clamp(0, 1, norm_in_pressure+v);
           in_volume   = lerp(min_in_volume,   max_in_volume,   norm_in_volume);
           in_pressure = lerp(min_in_pressure, max_in_pressure, norm_in_pressure);
+
+          in_flow = in_volume/(in_itime/60);
+          in_itime = in_volume/(in_flow/60);
+
           break;
         case IN_CHANNEL_RATE:
           norm_in_rate = clamp(0,1,norm_in_rate+v);
