@@ -205,6 +205,7 @@ var GamePlayScene = function(game, stage, args)
   var blip_running = 0;
   var blip_rate = 0.0013;
   var blip_t = 0;
+  var blip_stamp;
   var cur_screen = 1;
 
   //ui
@@ -1175,7 +1176,18 @@ var GamePlayScene = function(game, stage, args)
     if(alert_t-0.1 > 0 && floor(alert_t)-floor(alert_t-0.1) > 0)
       beep_aud.play();
 
-    if(blip_running) blip_t += blip_rate;
+    if(blip_running)
+    {
+      if(blip_stamp)
+      {
+        var delta = new Date()-blip_stamp;
+        blip_rate = delta/(12*1000);
+      }
+      blip_t += blip_rate;
+      blip_stamp = new Date();
+    }
+    else blip_stamp = 0;
+
     var fulllen = patient_volume_graph.data.itime+patient_volume_graph.data.etime+patient_volume_graph.data.dtime;
     if(blip_t == blip_rate || floor(((blip_t-patient_volume_graph.data.itime)-blip_rate)/fulllen) != floor((blip_t-patient_volume_graph.data.itime)/fulllen))
     {
