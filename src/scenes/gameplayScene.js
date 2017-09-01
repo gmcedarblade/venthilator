@@ -3,10 +3,10 @@ var GamePlayScene = function(game, stage, args)
   var self = this;
 
   var canv = stage.drawCanv;
-  var bogus_canv = {width:canv.width/gmul,height:canv.height/gmul};
+  var bogus_canv = {width:canv.width/gmulx,height:canv.height/gmuly};
   var canvas = canv.canvas;
   var ctx = canv.context;
-  ctx.scale(gmul,gmul);
+  ctx.scale(gmulx,gmuly);
   var n_ticks = 0;
   var cam = {wx:0,wy:0,ww:1,wh:2};
 

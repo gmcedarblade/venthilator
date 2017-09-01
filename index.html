@@ -42,7 +42,8 @@ body,div
 <script type="text/javascript" src="src/scenes/gameplayScene.js"></script>
 
 <script type="text/javascript">
-var gmul = 2;
+var gmulx = 2;
+var gmuly = 1.9;
 
 var arisready = false;
 var jsready = false;
@@ -83,8 +84,8 @@ function checkReady()
 {
   if(!jsready || !arisready) return;
 
-  var w = 420*gmul;
-  var h = 640*gmul;
+  var w = 420*gmulx;
+  var h = 640*gmuly;
   var content          = document.getElementById("content");
   var stage_container  = document.getElementById("stage_container");
   var shadow_container = document.getElementById("shadow_container");
