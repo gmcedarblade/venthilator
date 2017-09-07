@@ -83,6 +83,7 @@ var d;
 function checkReady()
 {
   if(!jsready || !arisready) return;
+  if(g) return;
 
   var w = 420*gmulx;
   var h = 640*gmuly;
