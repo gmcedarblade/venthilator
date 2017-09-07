@@ -117,6 +117,8 @@ var GamePlayScene = function(game, stage, args)
   var selected_channel = 0;
   var selected_alarm = 0;
   var alert_t = 0;
+  var alert_rate = 0.01;
+  var alert_stamp;
   var norm_in_volume   = 0.5;
   var norm_in_pressure = 0.5;
   var norm_in_rate     = 0.3;
@@ -1170,8 +1172,17 @@ var GamePlayScene = function(game, stage, args)
     if(selected_mode == MODE_PRESSURE) in_channel_btns[0].title = "Pressure"
 
     var in_error = triggered_alarms();
-    if(in_error) alert_t += 0.01;
-    else         alert_t = 0;
+    if(in_error)
+    {
+      if(alert_stamp)
+      {
+        var delta = new Date()-alert_stamp;
+        alert_rate = delta/1000;
+      }
+      alert_t += alert_rate;
+      alert_stamp = new Date();
+    }
+    else alert_t = 0;
 
     if(alert_t-0.1 > 0 && floor(alert_t)-floor(alert_t-0.1) > 0)
       beep_aud.play();
