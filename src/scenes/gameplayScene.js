@@ -1538,7 +1538,7 @@ var GamePlayScene = function(game, stage, args)
         ctx.lineWidth = 0.25;
         ctx.strokeStyle = light_blue;
         ctx.beginPath();
-        if(maxflow > 25)                strokeMirrorGraph(cur_graph,maxflow,25);
+        if(maxflow > 25)  label_disp_y = strokeMirrorGraph(cur_graph,maxflow,25);
         if(maxflow > 50)  label_disp_y = strokeMirrorGraph(cur_graph,maxflow,50);
         if(maxflow > 75)  label_disp_y = strokeMirrorGraph(cur_graph,maxflow,75);
         if(maxflow > 100) label_disp_y = strokeMirrorGraph(cur_graph,maxflow,100);
