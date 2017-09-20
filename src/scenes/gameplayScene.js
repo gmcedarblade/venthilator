@@ -64,7 +64,7 @@ var GamePlayScene = function(game, stage, args)
   var SCREEN_NOTIF       = ENUM; ENUM++;
   var SCREEN_COMPLETE    = ENUM; ENUM++;
 
-  var min_in_volume = 0;
+  var min_in_volume = 0.1;
   var max_in_volume = 2;
   var min_in_pressure = 1;
   var max_in_pressure = 2;
