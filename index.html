@@ -65,17 +65,19 @@ function begin()
 function playerSuccess()
 {
   console.log("succeed");
-  //var item_name = 'SimpleItem';
-  //var item_id = ARIS.cache.idForItemName(item_name);
-  //ARIS.givePlayerItemCount(item_id,1);
+  var ventPass = 'ventPass';
+  var ventPass = ARIS.cache.idForItemName(ventPass);
+  ARIS.givePlayerItemCount(ventPass,1);
+  ARIS.exit();
 }
 
 function playerFailure()
 {
   console.log("fail");
-  //var item_name = 'SimpleItem';
-  //var item_id = ARIS.cache.idForItemName(item_name);
-  //ARIS.givePlayerItemCount(item_id,1);
+  var ventFail = 'ventFail';
+  var ventFail = ARIS.cache.idForItemName(ventFail);
+  ARIS.givePlayerItemCount(ventFail,1);
+  ARIS.exit();
 }
 
 var g;

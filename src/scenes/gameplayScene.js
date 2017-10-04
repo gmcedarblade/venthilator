@@ -1646,8 +1646,8 @@ var GamePlayScene = function(game, stage, args)
       ctx.fillStyle = light_blue;
       canv.fillRoundRect(next_btn.x,next_btn.y,next_btn.w,next_btn.h,5);
       ctx.fillStyle = white;
-      ctx.font = "20px Helvetica";
-      ctx.fillText("Next Patient",next_btn.x+35,next_btn.y+next_btn.h/2+7);
+      ctx.font = "15px Helvetica";
+      ctx.fillText("Exit Ventilator Simulation",next_btn.x+8,next_btn.y+next_btn.h/2+7);
 
       ctx.font = "30px Helvetica";
       ctx.fillStyle = black;
