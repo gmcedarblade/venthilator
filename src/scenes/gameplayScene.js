@@ -120,19 +120,27 @@ var GamePlayScene = function(game, stage, args)
   var alert_rate = 0.01;
   var alert_stamp;
   var norm_in_volume   = 0.5;
+  console.log(norm_in_volume);
   var norm_in_pressure = 0.5;
   var norm_in_rate     = 0.3;
   var norm_in_flow     = 0.294;
   var norm_in_oxy      = 0.0;
   var norm_in_itime    = 0.2;
   var norm_in_peep     = 0.0;
-  var in_volume   = lerp(min_in_volume,   max_in_volume,   norm_in_volume);
-  var in_pressure = lerp(min_in_pressure, max_in_pressure, norm_in_pressure);
-  var in_rate     = lerp(min_in_rate,     max_in_rate,     norm_in_rate);
-  var in_flow     = lerp(min_in_flow,     max_in_flow,     norm_in_flow);
-  var in_oxy      = lerp(min_in_oxy,      max_in_oxy,      norm_in_oxy);
-  var in_itime    = lerp(min_in_itime  ,  max_in_itime  ,  norm_in_itime);
-  var in_peep     = lerp(min_in_peep,     max_in_peep,     norm_in_peep);
+
+  /*
+  Gets the JSON object "ventPlayerSet"
+  and sets it as the displaying values, 
+  if it is not set then it displays the set
+  default values
+  */
+  var in_volume   = localStorage.getItem("ventPlayerSet") ? object.volume:lerp(min_in_volume,   max_in_volume,   norm_in_volume);
+  var in_pressure = localStorage.getItem("ventPlayerSet") ? object.pressure:lerp(min_in_pressure, max_in_pressure, norm_in_pressure);
+  var in_rate     = localStorage.getItem("ventPlayerSet") ? object.rate:lerp(min_in_rate,     max_in_rate,     norm_in_rate);
+  var in_flow     = localStorage.getItem("ventPlayerSet") ? object.flow:lerp(min_in_flow,     max_in_flow,     norm_in_flow);
+  var in_oxy      = localStorage.getItem("ventPlayerSet") ? object.oxygen:lerp(min_in_oxy,      max_in_oxy,      norm_in_oxy);
+  var in_itime    = localStorage.getItem("ventPlayerSet") ? object.itime:lerp(min_in_itime  ,  max_in_itime  ,  norm_in_itime);
+  var in_peep     = localStorage.getItem("ventPlayerSet") ? object.peep:lerp(min_in_peep,     max_in_peep,     norm_in_peep);
   var norm_in_alarm_min_pressure             = mapVal(min_in_alarm_pressure,             max_in_alarm_pressure,             0,1, 5);
   var norm_in_alarm_max_pressure             = mapVal(min_in_alarm_pressure,             max_in_alarm_pressure,             0,1, 30);
   var norm_in_alarm_min_rate                 = mapVal(min_in_alarm_rate,                 max_in_alarm_rate,                 0,1, 4);
@@ -203,8 +211,10 @@ var GamePlayScene = function(game, stage, args)
   var patient_name_primary = "Jane";
   var patient_name_secondary = "Smith";
 
-  //ui state
-  var blip_running = 0;
+  //UI State
+
+  //sets blip_running to true if the JSON object is set, false if not.
+  var blip_running = localStorage.getItem("ventPlayerSet") ? 1:0;
   var blip_rate = 0.0013;
   var blip_t = 0;
   var blip_stamp;
@@ -1063,6 +1073,17 @@ var GamePlayScene = function(game, stage, args)
       commit_in_itime    = in_itime;
       commit_in_peep     = in_peep;
       blip_running = true;
+
+      getVentSettings(in_volume, in_pressure, in_rate, in_flow, in_oxy, in_itime, in_peep);
+    
+      console.log(playerVolume + "\n");
+      console.log(playerPressure + "\n");
+      console.log(playerRate + "\n");
+      console.log(playerFlow + "\n");
+      console.log(playerOxygen + "\n");
+      console.log(playerITime + "\n");
+      console.log(playerPeep + "\n");
+
       update_alarms();
     });
     commit_vent_btn.title = "Commit Changes";
@@ -1092,6 +1113,8 @@ var GamePlayScene = function(game, stage, args)
     dismiss_submit_btn = new ButtonBox(bogus_canv.width/2-50,450,100,40, function()
     {
       cur_screen = SCREEN_VENTILATOR;
+      if(evaluate_patient() && evaluate_alarms()) playerSuccess();
+      else playerFailure();
     });
     dismiss_submit_btn.title = "Got It";
 
@@ -1111,8 +1134,7 @@ var GamePlayScene = function(game, stage, args)
     next_btn = new ButtonBox(bogus_canv.width-240,bogus_canv.height-65,180,40, function()
     {
       cur_screen = SCREEN_NOTIF;
-      if(evaluate_patient() && evaluate_alarms()) playerSuccess();
-      else playerFailure();
+      
     });
     next_btn.title = "Next Patient";
 

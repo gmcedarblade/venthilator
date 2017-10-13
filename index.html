@@ -8,6 +8,9 @@ body,div
   padding:0px;
   font:12px Helvetica;
 }
+p{
+  text-align: center;
+}
 </style>
 <script type='text/javascript' src='src/config.js'></script>
 <script type='text/javascript' src='src/utils/doutils.js'></script>
@@ -43,7 +46,7 @@ body,div
 
 <script type="text/javascript">
 var gmulx = 2;
-var gmuly = 1.9;
+var gmuly = 1.5;
 
 var arisready = false;
 var jsready = false;
@@ -111,7 +114,6 @@ window.addEventListener("load",begin,false);
 <div id="content" style="margin:0px auto; position:relative;">
   <div id="stage_container" style="position:absolute; top:0px; left:0px; user-select:none;"> </div>
 </div>
-
 <!-- only for use with dom.js
 <div id="fade" style="pointer-events:none; display:none; width:100%; height:100%; background-color:rgba(255,255,255,0.5); position:absolute; top:0px; left:0px;">
 </div>
@@ -126,5 +128,38 @@ window.addEventListener("load",begin,false);
 -->
 
 </body>
+  <script type="text/javascript">
+  var playerVolume = 0;
+  var playerPressure = 0;
+  var playerRate = 0;
+  var playerFlow = 0;
+  var playerOxygen = 0;
+  var playerITime = 0;
+  var playerPeep = 0;
+
+  //Variables for the JSON object
+  var myObject, myJSON, text, object;
+
+  function getVentSettings(setVolume, setPressure, setRate, setFlow, setOxygen, setITime, setPeep) {
+  
+    playerVolume = setVolume;
+    playerPressure = setPressure;
+    playerRate = setRate;
+    playerFlow = setFlow;
+    playerOxygen = setOxygen;
+    playerITime = setITime;
+    playerPeep = setPeep;
+
+    //Storing data
+    myObject = { "volume":playerVolume, "pressure":playerPressure, "rate":playerRate, "flow":playerFlow, "oxygen":playerOxygen, "itime":playerITime, "peep":playerPeep };
+    myJSON = JSON.stringify(myObject);
+    localStorage.setItem("ventPlayerSet", myJSON);
+
+  }
+
+  //Retrieving data
+  text = localStorage.getItem("ventPlayerSet");
+  object = JSON.parse(text);
+  </script>
 </html>
 
