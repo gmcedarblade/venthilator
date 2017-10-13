@@ -1075,14 +1075,6 @@ var GamePlayScene = function(game, stage, args)
       blip_running = true;
 
       getVentSettings(in_volume, in_pressure, in_rate, in_flow, in_oxy, in_itime, in_peep);
-    
-      console.log(playerVolume + "\n");
-      console.log(playerPressure + "\n");
-      console.log(playerRate + "\n");
-      console.log(playerFlow + "\n");
-      console.log(playerOxygen + "\n");
-      console.log(playerITime + "\n");
-      console.log(playerPeep + "\n");
 
       update_alarms();
     });
