@@ -845,7 +845,7 @@ var GamePlayScene = function(game, stage, args)
     knob_indicator_img = new Image();
     knob_indicator_img.src = "assets/knob-indicator.png";
     icon_alarms_img = new Image();
-    icon_alarms_img.src = "assets/icon-alarms.png"
+    icon_alarms_img.src = "assets/alarms-icon-lighter-gray.png"
     icon_patient_img = new Image();
     icon_patient_img.src = "assets/icon-patient.png"
     icon_sad_face_img = new Image();
@@ -1118,10 +1118,12 @@ var GamePlayScene = function(game, stage, args)
 
     alarms_btn = new ButtonBox(80,bogus_canv.height-65,40,40, function()
     {
-      cur_screen = SCREEN_ALARMS;
+      
+      //cur_screen = SCREEN_ALARMS;
       update_alarms();
     });
     alarms_btn.title = "alarms";
+    alarms_btn.color = "#ff0000";
 
     next_btn = new ButtonBox(bogus_canv.width-240,bogus_canv.height-65,180,40, function()
     {
@@ -1651,12 +1653,12 @@ var GamePlayScene = function(game, stage, args)
       ctx.lineTo(bogus_canv.width,bogus_canv.height-80);
       ctx.stroke();
 
-      ctx.fillStyle = dark_blue;
+      ctx.fillStyle = gray;
       ctx.font = "15px Helvetica";
       //ctx.drawImage(icon_patient_img,patient_btn.x+5,patient_btn.y,patient_btn.w-10,patient_btn.h-5);
       //ctx.fillText("patient info",patient_btn.x-17,patient_btn.y+patient_btn.h+12);
       ctx.drawImage(icon_alarms_img,alarms_btn.x+5,alarms_btn.y,alarms_btn.w-10,alarms_btn.h-5);
-      ctx.fillText("alarms",alarms_btn.x,alarms_btn.y+alarms_btn.h+12);
+      ctx.fillText("Alarms",alarms_btn.x,alarms_btn.y+alarms_btn.h+12);
       ctx.fillStyle = light_blue;
       canv.fillRoundRect(next_btn.x,next_btn.y,next_btn.w,next_btn.h,5);
       ctx.fillStyle = white;
