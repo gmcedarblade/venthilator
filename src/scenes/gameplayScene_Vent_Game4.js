@@ -141,13 +141,15 @@ var GamePlayScene = function(game, stage, args)
   if it is not set then it displays the set
   default values
   */
-  var in_volume   = localStorage.getItem("ventPlayerSet") ? object.volume:lerp(min_in_volume,   max_in_volume,   norm_in_volume);
-  var in_pressure = localStorage.getItem("ventPlayerSet") ? object.pressure:lerp(min_in_pressure, max_in_pressure, norm_in_pressure);
-  var in_rate     = localStorage.getItem("ventPlayerSet") ? object.rate:lerp(min_in_rate,     max_in_rate,     norm_in_rate);
-  var in_flow     = localStorage.getItem("ventPlayerSet") ? object.flow:lerp(min_in_flow,     max_in_flow,     norm_in_flow);
-  var in_oxy      = localStorage.getItem("ventPlayerSet") ? object.oxygen:lerp(min_in_oxy,      max_in_oxy,      norm_in_oxy);
-  var in_itime    = localStorage.getItem("ventPlayerSet") ? object.itime:lerp(min_in_itime  ,  max_in_itime  ,  norm_in_itime);
-  var in_peep     = localStorage.getItem("ventPlayerSet") ? object.peep:lerp(min_in_peep,     max_in_peep,     norm_in_peep);
+  var in_volume   = 0.600; //note before: localStorage.getItem("ventPlayerSet") ? object.volume:lerp(min_in_volume,   max_in_volume,   norm_in_volume);
+  var in_pressure = lerp(min_in_pressure, max_in_pressure, norm_in_pressure); //note before: localStorage.getItem("ventPlayerSet") ? object.pressure:lerp(min_in_pressure, max_in_pressure, norm_in_pressure);
+  var in_rate     = 16; //note before: localStorage.getItem("ventPlayerSet") ? object.rate:lerp(min_in_rate,     max_in_rate,     norm_in_rate);
+  var in_flow     = 75; // note before:localStorage.getItem("ventPlayerSet") ? object.flow:lerp(min_in_flow,     max_in_flow,     norm_in_flow);
+  var in_oxy      = 75; // note before: localStorage.getItem("ventPlayerSet") ? object.oxygen:lerp(min_in_oxy,      max_in_oxy,      norm_in_oxy);
+  var in_itime    = 0.489; // note before: localStorage.getItem("ventPlayerSet") ? object.itime:lerp(min_in_itime  ,  max_in_itime  ,  norm_in_itime);
+  var in_peep     = 8; // note before: localStorage.getItem("ventPlayerSet") ? object.peep:lerp(min_in_peep,     max_in_peep,     norm_in_peep);
+  
+  // Start of setting min and max display values for alarms
   var norm_in_alarm_min_pressure             = mapVal(min_in_alarm_pressure,             max_in_alarm_pressure,             0,1, 0);
   var norm_in_alarm_max_pressure             = mapVal(min_in_alarm_pressure,             max_in_alarm_pressure,             0,1, 80);
   var norm_in_alarm_min_rate                 = mapVal(min_in_alarm_rate,                 max_in_alarm_rate,                 0,1, 0);
@@ -156,6 +158,8 @@ var GamePlayScene = function(game, stage, args)
   var norm_in_alarm_max_exhale_minute_volume = mapVal(min_in_alarm_exhale_minute_volume, max_in_alarm_exhale_minute_volume, 0,1, 45);
   var norm_in_alarm_min_apnea                = mapVal(min_in_alarm_apnea               , max_in_alarm_apnea               , 0,1, -999999);
   var norm_in_alarm_max_apnea                = mapVal(min_in_alarm_apnea               , max_in_alarm_apnea               , 0,1, 45);
+  // End of setting min and max display values for alarms
+  
   var in_alarm_min_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_min_pressure);
   var in_alarm_max_pressure = lerp(min_in_alarm_pressure, max_in_alarm_pressure, norm_in_alarm_max_pressure);
   var in_alarm_min_rate = lerp(min_in_alarm_rate, max_in_alarm_rate, norm_in_alarm_min_rate);
@@ -221,7 +225,7 @@ var GamePlayScene = function(game, stage, args)
   //UI State
 
   //sets blip_running to true if the JSON object is set, false if not.
-  var blip_running = localStorage.getItem("ventPlayerSet") ? 1:0;
+  var blip_running = 1;
   var blip_rate = 0.0013;
   var blip_t = 0;
   var blip_stamp;
@@ -292,7 +296,7 @@ var GamePlayScene = function(game, stage, args)
     console.log(fdisp(in_peep, 1));
     console.log(fdisp(in_oxy, 2));
 
-    if(fdisp(in_volume, 3) < 0.480 || fdisp(in_volume, 3) > 0.655) { console.log("vol");  return false; }
+    if(fdisp(in_volume, 3) < 0.435 || fdisp(in_volume, 3) > 0.585) { console.log("vol");  return false; }
     if(fdisp(in_rate, 1) < 9.5 || fdisp(in_rate,1) > 16.5) { console.log("rate");  return false; }
     if(fdisp(in_peep, 1) < 4.5 || fdisp(in_peep,1) > 7.5) { console.log("peep"); return false; }
     if(fdisp(in_oxy, 2) < 49.5 || fdisp(in_oxy, 2) > 100.5) { console.log("oxy");  return false; }
@@ -316,6 +320,22 @@ var GamePlayScene = function(game, stage, args)
     if(pressure_alarm.v             > pressure_alarm.max_v            *1.0 || pressure_alarm.v             < pressure_alarm.min_v            *1.0) { console.log("pressure alarm"); return false; }
     if(rate_alarm.v                 > rate_alarm.max_v                *1.0 || rate_alarm.v                 < rate_alarm.min_v                *1.0) { console.log("rate alarm");     return false; }
     if(exhale_minute_volume_alarm.v > exhale_minute_volume_alarm.max_v*1.0 || exhale_minute_volume_alarm.v < exhale_minute_volume_alarm.min_v*1.0) { console.log("emv alarm");      return false; }
+    
+    console.log("meh");
+    console.log("min p: " + fdisp(in_alarm_min_pressure,0) + "\n");
+    console.log("max p: " + fdisp(in_alarm_max_pressure,0) + "\n");
+    console.log("max rate: " + fdisp(in_alarm_max_rate,0) + "\n");
+    console.log("min rate: " + fdisp(in_alarm_min_rate,0) + "\n");
+    console.log("max emv: " + fdisp(in_alarm_max_exhale_minute_volume,1) + "\n");
+    console.log("min emv: " + fdisp(in_alarm_min_exhale_minute_volume,1) + "\n");
+    console.log("max apnea: " + fdisp(in_alarm_max_apnea,0) + "\n");
+    if(fdisp(in_alarm_max_pressure,0)             > 40.1 || fdisp(in_alarm_max_pressure,0)             < 33.9) { console.log("pressure alarm max"); return false; }
+    if(fdisp(in_alarm_min_pressure,0)             > 21.1 || fdisp(in_alarm_min_pressure,0)             < 14.9) { console.log("pressure alarm min"); return false; }
+    if(fdisp(in_alarm_max_rate,0)                 > 30.1 || fdisp(in_alarm_max_rate,0)                 < 17.9) { console.log("rate alarm max");     return false; }
+    if(fdisp(in_alarm_min_rate,0)                 > 12.1 || fdisp(in_alarm_min_rate,0)                 <  3.9) { console.log("rate alarm min");     return false; }
+    if(fdisp(in_alarm_max_exhale_minute_volume,1) > 16.1 || fdisp(in_alarm_max_exhale_minute_volume,1) < 11.9) { console.log("emv alarm max");      return false; }
+    if(fdisp(in_alarm_min_exhale_minute_volume,1) >  6.1 || fdisp(in_alarm_min_exhale_minute_volume,1) <  3.9) { console.log("emv alarm min");      return false; }
+    if(fdisp(in_alarm_max_apnea,0)                > 20.1) { console.log("apnea alarm max");      return false; }
     return true;
   }
 
@@ -353,41 +373,55 @@ var GamePlayScene = function(game, stage, args)
 
     self.draw = function()
     {
-      ctx.strokeStyle = dark_blue;
+      // code for styling for alarm page
+      ctx.strokeStyle = black;
       ctx.fillStyle = light_gray;
       ctx.strokeRect(self.x,self.y,self.w,self.h);
       ctx.fillRect(self.x,self.y,self.w,self.h);
 
       ctx.textAlign = "center";
-      ctx.fillStyle = dark_blue;
+      ctx.fillStyle = black;
       ctx.font = "20px Helvetica";
-      ctx.fillStyle = dark_blue;
+      ctx.fillStyle = black;
       ctx.fillText(title,self.x,self.y-70);
       ctx.font = "14px Helvetica";
       ctx.fillText(label,self.x,self.y-50);
 
       ctx.textAlign = "left";
-      ctx.fillStyle = dark_blue;
-      if(min_selected()) canv.fillRoundRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h,5);
-      ctx.fillStyle = light_blue;
+      ctx.fillStyle = green;
+      if(min_selected()) {                                canv.fillRoundRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h,5);
+        ctx.fillStyle = white;
+        ctx.font = "14px Helvetica";
+        ctx.fillText("min",self.min_box.x+7,self.min_box.y+20);
+        ctx.font = "12px Helvetica";
+      ctx.fillText(min_text(),self.min_box.x+7,self.min_box.y+33);
+      } else {
+      ctx.fillStyle = black;
       ctx.font = "14px Helvetica";
       ctx.fillText("min",self.min_box.x+7,self.min_box.y+20);
       ctx.font = "12px Helvetica";
       ctx.fillText(min_text(),self.min_box.x+7,self.min_box.y+33);
-      ctx.strokeStyle = light_blue;
+      }
+      ctx.strokeStyle = gray;
       ctx.fillStyle = white;
       canv.strokeRoundRect(self.min_box.x,self.min_box.y,self.min_box.w,self.min_box.h,5);
       ctx.fillRect(self.x-2,self.min_box.y-2,self.w+4,4);
       ctx.strokeRect(self.x-2,self.min_box.y-2,self.w+4,4);
 
-      ctx.fillStyle = dark_blue;
-      if(max_selected()) canv.fillRoundRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h,5);
-      ctx.fillStyle = light_blue;
-      ctx.font = "14px Helvetica";
-      ctx.fillText("max",self.max_box.x+7,self.max_box.y+20);
-      ctx.font = "12px Helvetica";
+      ctx.fillStyle = green;
+      if(max_selected()) { canv.fillRoundRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h,5);
+        ctx.fillStyle = white;
+        ctx.font = "14px Helvetica";
+        ctx.fillText("max",self.max_box.x+7,self.max_box.y+20);
+        ctx.font = "12px Helvetica";
       ctx.fillText(max_text(),self.max_box.x+7,self.max_box.y+33);
-      ctx.strokeStyle = light_blue;
+      } else {
+        ctx.fillStyle = black;
+        ctx.font = "14px Helvetica";
+        ctx.fillText("max",self.max_box.x+7,self.max_box.y+20);
+        ctx.font = "12px Helvetica"; ctx.fillText(max_text(),self.max_box.x+7,self.max_box.y+33);
+      } 
+      ctx.strokeStyle = gray;
       ctx.fillStyle = white;
       canv.strokeRoundRect(self.max_box.x,self.max_box.y,self.max_box.w,self.max_box.h,5);
       ctx.strokeRect(self.x-2,self.max_box.y+self.max_box.h-2,self.w+4,4);
@@ -398,8 +432,10 @@ var GamePlayScene = function(game, stage, args)
 
       if(blip_running)
       {
-        ctx.fillStyle = dark_blue;
+        ctx.fillStyle = black;
         ctx.fillRect(self.x-1,self.y+self.h-(self.h*self.v)-1,self.w+2,2);
+        // Function for the text that is output for the pressure,
+        // rate, VE, and Apnea for the alarms that is not UI capable
         ctx.fillText(text(),self.x+self.w+5,self.y+self.h-(self.v*self.h));
       }
     }
@@ -764,12 +800,17 @@ var GamePlayScene = function(game, stage, args)
     ctx.fillText(btn.title,btn.x+2,btn.y+btn.h/2-10);
     ctx.font = "12px Helvetica";
     if(sub) ctx.fillText(sub,btn.x+2,btn.y+btn.h/2+4);
-    ctx.fillStyle = black;
+    ctx.fillStyle = gray;
     if(subsub) ctx.fillText(subsub,btn.x+2,btn.y+btn.h/2+15);
   }
+  // where to change color of the buttons
   var drawBtn = function(btn,sub,subsub)
   {
-    ctx.fillStyle = green;
+    if (cur_screen == SCREEN_VENTILATOR) {
+      ctx.fillStyle = gray;
+    } else {
+      ctx.fillStyle = gray;
+    }
     canv.fillRoundRect(btn.x,btn.y,btn.w,btn.h,5);
     ctx.fillStyle = white;
     ctx.font = "18px Helvetica";
@@ -805,13 +846,14 @@ var GamePlayScene = function(game, stage, args)
 
     x = 50;
     ctx.font = "35px Helvetica";
-    ctx.fillText("All settings are final.",x,325);
+    //ctx.fillText("All settings are final.",x,325);
     y = 400;
     yd = 35;
     ctx.font = "35px Helvetica";
-    ctx.fillText("Press continue",x+45,y); y+=yd;
-    ctx.fillText("if you are",x+75,y); y+=yd;
-    ctx.fillText("ready to exit.",x+55,y); y+=yd;
+    ctx.fillText("Waiting for patient",x+15,y-25); y+=yd;
+    //ctx.fillText("if you are",x+75,y); 
+    y+=yd;
+    ctx.fillText("connection...",x+55,y); y+=yd;
     y = 380;
     yd = 25;
     ctx.fillText("",x,y); y+=yd;
@@ -886,11 +928,11 @@ var GamePlayScene = function(game, stage, args)
     knob_indicator_img = new Image();
     knob_indicator_img.src = "assets/knob-indicator.png";
     icon_alarms_img = new Image();
-    icon_alarms_img.src = "assets/alarms-icon-lighter-gray.png"
+    icon_alarms_img.src = "assets/alarm-icon.png";
     icon_patient_img = new Image();
-    icon_patient_img.src = "assets/icon-patient.png"
+    icon_patient_img.src = "assets/icon-patient.png";
     icon_sad_face_img = new Image();
-    icon_sad_face_img.src = "assets/sad-face.png"
+    icon_sad_face_img.src = "assets/sad-face.png";
     beep_aud = new Audio();
     beep_aud.src = "assets/beep.mp3";
 
@@ -1031,7 +1073,7 @@ var GamePlayScene = function(game, stage, args)
       function(){return selected_alarm == IN_ALARM_MAX_APNEA;},
       function(){return fdisp(in_alarm_min_apnea,0);},
       function(){return fdisp(in_alarm_max_apnea,0);},
-      function(){return fdisp(60/out_rate,0);},
+      function(){return "";}, //for notes:fdisp(60/out_rate,0)
       function(){return fdisp(min_in_alarm_apnea,0);},
       function(){return fdisp(max_in_alarm_apnea,0);},
       "Apnea",
@@ -1105,22 +1147,27 @@ var GamePlayScene = function(game, stage, args)
 
     commit_vent_btn = new ButtonBox(0,0,0,0, function()
     {
-      blip_t = 0;
-      patient_volume_graph.commit();
-      patient_pressure_graph.commit();
-      patient_flow_graph.commit();
-      commit_in_volume   = in_volume;
-      commit_in_pressure = in_pressure;
-      commit_in_rate     = in_rate;
-      commit_in_flow     = in_flow;
-      commit_in_oxy      = in_oxy;
-      commit_in_itime    = in_itime;
-      commit_in_peep     = in_peep;
-      blip_running = true;
-
-      getVentSettings(fdisp(in_volume,3), fdisp(in_pressure,2), fdisp(in_rate,2), fdisp(in_flow,2), fdisp(in_oxy,2), fdisp(in_itime, 2), fdisp(in_peep,0));
-
-      update_alarms();
+      
+      /*
+      Commented out so there is no ability for the 
+      user to commit changes to the vent settings.
+      */
+//      blip_t = 0;
+//      patient_volume_graph.commit();
+//      patient_pressure_graph.commit();
+//      patient_flow_graph.commit();
+//      commit_in_volume   = in_volume;
+//      commit_in_pressure = in_pressure;
+//      commit_in_rate     = in_rate;
+//      commit_in_flow     = in_flow;
+//      commit_in_oxy      = in_oxy;
+//      commit_in_itime    = in_itime;
+//      commit_in_peep     = in_peep;
+//      blip_running = true;
+//
+//      getVentSettings(fdisp(in_volume,3), fdisp(in_pressure,2), fdisp(in_rate,2), fdisp(in_flow,2), fdisp(in_oxy,2), fdisp(in_itime, 2), fdisp(in_peep,0));
+//
+//      update_alarms();
     });
     commit_vent_btn.title = "Test Lung";
     commit_vent_btn.ww = 0.25;
@@ -1146,13 +1193,18 @@ var GamePlayScene = function(game, stage, args)
     });
     x_btn.title = "Back to Ventilator";
 
+    // Connect Patient button on the final verification page
     dismiss_submit_btn = new ButtonBox(bogus_canv.width/2,580,180,40, function()
     {
-      cur_screen = SCREEN_VENTILATOR;
-      if(evaluate_patient() && evaluate_alarms()) playerSuccess();
-      else playerFailure();
+      /*
+      Commented out so there is no ability for the user to 
+      make changes and be evaluated
+      */
+//      cur_screen = SCREEN_VENTILATOR;
+//      if(evaluate_patient() && evaluate_alarms()) playerSuccess();
+//      else playerFailure();
     });
-    dismiss_submit_btn.title = "Place on Patient";
+    dismiss_submit_btn.title = "Connect Patient";
 
     patient_btn = new ButtonBox(30,bogus_canv.height-65,40,40, function()
     {
@@ -1163,7 +1215,7 @@ var GamePlayScene = function(game, stage, args)
     alarms_btn = new ButtonBox(80,bogus_canv.height-65,40,40, function()
     {
       
-      //cur_screen = SCREEN_ALARMS;
+      cur_screen = SCREEN_ALARMS;
       update_alarms();
     });
     alarms_btn.title = "alarms";
@@ -1197,11 +1249,14 @@ var GamePlayScene = function(game, stage, args)
       case SCREEN_VENTILATOR:
         for(var i = 0; i < in_channel_btns.length; i++)
           clicker.filter(in_channel_btns[i]);
-        clicker.filter(commit_vent_btn);
-        //clicker.filter(patient_btn);
+        //removed ability for "test lung"
+        //clicker.filter(commit_vent_btn);
+        clicker.filter(patient_btn);
         clicker.filter(alarms_btn);
-        clicker.filter(next_btn);
-        dragger.filter(vent_knob);
+        //removed ability for "Connect Patient" on main vent screen
+        //clicker.filter(next_btn);
+        //removed ability for making adjustments to vent settings
+        //dragger.filter(vent_knob);
       break;
       case SCREEN_PATIENT:
         clicker.filter(x_btn);
@@ -1216,8 +1271,8 @@ var GamePlayScene = function(game, stage, args)
         clicker.filter(exhale_minute_volume_alarm.max_box);
         clicker.filter(apnea_alarm.min_box);
         clicker.filter(apnea_alarm.max_box);
-        clicker.filter(commit_alarm_btn);
-        dragger.filter(alarm_knob);
+        //clicker.filter(commit_alarm_btn);
+        //dragger.filter(alarm_knob);
         break;
       case SCREEN_NOTIF:
         clicker.filter(x_btn);
@@ -1384,10 +1439,10 @@ var GamePlayScene = function(game, stage, args)
     else if(cur_screen == SCREEN_ALARMS)
     {
       ctx.fillStyle = white;
-      ctx.drawImage(icon_alarms_img,20,15,30,40);
-      ctx.font = "30px Helvetica";
-      ctx.fillStyle = dark_blue;
-      ctx.fillText("alarms",70,45);
+      ctx.drawImage(icon_alarms_img,380,15,30,40);
+      ctx.font = "25px Helvetica";
+      ctx.fillStyle = black;
+      ctx.fillText("Alarms",300,45);
 
       pressure_alarm.draw();
       rate_alarm.draw();
@@ -1410,15 +1465,21 @@ var GamePlayScene = function(game, stage, args)
         case IN_ALARM_MAX_APNEA:                sub = fdisp(in_alarm_max_apnea,0)               +" seconds"; title = "Apnea"; break;
       }
 
-      ctx.fillStyle = dark_blue;
-      ctx.fillText(title,commit_alarm_btn.x,commit_alarm_btn.y-40);
+      ctx.fillStyle = black;
+     ctx.fillText(title,commit_alarm_btn.x,commit_alarm_btn.y-40);
+      
       ctx.font = "22px Helvetica";
+      
       ctx.fillText(sub,commit_alarm_btn.x,commit_alarm_btn.y-12);
+      ctx.fillStyle = red;
       drawBtn(commit_alarm_btn);
 
-      ctx.fillStyle = dark_blue;
-      ctx.font = "30px Helvetica"
-      ctx.fillText(x_btn.title,x_btn.x,x_btn.y+x_btn.h/2+18);
+      ctx.fillStyle = slate_gray;
+      ctx.font = "22px Helvetica"
+      canv.fillRoundRect(x_btn.x-90,x_btn.y+5,x_btn.w+60,x_btn.h+5,5);
+      ctx.fillStyle = white;
+      ctx.fillText(x_btn.title,x_btn.x-85,x_btn.y+x_btn.h/2+18);
+      canv.fillStyle = green;
     }
     else if(cur_screen == SCREEN_NOTIF)
     {
@@ -1617,7 +1678,7 @@ var GamePlayScene = function(game, stage, args)
           case IN_CHANNEL_FLOW:  sub = fdisp(commit_in_flow,  0)+" l/min";  subsub = fdisp(in_flow,  0)+" l/min";  break;
           case IN_CHANNEL_OXY:   sub = fdisp(commit_in_oxy,   0)+"%";       subsub = fdisp(in_oxy,   0)+"%";       break;
           case IN_CHANNEL_ITIME: sub = fdisp(commit_in_itime, 1)+" sec";    subsub = fdisp(in_itime, 1)+" sec";    break;
-          case IN_CHANNEL_PEEP:  sub = fdisp(commit_in_peep,  0)+" cm H₂0"; subsub = fdisp(in_peep,  0)+" cm H₂0"; break;
+          case IN_CHANNEL_PEEP:  sub = fdisp(commit_in_peep,  1)+" cm H₂0"; subsub = fdisp(in_peep,  1)+" cm H₂0"; break;
         }
         if(subsub != sub) drawInBtn(in_channel_btns[i],sub,subsub);
         else              drawInBtn(in_channel_btns[i],sub);
@@ -1630,7 +1691,7 @@ var GamePlayScene = function(game, stage, args)
         case IN_CHANNEL_FLOW:  sub = fdisp(in_flow,  0)+" l/min";  break;
         case IN_CHANNEL_OXY:   sub = fdisp(in_oxy,   0)+"%";       break;
         case IN_CHANNEL_ITIME: sub = fdisp(in_itime, 1)+" sec";    break;
-        case IN_CHANNEL_PEEP:  sub = fdisp(in_peep,  0)+" cm H₂0"; break;
+        case IN_CHANNEL_PEEP:  sub = fdisp(in_peep,  1)+" cm H₂0"; break;
       }
       ctx.fillStyle = white;
       ctx.fillText(in_channel_btns[selected_channel].title,commit_vent_btn.x,commit_vent_btn.y-40);
@@ -1642,7 +1703,7 @@ var GamePlayScene = function(game, stage, args)
       ctx.drawImage(knob_img,vent_knob.x+10,vent_knob.y+10,vent_knob.w-20,vent_knob.h-20);
       ctx.drawImage(knob_indicator_img,vent_knob.x+vent_knob.w/2+cos(vent_knob.viz_theta)*vent_knob.w/3.5-4,vent_knob.y+vent_knob.h/2+sin(vent_knob.viz_theta)*vent_knob.w/3.5-4,8,8);
 
-      ctx.strokeStyle = gray;
+      ctx.strokeStyle = black;
       ctx.beginPath();
       ctx.moveTo(0,bogus_canv.height-80);
       ctx.lineTo(bogus_canv.width,bogus_canv.height-80);
@@ -1654,12 +1715,15 @@ var GamePlayScene = function(game, stage, args)
       //ctx.fillText("patient info",patient_btn.x-17,patient_btn.y+patient_btn.h+12);
       ctx.drawImage(icon_alarms_img,alarms_btn.x+5,alarms_btn.y,alarms_btn.w-10,alarms_btn.h-5);
       ctx.fillText("Alarms",alarms_btn.x,alarms_btn.y+alarms_btn.h+12);
-      ctx.fillStyle = green;
+      ctx.fillStyle = gray;
       canv.fillRoundRect(next_btn.x,next_btn.y,next_btn.w,next_btn.h,5);
       ctx.fillStyle = white;
+      canv.fillStyle = green;
+      // connect patient on the vent screen
       ctx.font = "22px Helvetica";
-      ctx.fillText("Place on Patient",next_btn.x+8,next_btn.y+next_btn.h/2+7);
-
+      
+      ctx.fillText("Connect Patient",next_btn.x+8,next_btn.y+next_btn.h/2+7);
+      
       ctx.font = "30px Helvetica";
       ctx.fillStyle = black;
 

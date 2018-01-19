@@ -292,7 +292,7 @@ var GamePlayScene = function(game, stage, args)
     console.log(fdisp(in_peep, 1));
     console.log(fdisp(in_oxy, 2));
 
-    if(fdisp(in_volume, 3) < 0.480 || fdisp(in_volume, 3) > 0.655) { console.log("vol");  return false; }
+    if(fdisp(in_volume, 3) < 0.280 || fdisp(in_volume, 3) > 0.390) { console.log("vol");  return false; }
     if(fdisp(in_rate, 1) < 9.5 || fdisp(in_rate,1) > 16.5) { console.log("rate");  return false; }
     if(fdisp(in_peep, 1) < 4.5 || fdisp(in_peep,1) > 7.5) { console.log("peep"); return false; }
     if(fdisp(in_oxy, 2) < 49.5 || fdisp(in_oxy, 2) > 100.5) { console.log("oxy");  return false; }
@@ -804,14 +804,14 @@ var GamePlayScene = function(game, stage, args)
     ctx.fillStyle = black;
 
     x = 50;
-    ctx.font = "35px Helvetica";
-    ctx.fillText("All settings are final.",x,325);
+//    ctx.font = "35px Helvetica";
+//    ctx.fillText("All settings are final.",x,325);
     y = 400;
     yd = 35;
     ctx.font = "35px Helvetica";
-    ctx.fillText("Press continue",x+45,y); y+=yd;
-    ctx.fillText("if you are",x+75,y); y+=yd;
-    ctx.fillText("ready to exit.",x+55,y); y+=yd;
+    ctx.fillText("Waiting for patient",x,y); y+=yd;
+    //ctx.fillText("if you are",x+75,y); y+=yd;
+    ctx.fillText("connection...",x+55,y); y+=yd;
     y = 380;
     yd = 25;
     ctx.fillText("",x,y); y+=yd;
@@ -1152,7 +1152,7 @@ var GamePlayScene = function(game, stage, args)
       if(evaluate_patient() && evaluate_alarms()) playerSuccess();
       else playerFailure();
     });
-    dismiss_submit_btn.title = "Place on Patient";
+    dismiss_submit_btn.title = "Connect Patient";
 
     patient_btn = new ButtonBox(30,bogus_canv.height-65,40,40, function()
     {
@@ -1658,7 +1658,7 @@ var GamePlayScene = function(game, stage, args)
       canv.fillRoundRect(next_btn.x,next_btn.y,next_btn.w,next_btn.h,5);
       ctx.fillStyle = white;
       ctx.font = "22px Helvetica";
-      ctx.fillText("Place on Patient",next_btn.x+8,next_btn.y+next_btn.h/2+7);
+      ctx.fillText("Connect Patient",next_btn.x+8,next_btn.y+next_btn.h/2+7);
 
       ctx.font = "30px Helvetica";
       ctx.fillStyle = black;
